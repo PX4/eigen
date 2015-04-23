@@ -1,0 +1,45 @@
+language: cpp
+
+# use travis-ci docker based infrastructure
+sudo: false
+
+cache:
+  directories:
+    - $HOME/.ccache
+
+addons:
+  apt:
+    sources:
+    - kubuntu-backports
+    - ubuntu-toolchain-r-test
+    packages:
+    - build-essential
+    - ccache
+    - cmake
+    - g++-4.8
+    - gcc-4.8
+    - ninja-build
+
+before_script:
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+# setup ccache
+  - mkdir -p ~/bin
+  - ln -s /usr/bin/ccache ~/bin/g++
+  - ln -s /usr/bin/ccache ~/bin/g++-4.8
+  - ln -s /usr/bin/ccache ~/bin/gcc
+  - ln -s /usr/bin/ccache ~/bin/gcc-4.8
+  - export PATH=~/bin:$PATH
+
+script:
+  - ccache -z
+  - mkdir build && cd build
+  - cmake -GNinja ..
+  - ninja -j4 check
+  - ccache -s
+
+notifications:
+  webhooks:
+    urls:
+      - https://webhooks.gitter.im/e/2b9c4a4cb2211f8befba
+    on_success: always  # options: [always|never|change] default: always
+    on_failure: always  # options: [always|never|change] default: always
