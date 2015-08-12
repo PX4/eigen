@@ -49,7 +49,9 @@ public:
     * this class becomes invalid. Call compute() to update it with the new
     * matrix A, or modify a copy of A.
     */
-  IterativeSolverBase(const MatrixType& A)
+  template<typename MatrixDerived>
+  explicit IterativeSolverBase(const EigenBase<MatrixDerived>& A)
+    : mp_matrix(A.derived())
   {
     init();
     compute(A);
@@ -62,7 +64,8 @@ public:
     * Currently, this function mostly call analyzePattern on the preconditioner. In the future
     * we might, for instance, implement column reodering for faster matrix vector products.
     */
-  Derived& analyzePattern(const MatrixType& A)
+  template<typename MatrixDerived>
+  Derived& analyzePattern(const EigenBase<MatrixDerived>& A)
   {
     m_preconditioner.analyzePattern(A);
     m_isInitialized = true;
@@ -80,7 +83,8 @@ public:
     * this class becomes invalid. Call compute() to update it with the new
     * matrix A, or modify a copy of A.
     */
-  Derived& factorize(const MatrixType& A)
+  template<typename MatrixDerived>
+  Derived& factorize(const EigenBase<MatrixDerived>& A)
   {
     eigen_assert(m_analysisIsOk && "You must first call analyzePattern()"); 
     mp_matrix = &A;
@@ -100,7 +104,8 @@ public:
     * this class becomes invalid. Call compute() to update it with the new
     * matrix A, or modify a copy of A.
     */
-  Derived& compute(const MatrixType& A)
+  template<typename MatrixDerived>
+  Derived& compute(const EigenBase<MatrixDerived>& A)
   {
     mp_matrix = &A;
     m_preconditioner.compute(A);
@@ -220,7 +225,25 @@ protected:
     m_maxIterations = -1;
     m_tolerance = NumTraits<Scalar>::epsilon();
   }
-  const MatrixType* mp_matrix;
+  
+  template<typename MatrixDerived>
+  void grab(const EigenBase<MatrixDerived> &A)
+  {
+    mp_matrix.~Ref<const MatrixType>();
+    ::new (&mp_matrix) Ref<const MatrixType>(A.derived());
+  }
+  
+  void grab(const Ref<const MatrixType> &A)
+  {
+    if(&(A.derived()) != &mp_matrix)
+    {
+      mp_matrix.~Ref<const MatrixType>();
+      ::new (&mp_matrix) Ref<const MatrixType>(A);
+    }
+  }
+  
+  MatrixType m_dummy;
+  Ref<const MatrixType> mp_matrix;
   Preconditioner m_preconditioner;
 
   int m_maxIterations;

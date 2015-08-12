@@ -52,8 +52,9 @@ template<typename PlainObjectType, int Options = 0,
   * VectorXf a;
   * foo1(a.head());             // OK
   * foo1(A.col());              // OK
-  * foo1(A.row());              // compilation error because here innerstride!=1
-  * foo2(A.row());              // The row is copied into a contiguous temporary
+  * foo1(A.row());              // Compilation error because here innerstride!=1
+  * foo2(A.row());              // Compilation error because A.row() is a 1xN object while foo2 is expecting a Nx1 object
+  * foo2(A.row().transpose());  // The row is copied into a contiguous temporary
   * foo2(2*a);                  // The expression is evaluated into a temporary
   * foo2(A.col().segment(2,4)); // No temporary
   * \endcode
@@ -191,8 +192,8 @@ template<typename PlainObjectType, int Options, typename StrideType> class Ref
   private:
     typedef internal::traits<Ref> Traits;
     template<typename Derived>
-    inline Ref(const PlainObjectBase<Derived>& expr,
-               typename internal::enable_if<bool(Traits::template match<Derived>::MatchAtCompileTime),Derived>::type* = 0);
+    EIGEN_DEVICE_FUNC inline Ref(const PlainObjectBase<Derived>& expr,
+                                 typename internal::enable_if<bool(Traits::template match<Derived>::MatchAtCompileTime),Derived>::type* = 0);
   public:
 
     typedef RefBase<Ref> Base;
@@ -201,15 +202,15 @@ template<typename PlainObjectType, int Options, typename StrideType> class Ref
 
     #ifndef EIGEN_PARSED_BY_DOXYGEN
     template<typename Derived>
-    inline Ref(PlainObjectBase<Derived>& expr,
-               typename internal::enable_if<bool(Traits::template match<Derived>::MatchAtCompileTime),Derived>::type* = 0)
+    EIGEN_DEVICE_FUNC inline Ref(PlainObjectBase<Derived>& expr,
+                                 typename internal::enable_if<bool(Traits::template match<Derived>::MatchAtCompileTime),Derived>::type* = 0)
     {
       EIGEN_STATIC_ASSERT(static_cast<bool>(Traits::template match<Derived>::MatchAtCompileTime), STORAGE_LAYOUT_DOES_NOT_MATCH);
       Base::construct(expr.derived());
     }
     template<typename Derived>
-    inline Ref(const DenseBase<Derived>& expr,
-               typename internal::enable_if<bool(Traits::template match<Derived>::MatchAtCompileTime),Derived>::type* = 0)
+    EIGEN_DEVICE_FUNC inline Ref(const DenseBase<Derived>& expr,
+                                 typename internal::enable_if<bool(Traits::template match<Derived>::MatchAtCompileTime),Derived>::type* = 0)
     #else
     template<typename Derived>
     inline Ref(DenseBase<Derived>& expr)
@@ -236,8 +237,8 @@ template<typename TPlainObjectType, int Options, typename StrideType> class Ref<
     EIGEN_DENSE_PUBLIC_INTERFACE(Ref)
 
     template<typename Derived>
-    inline Ref(const DenseBase<Derived>& expr,
-               typename internal::enable_if<bool(Traits::template match<Derived>::ScalarTypeMatch),Derived>::type* = 0)
+    EIGEN_DEVICE_FUNC inline Ref(const DenseBase<Derived>& expr,
+                                 typename internal::enable_if<bool(Traits::template match<Derived>::ScalarTypeMatch),Derived>::type* = 0)
     {
 //      std::cout << match_helper<Derived>::HasDirectAccess << "," << match_helper<Derived>::OuterStrideMatch << "," << match_helper<Derived>::InnerStrideMatch << "\n";
 //      std::cout << int(StrideType::OuterStrideAtCompileTime) << " - " << int(Derived::OuterStrideAtCompileTime) << "\n";

@@ -156,7 +156,8 @@ static void run(Index rows, Index cols, Index depth,
 
     ei_declare_aligned_stack_constructed_variable(LhsScalar, blockA, sizeA, blocking.blockA());
     ei_declare_aligned_stack_constructed_variable(RhsScalar, blockB, sizeB, blocking.blockB());
-    ei_declare_aligned_stack_constructed_variable(RhsScalar, blockW, sizeW, blocking.blockW());
+    
+    const bool pack_rhs_once = mc!=rows && kc==depth && nc==cols;
 
     // For each horizontal panel of the rhs, and corresponding panel of the lhs...
     // (==GEMM_VAR1)
@@ -174,15 +175,28 @@ static void run(Index rows, Index cols, Index depth,
       // (==GEPP_VAR1)
       for(Index i2=0; i2<rows; i2+=mc)
       {
-        const Index actual_mc = (std::min)(i2+mc,rows)-i2;
-
-        // We pack the lhs's block into a sequential chunk of memory (L1 caching)
-        // Note that this block will be read a very high number of times, which is equal to the number of
-        // micro vertical panel of the large rhs's panel (e.g., cols/4 times).
-        pack_lhs(blockA, &lhs(i2,k2), lhsStride, actual_kc, actual_mc);
-
-        // Everything is packed, we can now call the block * panel kernel:
-        gebp(res+i2, resStride, blockA, blockB, actual_mc, actual_kc, cols, alpha, -1, -1, 0, 0, blockW);
+        const Index actual_kc = (std::min)(k2+kc,depth)-k2;
+        
+        // OK, here we have selected one horizontal panel of rhs and one vertical panel of lhs.
+        // => Pack lhs's panel into a sequential chunk of memory (L2/L3 caching)
+        // Note that this panel will be read as many times as the number of blocks in the rhs's
+        // horizontal panel which is, in practice, a very low number.
+        pack_lhs(blockA, lhs.getSubMapper(i2,k2), actual_kc, actual_mc);
+        
+        // For each kc x nc block of the rhs's horizontal panel...
+        for(Index j2=0; j2<cols; j2+=nc)
+        {
+          const Index actual_nc = (std::min)(j2+nc,cols)-j2;
+          
+          // We pack the rhs's block into a sequential chunk of memory (L2 caching)
+          // Note that this block will be read a very high number of times, which is equal to the number of
+          // micro horizontal panel of the large rhs's panel (e.g., rows/12 times).
+          if((!pack_rhs_once) || i2==0)
+            pack_rhs(blockB, rhs.getSubMapper(k2,j2), actual_kc, actual_nc);
+          
+          // Everything is packed, we can now call the panel * block kernel:
+          gebp(res.getSubMapper(i2, j2), blockA, blockB, actual_mc, actual_kc, actual_nc, alpha);
+        }
       }
     }
   }
@@ -208,9 +222,10 @@ struct gemm_functor
     : m_lhs(lhs), m_rhs(rhs), m_dest(dest), m_actualAlpha(actualAlpha), m_blocking(blocking)
   {}
 
-  void initParallelSession() const
+  void initParallelSession(Index num_threads) const
   {
-    m_blocking.allocateB();
+    m_blocking.initParallel(m_lhs.rows(), m_rhs.cols(), m_lhs.cols(), num_threads);
+    m_blocking.allocateA();
   }
 
   void operator() (Index row, Index rows, Index col=0, Index cols=-1, GemmParallelInfo<Index>* info=0) const
@@ -267,7 +282,7 @@ class level3_blocking
 };
 
 template<int StorageOrder, typename _LhsScalar, typename _RhsScalar, int MaxRows, int MaxCols, int MaxDepth, int KcFactor>
-class gemm_blocking_space<StorageOrder,_LhsScalar,_RhsScalar,MaxRows, MaxCols, MaxDepth, KcFactor, true>
+class gemm_blocking_space<StorageOrder,_LhsScalar,_RhsScalar,MaxRows, MaxCols, MaxDepth, KcFactor, true /* == FiniteAtCompileTime */>
   : public level3_blocking<
       typename conditional<StorageOrder==RowMajor,_RhsScalar,_LhsScalar>::type,
       typename conditional<StorageOrder==RowMajor,_LhsScalar,_RhsScalar>::type>
@@ -292,7 +307,7 @@ class gemm_blocking_space<StorageOrder,_LhsScalar,_RhsScalar,MaxRows, MaxCols, M
 
   public:
 
-    gemm_blocking_space(DenseIndex /*rows*/, DenseIndex /*cols*/, DenseIndex /*depth*/)
+    gemm_blocking_space(Index /*rows*/, Index /*cols*/, Index /*depth*/, Index /*num_threads*/, bool /*full_rows = false*/)
     {
       this->m_mc = ActualRows;
       this->m_nc = ActualCols;
@@ -301,6 +316,9 @@ class gemm_blocking_space<StorageOrder,_LhsScalar,_RhsScalar,MaxRows, MaxCols, M
       this->m_blockB = m_staticB;
       this->m_blockW = m_staticW;
     }
+    
+    void initParallel(Index, Index, Index, Index)
+    {}
 
     inline void allocateA() {}
     inline void allocateB() {}
@@ -327,7 +345,7 @@ class gemm_blocking_space<StorageOrder,_LhsScalar,_RhsScalar,MaxRows, MaxCols, M
 
   public:
 
-    gemm_blocking_space(DenseIndex rows, DenseIndex cols, DenseIndex depth)
+    gemm_blocking_space(Index rows, Index cols, Index depth, Index num_threads, bool l3_blocking)
     {
       this->m_mc = Transpose ? cols : rows;
       this->m_nc = Transpose ? rows : cols;
@@ -337,6 +355,19 @@ class gemm_blocking_space<StorageOrder,_LhsScalar,_RhsScalar,MaxRows, MaxCols, M
       m_sizeA = this->m_mc * this->m_kc;
       m_sizeB = this->m_kc * this->m_nc;
       m_sizeW = this->m_kc*Traits::WorkSpaceFactor;
+    }
+    
+    void initParallel(Index rows, Index cols, Index depth, Index num_threads)
+    {
+      this->m_mc = Transpose ? cols : rows;
+      this->m_nc = Transpose ? rows : cols;
+      this->m_kc = depth;
+      
+      eigen_internal_assert(this->m_blockA==0 && this->m_blockB==0);      
+      Index m = this->m_mc;
+      computeProductBlockingSizes<LhsScalar,RhsScalar,KcFactor>(this->m_kc, m, this->m_nc, num_threads);
+      m_sizeA = this->m_mc * this->m_kc;
+      m_sizeB = this->m_kc * this->m_nc;
     }
 
     void allocateA()
@@ -398,8 +429,21 @@ class GeneralProduct<Lhs, Rhs, GemmProduct>
     {
       eigen_assert(dst.rows()==m_lhs.rows() && dst.cols()==m_rhs.cols());
 
-      typename internal::add_const_on_value_type<ActualLhsType>::type lhs = LhsBlasTraits::extract(m_lhs);
-      typename internal::add_const_on_value_type<ActualRhsType>::type rhs = RhsBlasTraits::extract(m_rhs);
+  template<typename Dst>
+  static void subTo(Dst& dst, const Lhs& lhs, const Rhs& rhs)
+  {
+    if((rhs.rows()+dst.rows()+dst.cols())<20 && rhs.rows()>0)
+      lazyproduct::subTo(dst, lhs, rhs);
+    else
+      scaleAndAddTo(dst, lhs, rhs, Scalar(-1));
+  }
+  
+  template<typename Dest>
+  static void scaleAndAddTo(Dest& dst, const Lhs& a_lhs, const Rhs& a_rhs, const Scalar& alpha)
+  {
+    eigen_assert(dst.rows()==a_lhs.rows() && dst.cols()==a_rhs.cols());
+    if(a_lhs.cols()==0 || a_lhs.rows()==0 || a_rhs.cols()==0)
+      return;
 
       Scalar actualAlpha = alpha * LhsBlasTraits::extractScalarFactor(m_lhs)
                                  * RhsBlasTraits::extractScalarFactor(m_rhs);

@@ -44,6 +44,7 @@ class SimplicialCholeskyBase : internal::noncopyable
     typedef typename MatrixType::Index Index;
     typedef SparseMatrix<Scalar,ColMajor,Index> CholMatrixType;
     typedef Matrix<Scalar,Dynamic,1> VectorType;
+    typedef Matrix<StorageIndex,Dynamic,1> VectorI;
 
   public:
 
@@ -232,10 +233,10 @@ class SimplicialCholeskyBase : internal::noncopyable
     
     CholMatrixType m_matrix;
     VectorType m_diag;                                // the diagonal coefficients (LDLT mode)
-    VectorXi m_parent;                                // elimination tree
-    VectorXi m_nonZerosPerCol;
-    PermutationMatrix<Dynamic,Dynamic,Index> m_P;     // the permutation
-    PermutationMatrix<Dynamic,Dynamic,Index> m_Pinv;  // the inverse permutation
+    VectorI m_parent;                                 // elimination tree
+    VectorI m_nonZerosPerCol;
+    PermutationMatrix<Dynamic,Dynamic,StorageIndex> m_P;     // the permutation
+    PermutationMatrix<Dynamic,Dynamic,StorageIndex> m_Pinv;  // the inverse permutation
 
     RealScalar m_shiftOffset;
     RealScalar m_shiftScale;
@@ -631,9 +632,15 @@ void SimplicialCholeskyBase<Derived>::ordering(const MatrixType& a, CholMatrixTy
     m_P = m_Pinv.inverse();
   else
     m_P.resize(0);
-
-  ap.resize(size,size);
-  ap.template selfadjointView<Upper>() = a.template selfadjointView<UpLo>().twistedBy(m_P);
+    if(int(UpLo)==int(Lower) || MatrixType::IsRowMajor)
+    {
+      // we have to transpose the lower part to to the upper one
+      ap.resize(size,size);
+      ap.template selfadjointView<Upper>() = a.template selfadjointView<UpLo>();
+    }
+    else
+      internal::simplicial_cholesky_grab_input<CholMatrixType,MatrixType>::run(a, pmat, ap);
+  }
 }
 
 namespace internal {

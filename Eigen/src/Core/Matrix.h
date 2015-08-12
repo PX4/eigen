@@ -211,20 +211,20 @@ class Matrix
       : Base(internal::constructor_without_unaligned_array_assert())
     { Base::_check_template_params(); EIGEN_INITIALIZE_COEFFS_IF_THAT_OPTION_IS_ENABLED }
 
-    /** \brief Constructs a vector or row-vector with given dimension. \only_for_vectors
-      *
-      * Note that this is only useful for dynamic-size vectors. For fixed-size vectors,
-      * it is redundant to pass the dimension here, so it makes more sense to use the default
-      * constructor Matrix() instead.
-      */
-    EIGEN_STRONG_INLINE explicit Matrix(Index dim)
-      : Base(dim, RowsAtCompileTime == 1 ? 1 : dim, ColsAtCompileTime == 1 ? 1 : dim)
+#ifdef EIGEN_HAVE_RVALUE_REFERENCES
+    EIGEN_DEVICE_FUNC
+    Matrix(Matrix&& other)
+      : Base(std::move(other))
     {
       Base::_check_template_params();
-      EIGEN_STATIC_ASSERT_VECTOR_ONLY(Matrix)
-      eigen_assert(dim >= 0);
-      eigen_assert(SizeAtCompileTime == Dynamic || SizeAtCompileTime == dim);
-      EIGEN_INITIALIZE_COEFFS_IF_THAT_OPTION_IS_ENABLED
+      if (RowsAtCompileTime!=Dynamic && ColsAtCompileTime!=Dynamic)
+        Base::_set_noalias(other);
+    }
+    EIGEN_DEVICE_FUNC
+    Matrix& operator=(Matrix&& other)
+    {
+      other.swap(*this);
+      return *this;
     }
 
     #ifndef EIGEN_PARSED_BY_DOXYGEN

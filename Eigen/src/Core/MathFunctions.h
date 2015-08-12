@@ -331,34 +331,32 @@ inline NewType cast(const OldType& x)
 /****************************************************************************
 * Implementation of atanh2                                                *
 ****************************************************************************/
-
-template<typename Scalar, bool IsInteger>
-struct atanh2_default_impl
-{
-  typedef Scalar retval;
-  typedef typename NumTraits<Scalar>::Real RealScalar;
-  static inline Scalar run(const Scalar& x, const Scalar& y)
-  {
-    using std::abs;
-    using std::log;
-    using std::sqrt;
-    Scalar z = x / y;
-    if (y == Scalar(0) || abs(z) > sqrt(NumTraits<RealScalar>::epsilon()))
-      return RealScalar(0.5) * log((y + x) / (y - x));
-    else
-      return z + z*z*z / RealScalar(3);
-  }
-};
-
-template<typename Scalar>
-struct atanh2_default_impl<Scalar, true>
+template<typename Scalar, bool isComplex = NumTraits<Scalar>::IsComplex >
+struct log1p_impl
 {
   static inline Scalar run(const Scalar&, const Scalar&)
   {
     EIGEN_STATIC_ASSERT_NON_INTEGER(Scalar)
-    return Scalar(0);
+    typedef typename NumTraits<Scalar>::Real RealScalar;
+    using std::log;
+    Scalar x1p = RealScalar(1) + x;
+    return ( x1p == Scalar(1) ) ? x : x * ( log(x1p) / (x1p - RealScalar(1)) );
   }
 };
+// In C++11 we can specialize log1p_impl for real Scalars
+// Let's be conservative and enable the default C++11 implementation only if we are sure it exists
+#if (__cplusplus >= 201103L) && (EIGEN_COMP_GNUC_STRICT || EIGEN_COMP_CLANG || EIGEN_COMP_MSVC || EIGEN_COMP_ICC)  \
+    && (EIGEN_ARCH_i386_OR_x86_64) && (EIGEN_OS_GNULINUX || EIGEN_OS_WIN_STRICT || EIGEN_OS_MAC)
+template<typename Scalar>
+struct log1p_impl<Scalar, false> {
+  static inline Scalar run(const Scalar& x)
+  {
+    EIGEN_STATIC_ASSERT_NON_INTEGER(Scalar)
+    using std::log1p;
+    return log1p(x);
+  }
+};
+#endif
 
 template<typename Scalar>
 struct atanh2_impl : atanh2_default_impl<Scalar, NumTraits<Scalar>::IsInteger> {};
@@ -447,48 +445,48 @@ struct random_default_impl<Scalar, false, false>
 };
 
 enum {
-  floor_log2_terminate,
-  floor_log2_move_up,
-  floor_log2_move_down,
-  floor_log2_bogus
+  meta_floor_log2_terminate,
+  meta_floor_log2_move_up,
+  meta_floor_log2_move_down,
+  meta_floor_log2_bogus
 };
 
-template<unsigned int n, int lower, int upper> struct floor_log2_selector
+template<unsigned int n, int lower, int upper> struct meta_floor_log2_selector
 {
   enum { middle = (lower + upper) / 2,
-         value = (upper <= lower + 1) ? int(floor_log2_terminate)
-               : (n < (1 << middle)) ? int(floor_log2_move_down)
-               : (n==0) ? int(floor_log2_bogus)
-               : int(floor_log2_move_up)
+         value = (upper <= lower + 1) ? int(meta_floor_log2_terminate)
+               : (n < (1 << middle)) ? int(meta_floor_log2_move_down)
+               : (n==0) ? int(meta_floor_log2_bogus)
+               : int(meta_floor_log2_move_up)
   };
 };
 
 template<unsigned int n,
          int lower = 0,
          int upper = sizeof(unsigned int) * CHAR_BIT - 1,
-         int selector = floor_log2_selector<n, lower, upper>::value>
-struct floor_log2 {};
+         int selector = meta_floor_log2_selector<n, lower, upper>::value>
+struct meta_floor_log2 {};
 
 template<unsigned int n, int lower, int upper>
-struct floor_log2<n, lower, upper, floor_log2_move_down>
+struct meta_floor_log2<n, lower, upper, meta_floor_log2_move_down>
 {
-  enum { value = floor_log2<n, lower, floor_log2_selector<n, lower, upper>::middle>::value };
+  enum { value = meta_floor_log2<n, lower, meta_floor_log2_selector<n, lower, upper>::middle>::value };
 };
 
 template<unsigned int n, int lower, int upper>
-struct floor_log2<n, lower, upper, floor_log2_move_up>
+struct meta_floor_log2<n, lower, upper, meta_floor_log2_move_up>
 {
-  enum { value = floor_log2<n, floor_log2_selector<n, lower, upper>::middle, upper>::value };
+  enum { value = meta_floor_log2<n, meta_floor_log2_selector<n, lower, upper>::middle, upper>::value };
 };
 
 template<unsigned int n, int lower, int upper>
-struct floor_log2<n, lower, upper, floor_log2_terminate>
+struct meta_floor_log2<n, lower, upper, meta_floor_log2_terminate>
 {
   enum { value = (n >= ((unsigned int)(1) << (lower+1))) ? lower+1 : lower };
 };
 
 template<unsigned int n, int lower, int upper>
-struct floor_log2<n, lower, upper, floor_log2_bogus>
+struct meta_floor_log2<n, lower, upper, meta_floor_log2_bogus>
 {
   // no value, error at compile time
 };
@@ -499,8 +497,25 @@ struct random_default_impl<Scalar, false, true>
   typedef typename NumTraits<Scalar>::NonInteger NonInteger;
 
   static inline Scalar run(const Scalar& x, const Scalar& y)
-  {
-    return x + Scalar((NonInteger(y)-x+1) * std::rand() / (RAND_MAX + NonInteger(1)));
+  { 
+    using std::max;
+    Scalar range = (max)(Scalar(0),Scalar(y-x));
+    Scalar offset = 0;
+    if(range<=RAND_MAX)
+    {
+      // rejection sampling
+      int divisor = RAND_MAX/(range+1);
+
+      do {
+        offset = Scalar(std::rand() / divisor);
+      } while (offset > range);
+    }
+    else
+    {
+      offset = std::rand() * range;
+    }
+    
+    return x + offset;
   }
 
   static inline Scalar run()
@@ -508,7 +523,7 @@ struct random_default_impl<Scalar, false, true>
 #ifdef EIGEN_MAKING_DOCS
     return run(Scalar(NumTraits<Scalar>::IsSigned ? -10 : 0), Scalar(10));
 #else
-    enum { rand_bits = floor_log2<(unsigned int)(RAND_MAX)+1>::value,
+    enum { rand_bits = meta_floor_log2<(unsigned int)(RAND_MAX)+1>::value,
            scalar_bits = sizeof(Scalar) * CHAR_BIT,
            shift = EIGEN_PLAIN_ENUM_MAX(0, int(rand_bits) - int(scalar_bits)),
            offset = NumTraits<Scalar>::IsSigned ? (1 << (EIGEN_PLAIN_ENUM_MIN(rand_bits,scalar_bits)-1)) : 0

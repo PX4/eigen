@@ -66,6 +66,14 @@
   #define EIGEN_ARCH_WANTS_STACK_ALIGNMENT 0
 #endif
 
+// Defined the boundary (in bytes) on which the data needs to be aligned. Note
+// that unless EIGEN_ALIGN is defined and not equal to 0, the data may not be
+// aligned at all regardless of the value of this #define.
+// TODO should be renamed EIGEN_MAXIMAL_ALIGN_BYTES,
+//      for instance with AVX 1 EIGEN_MAXIMAL_ALIGN_BYTES=32 while for 'int' 16 bytes alignment is always enough,
+//      and 16 bytes alignment is also enough for Vector4f.
+#define EIGEN_ALIGN_BYTES 16
+
 #ifdef EIGEN_DONT_ALIGN
   #ifndef EIGEN_DONT_ALIGN_STATICALLY
     #define EIGEN_DONT_ALIGN_STATICALLY
@@ -101,6 +109,36 @@
 #  define EIGEN_HAS_BUILTIN(x) __has_builtin(x)
 #else
 #  define EIGEN_HAS_BUILTIN(x) 0
+#endif
+
+// A Clang feature extension to determine compiler features.
+// We use it to determine 'cxx_rvalue_references'
+#ifndef __has_feature
+# define __has_feature(x) 0
+#endif
+
+// Do we support r-value references?
+#if (__has_feature(cxx_rvalue_references) || \
+    (defined(__cplusplus) && __cplusplus >= 201103L) || \
+     defined(__GXX_EXPERIMENTAL_CXX0X__) || \
+    (EIGEN_COMP_MSVC >= 1600))
+  #define EIGEN_HAVE_RVALUE_REFERENCES
+#endif
+
+// Does the compiler support result_of?
+#if (__has_feature(cxx_lambdas) || (defined(__cplusplus) && __cplusplus >= 201103L))
+#define EIGEN_HAS_STD_RESULT_OF 1
+#endif
+
+// Does the compiler support variadic templates?
+#if __cplusplus > 199711L
+#define EIGEN_HAS_VARIADIC_TEMPLATES 1
+#endif
+
+// Does the compiler support const expressions?
+#if (defined(__plusplus) && __cplusplus >= 201402L) || \
+    EIGEN_GNUC_AT_LEAST(4,9)
+#define EIGEN_HAS_CONSTEXPR 1
 #endif
 
 /** Allows to disable some optimizations which might affect the accuracy of the result.

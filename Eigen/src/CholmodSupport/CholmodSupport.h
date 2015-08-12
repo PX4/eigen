@@ -304,6 +304,7 @@ class CholmodBase : internal::noncopyable
       if(!x_cd)
       {
         this->m_info = NumericalIssue;
+        return;
       }
       // TODO optimize this copy by swapping when possible (be careful with alignment, etc.)
       dest = Matrix<Scalar,Dest::RowsAtCompileTime,Dest::ColsAtCompileTime>::Map(reinterpret_cast<Scalar*>(x_cd->x),b.rows(),b.cols());
@@ -325,6 +326,7 @@ class CholmodBase : internal::noncopyable
       if(!x_cs)
       {
         this->m_info = NumericalIssue;
+        return;
       }
       // TODO optimize this copy by swapping when possible (be careful with alignment, etc.)
       dest = viewAsEigen<DestScalar,DestOptions,DestIndex>(*x_cs);
@@ -395,7 +397,7 @@ class CholmodSimplicialLLT : public CholmodBase<_MatrixType, _UpLo, CholmodSimpl
     CholmodSimplicialLLT(const MatrixType& matrix) : Base()
     {
       init();
-      compute(matrix);
+      this->compute(matrix);
     }
 
     ~CholmodSimplicialLLT() {}
@@ -442,7 +444,7 @@ class CholmodSimplicialLDLT : public CholmodBase<_MatrixType, _UpLo, CholmodSimp
     CholmodSimplicialLDLT(const MatrixType& matrix) : Base()
     {
       init();
-      compute(matrix);
+      this->compute(matrix);
     }
 
     ~CholmodSimplicialLDLT() {}
@@ -487,7 +489,7 @@ class CholmodSupernodalLLT : public CholmodBase<_MatrixType, _UpLo, CholmodSuper
     CholmodSupernodalLLT(const MatrixType& matrix) : Base()
     {
       init();
-      compute(matrix);
+      this->compute(matrix);
     }
 
     ~CholmodSupernodalLLT() {}
@@ -534,7 +536,7 @@ class CholmodDecomposition : public CholmodBase<_MatrixType, _UpLo, CholmodDecom
     CholmodDecomposition(const MatrixType& matrix) : Base()
     {
       init();
-      compute(matrix);
+      this->compute(matrix);
     }
 
     ~CholmodDecomposition() {}

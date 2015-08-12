@@ -353,7 +353,7 @@ class SparseLU : public internal::SparseLUImpl<typename _MatrixType::Scalar, typ
           }
         }
       }
-      return det * Scalar(m_detPermR * m_detPermC);
+      return (m_detPermR * m_detPermC) > 0 ? det : -det;
     }
 
   protected:

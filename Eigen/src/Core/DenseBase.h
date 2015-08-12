@@ -412,7 +412,8 @@ template<typename Derived> class DenseBase
     typename internal::traits<Derived>::Scalar maxCoeff(IndexType* index) const;
 
     template<typename BinaryOp>
-    typename internal::result_of<BinaryOp(typename internal::traits<Derived>::Scalar)>::type
+    EIGEN_DEVICE_FUNC
+    typename internal::result_of<BinaryOp(typename internal::traits<Derived>::Scalar,typename internal::traits<Derived>::Scalar)>::type
     redux(const BinaryOp& func) const;
 
     template<typename Visitor>

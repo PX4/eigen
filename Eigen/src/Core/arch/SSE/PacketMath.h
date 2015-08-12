@@ -22,6 +22,36 @@ namespace internal {
 #define EIGEN_ARCH_DEFAULT_NUMBER_OF_REGISTERS (2*sizeof(void*))
 #endif
 
+#ifdef __FMA__
+#ifndef EIGEN_HAS_SINGLE_INSTRUCTION_MADD
+#define EIGEN_HAS_SINGLE_INSTRUCTION_MADD 1
+#endif
+#endif
+
+#if (defined EIGEN_VECTORIZE_AVX) && EIGEN_COMP_GNUC_STRICT && (__GXX_ABI_VERSION < 1004)
+// With GCC's default ABI version, a __m128 or __m256 are the same types and therefore we cannot
+// have overloads for both types without linking error.
+// One solution is to increase ABI version using -fabi-version=4 (or greater).
+// Otherwise, we workaround this inconvenience by wrapping 128bit types into the following helper
+// structure:
+template<typename T>
+struct eigen_packet_wrapper
+{
+  EIGEN_ALWAYS_INLINE operator T&() { return m_val; }
+  EIGEN_ALWAYS_INLINE operator const T&() const { return m_val; }
+  EIGEN_ALWAYS_INLINE eigen_packet_wrapper() {}
+  EIGEN_ALWAYS_INLINE eigen_packet_wrapper(const T &v) : m_val(v) {}
+  EIGEN_ALWAYS_INLINE eigen_packet_wrapper& operator=(const T &v) {
+    m_val = v;
+    return *this;
+  }
+  
+  T m_val;
+};
+typedef eigen_packet_wrapper<__m128>  Packet4f;
+typedef eigen_packet_wrapper<__m128i> Packet4i;
+typedef eigen_packet_wrapper<__m128d> Packet2d;
+#else
 typedef __m128  Packet4f;
 typedef __m128i Packet4i;
 typedef __m128d Packet2d;
@@ -359,6 +389,29 @@ template<> EIGEN_STRONG_INLINE Packet2d preverse(const Packet2d& a)
 template<> EIGEN_STRONG_INLINE Packet4i preverse(const Packet4i& a)
 { return _mm_shuffle_epi32(a,0x1B); }
 
+template<size_t offset>
+struct protate_impl<offset, Packet4f>
+{
+  static Packet4f run(const Packet4f& a) {
+    return vec4f_swizzle1(a, offset, (offset + 1) % 4, (offset + 2) % 4, (offset + 3) % 4);
+  }
+};
+
+template<size_t offset>
+struct protate_impl<offset, Packet4i>
+{
+  static Packet4i run(const Packet4i& a) {
+    return vec4i_swizzle1(a, offset, (offset + 1) % 4, (offset + 2) % 4, (offset + 3) % 4);
+  }
+};
+
+template<size_t offset>
+struct protate_impl<offset, Packet2d>
+{
+  static Packet2d run(const Packet2d& a) {
+    return vec2d_swizzle1(a, offset, (offset + 1) % 2);
+  }
+};
 
 template<> EIGEN_STRONG_INLINE Packet4f pabs(const Packet4f& a)
 {

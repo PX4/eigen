@@ -204,7 +204,7 @@ if(NOT MSVC)
 
   option(EIGEN_TEST_NEON "Enable/Disable Neon in tests/examples" OFF)
   if(EIGEN_TEST_NEON)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=neon -mcpu=cortex-a8")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=neon -mfloat-abi=softfp")
     message(STATUS "Enabling NEON in tests/examples")
   endif()
 
@@ -284,7 +284,13 @@ if(EIGEN_TEST_NO_EXPLICIT_ALIGNMENT)
   message(STATUS "Disabling alignment in tests/examples")
 endif()
 
-option(EIGEN_TEST_C++0x "Enables all C++0x features." OFF)
+option(EIGEN_TEST_NO_EXCEPTIONS "Disables C++ exceptions" OFF)
+if(EIGEN_TEST_NO_EXCEPTIONS)
+  ei_add_cxx_compiler_flag("-fno-exceptions")
+  message(STATUS "Disabling exceptions in tests/examples")
+endif()
+
+option(EIGEN_TEST_CXX11 "Enable testing with C++11 and C++11 features (e.g. Tensor module)." OFF)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 

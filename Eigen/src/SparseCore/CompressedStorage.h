@@ -86,7 +86,12 @@ class CompressedStorage
     void resize(size_t size, double reserveSizeFactor = 0)
     {
       if (m_allocatedSize<size)
-        reallocate(size + size_t(reserveSizeFactor*double(size)));
+      {
+        Index realloc_size = (std::min<Index>)(NumTraits<StorageIndex>::highest(),  size + Index(reserveSizeFactor*double(size)));
+        if(realloc_size<size)
+          internal::throw_std_bad_alloc();
+        reallocate(realloc_size);
+      }
       m_size = size;
     }
 
@@ -124,7 +129,7 @@ class CompressedStorage
     }
 
     /** \returns the largest \c k in [start,end) such that for all \c j in [start,k) index[\c j]\<\a key */
-    inline Index searchLowerIndex(size_t start, size_t end, Index key) const
+    inline Index searchLowerIndex(Index start, Index end, Index key) const
     {
       while(end>start)
       {
@@ -152,7 +157,7 @@ class CompressedStorage
     }
 
     /** Like at(), but the search is performed in the range [start,end) */
-    inline Scalar atInRange(size_t start, size_t end, Index key, const Scalar& defaultValue = Scalar(0)) const
+    inline Scalar atInRange(Index start, Index end, Index key, const Scalar &defaultValue = Scalar(0)) const
     {
       if (start>=end)
         return Scalar(0);
@@ -178,7 +183,13 @@ class CompressedStorage
           m_indices[j] = m_indices[j-1];
           m_values[j] = m_values[j-1];
         }
-        m_indices[id] = key;
+        else if(m_size>id)
+        {
+          internal::smart_memmove(m_values +id, m_values +m_size, m_values +id+1);
+          internal::smart_memmove(m_indices+id, m_indices+m_size, m_indices+id+1);
+        }
+        m_size++;
+        m_indices[id] = internal::convert_index<StorageIndex>(key);
         m_values[id] = defaultValue;
       }
       return m_values[id];
@@ -204,17 +215,17 @@ class CompressedStorage
 
     inline void reallocate(size_t size)
     {
-      Scalar* newValues  = new Scalar[size];
-      Index* newIndices = new Index[size];
-      size_t copySize = (std::min)(size, m_size);
-      // copy
-      internal::smart_copy(m_values, m_values+copySize, newValues);
-      internal::smart_copy(m_indices, m_indices+copySize, newIndices);
-      // delete old stuff
-      delete[] m_values;
-      delete[] m_indices;
-      m_values = newValues;
-      m_indices = newIndices;
+      #ifdef EIGEN_SPARSE_COMPRESSED_STORAGE_REALLOCATE_PLUGIN
+        EIGEN_SPARSE_COMPRESSED_STORAGE_REALLOCATE_PLUGIN
+      #endif
+      eigen_internal_assert(size!=m_allocatedSize);
+      internal::scoped_array<Scalar> newValues(size);
+      internal::scoped_array<StorageIndex> newIndices(size);
+      Index copySize = (std::min)(size, m_size);
+      internal::smart_copy(m_values, m_values+copySize, newValues.ptr());
+      internal::smart_copy(m_indices, m_indices+copySize, newIndices.ptr());
+      std::swap(m_values,newValues.ptr());
+      std::swap(m_indices,newIndices.ptr());
       m_allocatedSize = size;
     }
 

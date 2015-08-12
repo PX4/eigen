@@ -178,16 +178,16 @@ template<typename MatrixType, unsigned int UpLo> class SparseSelfAdjointView
 
 template<typename Derived>
 template<unsigned int UpLo>
-const SparseSelfAdjointView<Derived, UpLo> SparseMatrixBase<Derived>::selfadjointView() const
+typename SparseMatrixBase<Derived>::template ConstSelfAdjointViewReturnType<UpLo>::Type SparseMatrixBase<Derived>::selfadjointView() const
 {
-  return derived();
+  return SparseSelfAdjointView<const Derived, UpLo>(derived());
 }
 
 template<typename Derived>
 template<unsigned int UpLo>
-SparseSelfAdjointView<Derived, UpLo> SparseMatrixBase<Derived>::selfadjointView()
+typename SparseMatrixBase<Derived>::template SelfAdjointViewReturnType<UpLo>::Type SparseMatrixBase<Derived>::selfadjointView()
 {
-  return derived();
+  return SparseSelfAdjointView<Derived, UpLo>(derived());
 }
 
 /***************************************************************************

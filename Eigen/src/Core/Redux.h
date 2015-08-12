@@ -322,7 +322,7 @@ struct redux_impl<Func, Derived, LinearVectorizedTraversal, CompleteUnrolling>
   */
 template<typename Derived>
 template<typename Func>
-EIGEN_STRONG_INLINE typename internal::result_of<Func(typename internal::traits<Derived>::Scalar)>::type
+EIGEN_STRONG_INLINE typename internal::result_of<Func(typename internal::traits<Derived>::Scalar,typename internal::traits<Derived>::Scalar)>::type
 DenseBase<Derived>::redux(const Func& func) const
 {
   typedef typename internal::remove_all<typename Derived::Nested>::type ThisNested;

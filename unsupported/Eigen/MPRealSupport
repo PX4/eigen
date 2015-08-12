@@ -139,22 +139,34 @@ int main()
     public:
       typedef mpfr::mpreal ResScalar;
       enum {
-        nr = 2, // must be 2 for proper packing...
+        Vectorizable = false,
+        LhsPacketSize = 1,
+        RhsPacketSize = 1,
+        ResPacketSize = 1,
+        NumberOfRegisters = 1,
+        nr = 1,
         mr = 1,
         WorkSpaceFactor = nr,
         LhsProgress = 1,
         RhsProgress = 1
       };
+      typedef ResScalar LhsPacket;
+      typedef ResScalar RhsPacket;
+      typedef ResScalar ResPacket;
+      
     };
 
-    template<typename Index, int mr, int nr, bool ConjugateLhs, bool ConjugateRhs>
-    struct gebp_kernel<mpfr::mpreal,mpfr::mpreal,Index,mr,nr,ConjugateLhs,ConjugateRhs>
+
+
+    template<typename Index, typename DataMapper, bool ConjugateLhs, bool ConjugateRhs>
+    struct gebp_kernel<mpfr::mpreal,mpfr::mpreal,Index,DataMapper,1,1,ConjugateLhs,ConjugateRhs>
     {
       typedef mpfr::mpreal mpreal;
 
       EIGEN_DONT_INLINE
-      void operator()(mpreal* res, Index resStride, const mpreal* blockA, const mpreal* blockB, Index rows, Index depth, Index cols, mpreal alpha,
-                      Index strideA=-1, Index strideB=-1, Index offsetA=0, Index offsetB=0, mpreal* /*unpackedB*/ = 0)
+      void operator()(const DataMapper& res, const mpreal* blockA, const mpreal* blockB, 
+                      Index rows, Index depth, Index cols, const mpreal& alpha,
+                      Index strideA=-1, Index strideB=-1, Index offsetA=0, Index offsetB=0)
       {
         mpreal acc1, acc2, tmp;
         
@@ -168,8 +180,9 @@ int main()
           mpreal *C2 = res + (j+1)*resStride;
           for(Index i=0; i<rows; i++)
           {
-            mpreal *B = const_cast<mpreal*>(blockB) + j*strideB + offsetB*actual_nr;
-            mpreal *A = const_cast<mpreal*>(blockA) + i*strideA + offsetA;
+            const mpreal *A = blockA + i*strideA + offsetA;
+            const mpreal *B = blockB + j*strideB + offsetB;
+            
             acc1 = 0;
             acc2 = 0;
             for(Index k=0; k<depth; k++)
@@ -185,13 +198,8 @@ int main()
               B+=actual_nr;
             }
             
-            mpfr_mul(acc1.mpfr_ptr(), acc1.mpfr_ptr(), alpha.mpfr_ptr(), mpreal::get_default_rnd());
-            mpfr_add(C1[i].mpfr_ptr(), C1[i].mpfr_ptr(), acc1.mpfr_ptr(),  mpreal::get_default_rnd());
-            
-            if(actual_nr==2) {
-              mpfr_mul(acc2.mpfr_ptr(), acc2.mpfr_ptr(), alpha.mpfr_ptr(), mpreal::get_default_rnd());
-              mpfr_add(C2[i].mpfr_ptr(), C2[i].mpfr_ptr(), acc2.mpfr_ptr(),  mpreal::get_default_rnd());
-            }
+            mpfr_mul(acc1.mpfr_ptr(), acc1.mpfr_srcptr(), alpha.mpfr_srcptr(), mpreal::get_default_rnd());
+            mpfr_add(res(i,j).mpfr_ptr(), res(i,j).mpfr_srcptr(), acc1.mpfr_srcptr(),  mpreal::get_default_rnd());
           }
         }
       }

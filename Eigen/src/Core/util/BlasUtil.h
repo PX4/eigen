@@ -116,6 +116,60 @@ template<typename Scalar> struct get_factor<Scalar,typename NumTraits<Scalar>::R
   static EIGEN_STRONG_INLINE typename NumTraits<Scalar>::Real run(const Scalar& x) { return numext::real(x); }
 };
 
+template<typename Scalar, typename Index>
+class BlasVectorMapper {
+  public:
+  EIGEN_ALWAYS_INLINE BlasVectorMapper(Scalar *data) : m_data(data) {}
+
+  EIGEN_ALWAYS_INLINE Scalar operator()(Index i) const {
+    return m_data[i];
+  }
+  template <typename Packet, int AlignmentType>
+  EIGEN_ALWAYS_INLINE Packet load(Index i) const {
+    return ploadt<Packet, AlignmentType>(m_data + i);
+  }
+
+  template <typename Packet>
+  bool aligned(Index i) const {
+    return (size_t(m_data+i)%sizeof(Packet))==0;
+  }
+
+  protected:
+  Scalar* m_data;
+};
+
+template<typename Scalar, typename Index, int AlignmentType>
+class BlasLinearMapper {
+  public:
+  typedef typename packet_traits<Scalar>::type Packet;
+  typedef typename packet_traits<Scalar>::half HalfPacket;
+
+  EIGEN_ALWAYS_INLINE BlasLinearMapper(Scalar *data) : m_data(data) {}
+
+  EIGEN_ALWAYS_INLINE void prefetch(int i) const {
+    internal::prefetch(&operator()(i));
+  }
+
+  EIGEN_ALWAYS_INLINE Scalar& operator()(Index i) const {
+    return m_data[i];
+  }
+
+  EIGEN_ALWAYS_INLINE Packet loadPacket(Index i) const {
+    return ploadt<Packet, AlignmentType>(m_data + i);
+  }
+
+  EIGEN_ALWAYS_INLINE HalfPacket loadHalfPacket(Index i) const {
+    return ploadt<HalfPacket, AlignmentType>(m_data + i);
+  }
+
+  EIGEN_ALWAYS_INLINE void storePacket(Index i, const Packet &p) const {
+    pstoret<Scalar, Packet, AlignmentType>(m_data + i, p);
+  }
+
+  protected:
+  Scalar *m_data;
+};
+
 // Lightweight helper class to access matrix coefficients.
 // Yes, this is somehow redundant with Map<>, but this version is much much lighter,
 // and so I hope better compilation performance (time and code quality).

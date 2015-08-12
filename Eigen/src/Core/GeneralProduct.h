@@ -435,9 +435,9 @@ template<> struct gemv_selector<OnTheRight,ColMajor,true>
 
     gemv_static_vector_if<ResScalar,Dest::SizeAtCompileTime,Dest::MaxSizeAtCompileTime,MightCannotUseDest> static_dest;
 
-    bool alphaIsCompatible = (!ComplexByReal) || (numext::imag(actualAlpha)==RealScalar(0));
-    bool evalToDest = EvalToDestAtCompileTime && alphaIsCompatible;
-    
+    const bool alphaIsCompatible = (!ComplexByReal) || (numext::imag(actualAlpha)==RealScalar(0));
+    const bool evalToDest = EvalToDestAtCompileTime && alphaIsCompatible;
+
     RhsScalar compatibleAlpha = get_factor<ResScalar,RhsScalar>::run(actualAlpha);
 
     ei_declare_aligned_stack_constructed_variable(ResScalar,actualDestPtr,dest.size(),

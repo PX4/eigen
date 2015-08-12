@@ -42,6 +42,12 @@
 #include <deque>
 #include <queue>
 #include <list>
+#if __cplusplus >= 201103L
+#include <random>
+#ifdef EIGEN_USE_THREADS
+#include <future>
+#endif
+#endif
 
 // To test that all calls from Eigen code to std::min() and std::max() are
 // protected by parenthesis against macro expansion, the min()/max() macros
@@ -145,20 +151,20 @@ namespace Eigen
     #define VERIFY_RAISES_ASSERT(a)                                                   \
       {                                                                               \
         Eigen::no_more_assert = false;                                                \
-        Eigen::eigen_assert_list.clear();                                                \
-        Eigen::internal::push_assert = true;                                                 \
+        Eigen::eigen_assert_list.clear();                                             \
+        Eigen::internal::push_assert = true;                                          \
         Eigen::report_on_cerr_on_assert_failure = false;                              \
         try {                                                                         \
           a;                                                                          \
           std::cerr << "One of the following asserts should have been triggered:\n";  \
-          for (uint ai=0 ; ai<eigen_assert_list.size() ; ++ai)                           \
-            std::cerr << "  " << eigen_assert_list[ai] << "\n";                          \
+          for (uint ai=0 ; ai<eigen_assert_list.size() ; ++ai)                        \
+            std::cerr << "  " << eigen_assert_list[ai] << "\n";                       \
           VERIFY(Eigen::should_raise_an_assert && # a);                               \
-        } catch (Eigen::eigen_assert_exception) {                                        \
-          Eigen::internal::push_assert = false; VERIFY(true);                                \
+        } catch (Eigen::eigen_assert_exception) {                                     \
+          Eigen::internal::push_assert = false; VERIFY(true);                         \
         }                                                                             \
         Eigen::report_on_cerr_on_assert_failure = true;                               \
-        Eigen::internal::push_assert = false;                                                \
+        Eigen::internal::push_assert = false;                                         \
       }
 
   #else // EIGEN_DEBUG_ASSERTS
@@ -179,7 +185,7 @@ namespace Eigen
           a;                                                      \
           VERIFY(Eigen::should_raise_an_assert && # a);           \
         }                                                         \
-        catch (Eigen::eigen_assert_exception&) { VERIFY(true); }     \
+        catch (Eigen::eigen_assert_exception&) { VERIFY(true); }  \
         Eigen::report_on_cerr_on_assert_failure = true;           \
       }
 

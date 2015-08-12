@@ -52,11 +52,15 @@ template<int SizeAtCompileType> void mixingtypes(int size = SizeAtCompileType)
 
   mf+mf;
   VERIFY_RAISES_ASSERT(mf+md);
+#ifndef EIGEN_HAS_STD_RESULT_OF
+  // this one does not even compile with C++11
   VERIFY_RAISES_ASSERT(mf+mcf);
-  VERIFY_RAISES_ASSERT(vf=vd);
-  VERIFY_RAISES_ASSERT(vf+=vd);
-  VERIFY_RAISES_ASSERT(mcd=md);
-
+#endif
+  // the following do not even compile since the introduction of evaluators
+//   VERIFY_RAISES_ASSERT(vf=vd);
+//   VERIFY_RAISES_ASSERT(vf+=vd);
+//   VERIFY_RAISES_ASSERT(mcd=md);
+  
   // check scalar products
   VERIFY_IS_APPROX(vcf * sf , vcf * complex<float>(sf));
   VERIFY_IS_APPROX(sd * vcd, complex<double>(sd) * vcd);

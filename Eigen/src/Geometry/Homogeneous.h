@@ -104,7 +104,14 @@ template<typename MatrixType,int _Direction> class Homogeneous
     operator* (const Transform<Scalar,Dim,Mode,Options>& lhs, const Homogeneous& rhs)
     {
       eigen_assert(int(Direction)==Vertical);
-      return internal::homogeneous_left_product_impl<Homogeneous,Transform<Scalar,Dim,Mode,Options> >(lhs,rhs.m_matrix);
+      return Product<Transform<Scalar,Dim,Mode,Options>, Homogeneous>(lhs,rhs);
+    }
+
+    template<typename Func>
+    EIGEN_STRONG_INLINE typename internal::result_of<Func(Scalar,Scalar)>::type
+    redux(const Func& func) const
+    {
+      return func(m_matrix.redux(func), Scalar(1));
     }
 
   protected:

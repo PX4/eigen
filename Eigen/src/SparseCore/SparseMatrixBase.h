@@ -103,6 +103,8 @@ template<typename Derived> class SparseMatrixBase : public EigenBase<Derived>
                         CwiseUnaryOp<internal::scalar_conjugate_op<Scalar>, Eigen::Transpose<const Derived> >,
                         Transpose<const Derived>
                      >::type AdjointReturnType;
+    typedef Transpose<Derived> TransposeReturnType;
+    typedef typename internal::add_const<Transpose<const Derived> >::type ConstTransposeReturnType;
 
 
     typedef SparseMatrix<Scalar, Flags&RowMajorBit ? RowMajor : ColMajor, Index> PlainObject;
@@ -382,10 +384,15 @@ template<typename Derived> class SparseMatrixBase : public EigenBase<Derived>
     #endif // EIGEN2_SUPPORT
 
     template<int Mode>
-    inline const SparseTriangularView<Derived, Mode> triangularView() const;
+    inline const TriangularView<const Derived, Mode> triangularView() const;
+    
+    template<unsigned int UpLo> struct SelfAdjointViewReturnType { typedef SparseSelfAdjointView<Derived, UpLo> Type; };
+    template<unsigned int UpLo> struct ConstSelfAdjointViewReturnType { typedef const SparseSelfAdjointView<const Derived, UpLo> Type; };
 
-    template<unsigned int UpLo> inline const SparseSelfAdjointView<Derived, UpLo> selfadjointView() const;
-    template<unsigned int UpLo> inline SparseSelfAdjointView<Derived, UpLo> selfadjointView();
+    template<unsigned int UpLo> inline 
+    typename ConstSelfAdjointViewReturnType<UpLo>::Type selfadjointView() const;
+    template<unsigned int UpLo> inline
+    typename SelfAdjointViewReturnType<UpLo>::Type selfadjointView();
 
     template<typename OtherDerived> Scalar dot(const MatrixBase<OtherDerived>& other) const;
     template<typename OtherDerived> Scalar dot(const SparseMatrixBase<OtherDerived>& other) const;
@@ -408,16 +415,6 @@ template<typename Derived> class SparseMatrixBase : public EigenBase<Derived>
     typedef Block<const Derived,Dynamic,Dynamic,true> ConstInnerVectorsReturnType;
     InnerVectorsReturnType innerVectors(Index outerStart, Index outerSize);
     const ConstInnerVectorsReturnType innerVectors(Index outerStart, Index outerSize) const;
-
-    /** \internal use operator= */
-    template<typename DenseDerived>
-    void evalTo(MatrixBase<DenseDerived>& dst) const
-    {
-      dst.setZero();
-      for (Index j=0; j<outerSize(); ++j)
-        for (typename Derived::InnerIterator i(derived(),j); i; ++i)
-          dst.coeffRef(i.row(),i.col()) = i.value();
-    }
 
     Matrix<Scalar,RowsAtCompileTime,ColsAtCompileTime> toDense() const
     {

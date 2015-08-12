@@ -17,9 +17,9 @@ namespace Eigen {
   *
   * This class allows to approximately solve for A.x = b problems assuming A is a diagonal matrix.
   * In other words, this preconditioner neglects all off diagonal entries and, in Eigen's language, solves for:
-  * \code
-  * A.diagonal().asDiagonal() . x = b
-  * \endcode
+    \code
+    A.diagonal().asDiagonal() . x = b
+    \endcode
   *
   * \tparam _Scalar the type of the scalar.
   *
@@ -28,6 +28,7 @@ namespace Eigen {
   *
   * \note A variant that has yet to be implemented would attempt to preserve the norm of each column.
   *
+  * \sa class LeastSquareDiagonalPreconditioner, class ConjugateGradient
   */
 template <typename _Scalar>
 class DiagonalPreconditioner
@@ -100,22 +101,69 @@ class DiagonalPreconditioner
     bool m_isInitialized;
 };
 
-namespace internal {
-
-template<typename _MatrixType, typename Rhs>
-struct solve_retval<DiagonalPreconditioner<_MatrixType>, Rhs>
-  : solve_retval_base<DiagonalPreconditioner<_MatrixType>, Rhs>
+/** \ingroup IterativeLinearSolvers_Module
+  * \brief Jacobi preconditioner for LeastSquaresConjugateGradient
+  *
+  * This class allows to approximately solve for A' A x  = A' b problems assuming A' A is a diagonal matrix.
+  * In other words, this preconditioner neglects all off diagonal entries and, in Eigen's language, solves for:
+    \code
+    (A.adjoint() * A).diagonal().asDiagonal() * x = b
+    \endcode
+  *
+  * \tparam _Scalar the type of the scalar.
+  *
+  * The diagonal entries are pre-inverted and stored into a dense vector.
+  * 
+  * \sa class LeastSquaresConjugateGradient, class DiagonalPreconditioner
+  */
+template <typename _Scalar>
+class LeastSquareDiagonalPreconditioner : public DiagonalPreconditioner<_Scalar>
 {
-  typedef DiagonalPreconditioner<_MatrixType> Dec;
-  EIGEN_MAKE_SOLVE_HELPERS(Dec,Rhs)
+    typedef _Scalar Scalar;
+    typedef typename NumTraits<Scalar>::Real RealScalar;
+    typedef DiagonalPreconditioner<_Scalar> Base;
+    using Base::m_invdiag;
+  public:
 
-  template<typename Dest> void evalTo(Dest& dst) const
-  {
-    dec()._solve(rhs(),dst);
-  }
+    LeastSquareDiagonalPreconditioner() : Base() {}
+
+    template<typename MatType>
+    explicit LeastSquareDiagonalPreconditioner(const MatType& mat) : Base()
+    {
+      compute(mat);
+    }
+
+    template<typename MatType>
+    LeastSquareDiagonalPreconditioner& analyzePattern(const MatType& )
+    {
+      return *this;
+    }
+    
+    template<typename MatType>
+    LeastSquareDiagonalPreconditioner& factorize(const MatType& mat)
+    {
+      // Compute the inverse squared-norm of each column of mat
+      m_invdiag.resize(mat.cols());
+      for(Index j=0; j<mat.outerSize(); ++j)
+      {
+        RealScalar sum = mat.innerVector(j).squaredNorm();
+        if(sum>0)
+          m_invdiag(j) = RealScalar(1)/sum;
+        else
+          m_invdiag(j) = RealScalar(1);
+      }
+      Base::m_isInitialized = true;
+      return *this;
+    }
+    
+    template<typename MatType>
+    LeastSquareDiagonalPreconditioner& compute(const MatType& mat)
+    {
+      return factorize(mat);
+    }
+
+  protected:
 };
-
-}
 
 /** \ingroup IterativeLinearSolvers_Module
   * \brief A naive preconditioner which approximates any matrix as the identity matrix

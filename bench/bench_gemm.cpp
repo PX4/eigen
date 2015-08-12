@@ -129,31 +129,63 @@ int main(int argc, char ** argv)
   int tries = 2;  // number of tries, we keep the best
 
   int s = 2048;
-  int cache_size = -1;
+  int m = s;
+  int n = s;
+  int p = s;
+  int cache_size1=-1, cache_size2=l2, cache_size3 = 0;
 
   bool need_help = false;
   for (int i=1; i<argc; ++i)
   {
-    if(argv[i][0]=='s')
-      s = atoi(argv[i]+1);
-    else if(argv[i][0]=='c')
-      cache_size = atoi(argv[i]+1);
-    else if(argv[i][0]=='t')
-      tries = atoi(argv[i]+1);
-    else if(argv[i][0]=='p')
-      rep = atoi(argv[i]+1);
+    if(argv[i][0]=='-')
+    {
+      if(argv[i][1]=='s')
+      {
+        ++i;
+        s = atoi(argv[i++]);
+        m = n = p = s;
+        if(argv[i][0]!='-')
+        {
+          n = atoi(argv[i++]);
+          p = atoi(argv[i++]);
+        }
+      }
+      else if(argv[i][1]=='c')
+      {
+        ++i;
+        cache_size1 = atoi(argv[i++]);
+        if(argv[i][0]!='-')
+        {
+          cache_size2 = atoi(argv[i++]);
+          if(argv[i][0]!='-')
+            cache_size3 = atoi(argv[i++]);
+        }
+      }
+      else if(argv[i][1]=='t')
+      {
+        ++i;
+        tries = atoi(argv[i++]);
+      }
+      else if(argv[i][1]=='p')
+      {
+        ++i;
+        rep = atoi(argv[i++]);
+      }
+    }
     else
       need_help = true;
   }
 
   if(need_help)
   {
-    std::cout << argv[0] << " s<matrix size> c<cache size> t<nb tries> p<nb repeats>\n";
+    std::cout << argv[0] << " -s <matrix sizes> -c <cache sizes> -t <nb tries> -p <nb repeats>\n";
+    std::cout << "   <matrix sizes> : size\n";
+    std::cout << "   <matrix sizes> : rows columns depth\n";
     return 1;
   }
 
-  if(cache_size>0)
-    setCpuCacheSizes(cache_size,96*cache_size);
+ if(cache_size1>0)
+   setCpuCacheSizes(cache_size1,cache_size2,cache_size3);
 
   int m = s;
   int n = s;
