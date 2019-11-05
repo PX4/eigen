@@ -130,6 +130,9 @@ struct significant_decimals_impl
 template<typename Derived>
 std::ostream & print_matrix(std::ostream & s, const Derived& _m, const IOFormat& fmt)
 {
+  using internal::is_same;
+  using internal::conditional;
+
   if(_m.size() == 0)
   {
     s << fmt.matPrefix << fmt.matSuffix;
@@ -138,6 +141,22 @@ std::ostream & print_matrix(std::ostream & s, const Derived& _m, const IOFormat&
   
   typename Derived::Nested m = _m;
   typedef typename Derived::Scalar Scalar;
+  typedef typename
+      conditional<
+          is_same<Scalar, char>::value ||
+            is_same<Scalar, unsigned char>::value ||
+            is_same<Scalar, numext::int8_t>::value ||
+            is_same<Scalar, numext::uint8_t>::value,
+          int,
+          typename conditional<
+              is_same<Scalar, std::complex<char> >::value ||
+                is_same<Scalar, std::complex<unsigned char> >::value ||
+                is_same<Scalar, std::complex<numext::int8_t> >::value ||
+                is_same<Scalar, std::complex<numext::uint8_t> >::value,
+              std::complex<int>,
+              const Scalar&
+            >::type
+        >::type PrintType;
 
   Index width = 0;
 
@@ -174,7 +193,7 @@ std::ostream & print_matrix(std::ostream & s, const Derived& _m, const IOFormat&
       {
         std::stringstream sstr;
         sstr.copyfmt(s);
-        sstr << m.coeff(i,j);
+        sstr << static_cast<PrintType>(m.coeff(i,j));
         width = std::max<Index>(width, Index(sstr.str().length()));
       }
   }
@@ -190,7 +209,7 @@ std::ostream & print_matrix(std::ostream & s, const Derived& _m, const IOFormat&
       s.fill(fmt.fill);
       s.width(width);
     }
-    s << m.coeff(i, 0);
+    s << static_cast<PrintType>(m.coeff(i, 0));
     for(Index j = 1; j < m.cols(); ++j)
     {
       s << fmt.coeffSeparator;
@@ -198,7 +217,7 @@ std::ostream & print_matrix(std::ostream & s, const Derived& _m, const IOFormat&
         s.fill(fmt.fill);
         s.width(width);
       }
-      s << m.coeff(i, j);
+      s << static_cast<PrintType>(m.coeff(i, j));
     }
     s << fmt.rowSuffix;
     if( i < m.rows() - 1)
