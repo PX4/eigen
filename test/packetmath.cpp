@@ -127,9 +127,6 @@ template<typename Scalar,typename Packet> void packetmath()
   VERIFY((!PacketTraits::Vectorizable) || PacketTraits::HasAdd);
   VERIFY((!PacketTraits::Vectorizable) || PacketTraits::HasSub);
   VERIFY((!PacketTraits::Vectorizable) || PacketTraits::HasMul);
-  VERIFY((!PacketTraits::Vectorizable) || PacketTraits::HasNegate);
-  // Disabled as it is not clear why it would be mandatory to support division.
-  //VERIFY((internal::is_same<Scalar,int>::value) || (!PacketTraits::Vectorizable) || PacketTraits::HasDiv);
 
   CHECK_CWISE2_IF(PacketTraits::HasAdd, REF_ADD,  internal::padd);
   CHECK_CWISE2_IF(PacketTraits::HasSub, REF_SUB,  internal::psub);
@@ -139,7 +136,8 @@ template<typename Scalar,typename Packet> void packetmath()
   CHECK_CWISE1(internal::pnot, internal::pnot);
   CHECK_CWISE1(internal::pzero, internal::pzero);
   CHECK_CWISE1(internal::ptrue, internal::ptrue);
-  CHECK_CWISE1(internal::negate, internal::pnegate);
+  if (PacketTraits::HasNegate)
+    CHECK_CWISE1(internal::negate, internal::pnegate);
   CHECK_CWISE1(numext::conj, internal::pconj);
 
   for(int offset=0;offset<3;++offset)
