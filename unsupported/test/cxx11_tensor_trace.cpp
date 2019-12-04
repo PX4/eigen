@@ -37,6 +37,7 @@ static void test_all_dimensions_trace() {
   VERIFY_IS_EQUAL(result1(), sum);
 
   Tensor<float, 5, DataLayout> tensor2(7, 7, 7, 7, 7);
+  tensor2.setRandom();
   array<ptrdiff_t, 5> dims = { { 2, 1, 0, 3, 4 } };
   Tensor<float, 0, DataLayout> result2 = tensor2.trace(dims);
   VERIFY_IS_EQUAL(result2.rank(), 0);
