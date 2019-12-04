@@ -61,10 +61,10 @@ fi
 
 
 if [ ! -d "eigen_src" ]; then
-  hg clone https://bitbucket.org/eigen/eigen eigen_src
+  git clone https://gitlab.com/libeigen/eigen.git eigen_src
 else
   cd eigen_src
-  hg pull -u
+  git pull
   cd ..
 fi
 
@@ -151,8 +151,8 @@ do
     rev2=`echo $rev | cut -f 2 -d':'`
     echo "Testing rev $rev, $rev2"
     cd eigen_src
-    hg up -C $rev2 > /dev/null
-    actual_rev=`hg identify | cut -f1 -d' '`
+    git checkout $rev2 > /dev/null
+    actual_rev=`git rev-parse --short HEAD`
     cd ..
     
     test_current $actual_rev float                  $WORKING_DIR_PREFIX"s"$bench
