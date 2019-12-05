@@ -70,6 +70,9 @@ void alignedvector3()
     VERIFY_IS_APPROX(f6,r1-r4);
   }
   
+  FastType f8, f9(0,0,0);
+  VERIFY_IS_APPROX(f9-f1,-f1);
+
   std::stringstream ss1, ss2;
   ss1 << f1;
   ss2 << r1;
