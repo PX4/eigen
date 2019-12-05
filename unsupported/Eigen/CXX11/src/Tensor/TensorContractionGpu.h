@@ -531,7 +531,7 @@ EigenContractionKernel(const LhsMapper lhs, const RhsMapper rhs,
 template<typename Index, typename LhsMapper,
          typename RhsMapper, typename OutputMapper, bool CHECK_LHS_BOUNDARY,
          bool CHECK_RHS_BOUNDARY>
-__device__ EIGEN_STRONG_INLINE void
+__device__ __forceinline__ void
 EigenFloatContractionKernelInternal16x16(const LhsMapper lhs, const RhsMapper rhs,
                        const OutputMapper output, float2 lhs_shmem2[][16],
                        float2 rhs_shmem2[][8], const Index m_size,
@@ -771,7 +771,7 @@ EigenFloatContractionKernelInternal16x16(const LhsMapper lhs, const RhsMapper rh
 template<typename Index, typename LhsMapper,
          typename RhsMapper, typename OutputMapper, bool CHECK_LHS_BOUNDARY,
          bool CHECK_RHS_BOUNDARY>
-__device__ EIGEN_STRONG_INLINE void
+__device__ __forceinline__ void
 EigenFloatContractionKernelInternal(const LhsMapper lhs, const RhsMapper rhs,
                        const OutputMapper output, float2 lhs_shmem2[][32],
                        float2 rhs_shmem2[][8], const Index m_size,
@@ -1335,7 +1335,7 @@ struct TensorEvaluator<const TensorContractionOp<Indices, LeftArgType, RightArgT
     const Index m_blocks = (m + 63) / 64;
     const Index n_blocks = (n + 63) / 64;
     const dim3 num_blocks(m_blocks, n_blocks, 1);
-    const dim3 block_size(8, 8, 8);
+    const dim3 block_size(8, 8, 1);
     LAUNCH_GPU_KERNEL((EigenContractionKernel<Scalar, Index, LhsMapper, RhsMapper, OutputMapper>), num_blocks, block_size, 0, device, lhs, rhs, output, m, n, k);
     }
   };
