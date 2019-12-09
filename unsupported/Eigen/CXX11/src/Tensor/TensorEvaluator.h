@@ -890,6 +890,19 @@ struct TensorEvaluator<const TensorSelectOp<IfArgType, ThenArgType, ElseArgType>
     m_elseImpl.evalSubExprsIfNeeded(NULL);
     return true;
   }
+
+#ifdef EIGEN_USE_THREADS
+  template <typename EvalSubExprsCallback>
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void evalSubExprsIfNeededAsync(
+      EvaluatorPointerType, EvalSubExprsCallback done) {
+    m_condImpl.evalSubExprsIfNeeded(nullptr, [this, done](bool) {
+      m_thenImpl.evalSubExprsIfNeeded(nullptr, [this, done](bool) {
+        m_elseImpl.evalSubExprsIfNeeded(nullptr, [done](bool) { done(true); });
+      });
+    });
+  }
+#endif  // EIGEN_USE_THREADS
+
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void cleanup() {
     m_condImpl.cleanup();
     m_thenImpl.cleanup();
