@@ -1335,7 +1335,7 @@ struct TensorEvaluator<const TensorContractionOp<Indices, LeftArgType, RightArgT
     const Index m_blocks = (m + 63) / 64;
     const Index n_blocks = (n + 63) / 64;
     const dim3 num_blocks(m_blocks, n_blocks, 1);
-    const dim3 block_size(8, 8, 1);
+    const dim3 block_size(8, 8, 8);
     LAUNCH_GPU_KERNEL((EigenContractionKernel<Scalar, Index, LhsMapper, RhsMapper, OutputMapper>), num_blocks, block_size, 0, device, lhs, rhs, output, m, n, k);
     }
   };
