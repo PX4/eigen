@@ -65,40 +65,6 @@ enum TensorBlockShapeType {
   kSkewedInnerDims
 };
 
-struct TensorOpResourceRequirements {
-  TensorBlockShapeType block_shape;
-  Index block_total_size;
-  // TODO(andydavis) Add 'target_num_threads' to support communication of
-  // thread-resource requirements. This will allow ops deep in the
-  // expression tree (like reductions) to communicate resources
-  // requirements based on local state (like the total number of reductions
-  // to be computed).
-  TensorOpResourceRequirements(TensorBlockShapeType shape,
-                               const Index size)
-      : block_shape(shape), block_total_size(size) {}
-};
-
-// Tries to merge multiple resource requirements.
-EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void MergeResourceRequirements(
-    const std::vector<TensorOpResourceRequirements>& resources,
-    TensorBlockShapeType* block_shape, Index* block_total_size) {
-  if (resources.empty()) {
-    return;
-  }
-  // TODO(andydavis) Implement different policies (i.e. revert to a default
-  // policy if block shapes/sizes conflict).
-  *block_shape = resources[0].block_shape;
-  *block_total_size = resources[0].block_total_size;
-  for (std::vector<TensorOpResourceRequirements>::size_type i = 1; i < resources.size(); ++i) {
-    if (resources[i].block_shape == kSkewedInnerDims &&
-        *block_shape != kSkewedInnerDims) {
-      *block_shape = kSkewedInnerDims;
-    }
-    *block_total_size =
-        numext::maxi(*block_total_size, resources[i].block_total_size);
-  }
-}
-
 /**
  * \class TensorBlock
  * \ingroup CXX11_Tensor_Module

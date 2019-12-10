@@ -182,25 +182,18 @@ class TensorExecutor<Expression, DefaultDevice, Vectorizable,
         TensorBlockScratch;
 
     Evaluator evaluator(expr, device);
-    Index total_size = array_prod(evaluator.dimensions());
-    Index cache_size = device.firstLevelCacheSize() / sizeof(Scalar);
 
     // TODO(ezhulenev): Do not use tiling for small tensors?
     const bool needs_assign = evaluator.evalSubExprsIfNeeded(NULL);
 
     if (needs_assign) {
-      // Size tensor blocks to fit in cache (or requested target block size).
-      Index block_total_size = numext::mini(cache_size, total_size);
-      TensorBlockShapeType block_shape = kSkewedInnerDims;
       // Query expression tree for desired block size/shape.
-      std::vector<TensorOpResourceRequirements> resources;
-      evaluator.getResourceRequirements(&resources);
-      MergeResourceRequirements(resources, &block_shape, &block_total_size);
+      const TensorBlockV2ResourceRequirements requirements =
+          evaluator.getResourceRequirements();
 
-      TensorBlockMapper block_mapper(
-          TensorBlockDimensions(evaluator.dimensions()), block_shape,
-          block_total_size);
-      block_total_size = block_mapper.block_dims_total_size();
+      const TensorBlockMapper block_mapper(
+          TensorBlockDimensions(evaluator.dimensions()), requirements.shapeV1(),
+          requirements.size);
 
       // Share scratch memory allocator between all blocks.
       TensorBlockScratch scratch(device);
@@ -268,14 +261,10 @@ template <typename Evaluator, typename TensorBlockMapper, bool Vectorizable>
 TensorExecutorTilingContext<TensorBlockMapper> GetTensorExecutorTilingContext(
     const ThreadPoolDevice& device, const Evaluator& evaluator,
     bool allocate_buffer = true) {
-  // Prefer blocks skewed toward inner dimension.
-  TensorBlockShapeType block_shape = kSkewedInnerDims;
-  Index block_total_size = 0;
-
   // Query expression tree for desired block size/shape.
-  std::vector<TensorOpResourceRequirements> resources;
-  evaluator.getResourceRequirements(&resources);
-  MergeResourceRequirements(resources, &block_shape, &block_total_size);
+  const TensorBlockV2ResourceRequirements requirements =
+      evaluator.getResourceRequirements();
+
   int num_threads = device.numThreads();
 
   // Estimate minimum block size based on cost.
@@ -285,7 +274,7 @@ TensorExecutorTilingContext<TensorBlockMapper> GetTensorExecutorTilingContext(
 
   TensorBlockMapper block_mapper(
       typename TensorBlockMapper::Dimensions(evaluator.dimensions()),
-      block_shape, block_size);
+      requirements.shapeV1(), block_size);
 
   block_size = block_mapper.block_dims_total_size();
   const size_t align = numext::maxi(EIGEN_MAX_ALIGN_BYTES, 1);

@@ -248,12 +248,13 @@ struct TensorEvaluator<const TensorReverseOp<ReverseDimensions, ArgType>, Device
     return rslt;
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void getResourceRequirements(
-      std::vector<internal::TensorOpResourceRequirements>* resources) const {
-    Eigen::Index block_total_size_max = numext::maxi<Eigen::Index>(
-        1, m_device.lastLevelCacheSize() / sizeof(Scalar));
-    resources->push_back(internal::TensorOpResourceRequirements(
-        internal::kSkewedInnerDims, block_total_size_max));
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
+  internal::TensorBlockV2ResourceRequirements getResourceRequirements() const {
+    const size_t target_block_size =
+        numext::maxi<size_t>(1, m_device.lastLevelCacheSize() / sizeof(Scalar));
+    return internal::TensorBlockV2ResourceRequirements::merge(
+        {internal::TensorBlockV2ShapeType::kSkewedInnerDims, target_block_size},
+        m_impl.getResourceRequirements());
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorBlockV2

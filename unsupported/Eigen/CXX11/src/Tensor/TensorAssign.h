@@ -208,10 +208,11 @@ struct TensorEvaluator<const TensorAssignOp<LeftArgType, RightArgType>, Device>
            TensorOpCost(0, sizeof(CoeffReturnType), 0, vectorized, PacketSize);
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void getResourceRequirements(
-      std::vector<internal::TensorOpResourceRequirements>* resources) const {
-    m_leftImpl.getResourceRequirements(resources);
-    m_rightImpl.getResourceRequirements(resources);
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
+  internal::TensorBlockV2ResourceRequirements getResourceRequirements() const {
+    return internal::TensorBlockV2ResourceRequirements::merge(
+        m_leftImpl.getResourceRequirements(),
+        m_rightImpl.getResourceRequirements());
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void evalBlockV2(

@@ -198,10 +198,9 @@ struct TensorEvaluator<const TensorReshapingOp<NewDimensions, ArgType>, Device>
     return m_impl.costPerCoeff(vectorized);
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void getResourceRequirements(
-      std::vector<internal::TensorOpResourceRequirements>*) const {
-    // TODO(ezhulenev): If we'll ever support block evaluation without raw
-    // access we'll need to get requirements from `m_impl`.
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
+  internal::TensorBlockV2ResourceRequirements getResourceRequirements() const {
+    return internal::TensorBlockV2ResourceRequirements::any();
   }
 
   // required in block(OutputTensorBlock* output_block) const
@@ -636,13 +635,13 @@ struct TensorEvaluator<const TensorSlicingOp<StartIndices, Sizes, ArgType>, Devi
     return m_impl.costPerCoeff(vectorized) + TensorOpCost(0, 0, m_is_identity ? 1 : NumDims);
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void getResourceRequirements(
-      std::vector<internal::TensorOpResourceRequirements>* resources) const {
-    Eigen::Index block_total_size_max = numext::maxi<Eigen::Index>(
-        1, m_device.lastLevelCacheSize() / sizeof(Scalar));
-    resources->push_back(internal::TensorOpResourceRequirements(
-        internal::kSkewedInnerDims, block_total_size_max));
-    m_impl.getResourceRequirements(resources);
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
+  internal::TensorBlockV2ResourceRequirements getResourceRequirements() const {
+    const size_t target_block_size =
+        numext::maxi<size_t>(1, m_device.lastLevelCacheSize() / sizeof(Scalar));
+    return internal::TensorBlockV2ResourceRequirements::merge(
+        {internal::TensorBlockV2ShapeType::kSkewedInnerDims, target_block_size},
+        m_impl.getResourceRequirements());
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorBlockV2

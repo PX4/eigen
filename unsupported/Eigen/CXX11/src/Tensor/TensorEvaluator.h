@@ -149,8 +149,10 @@ struct TensorEvaluator
                         PacketType<CoeffReturnType, Device>::size);
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void getResourceRequirements(
-      std::vector<internal::TensorOpResourceRequirements>*) const {}
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
+  internal::TensorBlockV2ResourceRequirements getResourceRequirements() const {
+    return internal::TensorBlockV2ResourceRequirements::any();
+  }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorBlockV2
   blockV2(TensorBlockDesc& desc, TensorBlockScratch& scratch,
@@ -320,8 +322,10 @@ struct TensorEvaluator<const Derived, Device>
                         PacketType<CoeffReturnType, Device>::size);
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void getResourceRequirements(
-      std::vector<internal::TensorOpResourceRequirements>*) const {}
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
+  internal::TensorBlockV2ResourceRequirements getResourceRequirements() const {
+    return internal::TensorBlockV2ResourceRequirements::any();
+  }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorBlockV2
   blockV2(TensorBlockDesc& desc, TensorBlockScratch& scratch,
@@ -517,9 +521,9 @@ struct TensorEvaluator<const TensorCwiseUnaryOp<UnaryOp, ArgType>, Device>
         TensorOpCost(0, 0, functor_cost, vectorized, PacketSize);
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void getResourceRequirements(
-      std::vector<internal::TensorOpResourceRequirements>* resources) const {
-    m_argImpl.getResourceRequirements(resources);
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
+  internal::TensorBlockV2ResourceRequirements getResourceRequirements() const {
+    return m_argImpl.getResourceRequirements();
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorBlockV2
@@ -655,10 +659,11 @@ struct TensorEvaluator<const TensorCwiseBinaryOp<BinaryOp, LeftArgType, RightArg
            TensorOpCost(0, 0, functor_cost, vectorized, PacketSize);
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void getResourceRequirements(
-      std::vector<internal::TensorOpResourceRequirements>* resources) const {
-    m_leftImpl.getResourceRequirements(resources);
-    m_rightImpl.getResourceRequirements(resources);
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
+  internal::TensorBlockV2ResourceRequirements getResourceRequirements() const {
+    return internal::TensorBlockV2ResourceRequirements::merge(
+        m_leftImpl.getResourceRequirements(),
+        m_rightImpl.getResourceRequirements());
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorBlockV2
@@ -934,11 +939,13 @@ struct TensorEvaluator<const TensorSelectOp<IfArgType, ThenArgType, ElseArgType>
         .cwiseMax(m_elseImpl.costPerCoeff(vectorized));
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void getResourceRequirements(
-      std::vector<internal::TensorOpResourceRequirements>* resources) const {
-    m_condImpl.getResourceRequirements(resources);
-    m_thenImpl.getResourceRequirements(resources);
-    m_elseImpl.getResourceRequirements(resources);
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
+  internal::TensorBlockV2ResourceRequirements getResourceRequirements() const {
+    return internal::TensorBlockV2ResourceRequirements::merge(
+        m_condImpl.getResourceRequirements(),
+        internal::TensorBlockV2ResourceRequirements::merge(
+            m_thenImpl.getResourceRequirements(),
+            m_elseImpl.getResourceRequirements()));
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorBlockV2

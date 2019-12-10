@@ -616,17 +616,16 @@ struct TensorEvaluator<const TensorBroadcastingOp<Broadcast, ArgType>, Device>
            TensorOpCost(0, 0, compute_cost, vectorized, PacketSize);
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void getResourceRequirements(
-      std::vector<internal::TensorOpResourceRequirements>* resources) const {
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
+  internal::TensorBlockV2ResourceRequirements getResourceRequirements() const {
     // TODO(wuke): Targeting L1 size is 30% faster than targeting L{-1} on large
     // tensors. But this might need further tuning.
-    Eigen::Index block_total_size_max = numext::maxi<Eigen::Index>(
+    const size_t target_block_size = numext::maxi<size_t>(
         1, m_device.firstLevelCacheSize() / sizeof(Scalar));
 
-    resources->push_back(internal::TensorOpResourceRequirements(
-        internal::kSkewedInnerDims, block_total_size_max));
-
-    m_impl.getResourceRequirements(resources);
+    return internal::TensorBlockV2ResourceRequirements::merge(
+        {internal::TensorBlockV2ShapeType::kSkewedInnerDims, target_block_size},
+        m_impl.getResourceRequirements());
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorBlockV2

@@ -164,9 +164,9 @@ struct TensorEvaluator<const TensorEvalToOp<ArgType, MakePointer_>, Device>
     internal::pstoret<CoeffReturnType, PacketReturnType, Aligned>(m_buffer + i, m_impl.template packet<TensorEvaluator<ArgType, Device>::IsAligned ? Aligned : Unaligned>(i));
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void getResourceRequirements(
-      std::vector<internal::TensorOpResourceRequirements>* resources) const {
-    m_impl.getResourceRequirements(resources);
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
+  internal::TensorBlockV2ResourceRequirements getResourceRequirements() const {
+    return m_impl.getResourceRequirements();
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void evalBlockV2(

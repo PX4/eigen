@@ -244,18 +244,19 @@ struct TensorEvaluator<const TensorShufflingOp<Shuffle, ArgType>, Device>
     return PacketLoader<LoadMode, Self, TensorEvaluator<ArgType, Device>::PacketAccess>::Run(*this, index);
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void getResourceRequirements(
-      std::vector<internal::TensorOpResourceRequirements>* resources) const {
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
+  internal::TensorBlockV2ResourceRequirements getResourceRequirements() const {
     static const int inner_dim =
         Layout == static_cast<int>(ColMajor) ? 0 : NumDims - 1;
-    const bool inner_dim_shuffled = m_shuffle[inner_dim] != inner_dim;
 
-    Eigen::Index block_total_size_max = numext::maxi<Eigen::Index>(
+    const size_t target_block_size = numext::maxi<size_t>(
         1, m_device.firstLevelCacheSize() / sizeof(Scalar));
-    resources->push_back(internal::TensorOpResourceRequirements(
-        inner_dim_shuffled ? internal::kUniformAllDims
-                           : internal::kSkewedInnerDims,
-        block_total_size_max));
+
+    const bool inner_dim_shuffled = m_shuffle[inner_dim] != inner_dim;
+    return {inner_dim_shuffled
+                ? internal::TensorBlockV2ShapeType::kUniformAllDims
+                : internal::TensorBlockV2ShapeType::kSkewedInnerDims,
+            target_block_size};
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorBlockV2
