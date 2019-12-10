@@ -82,7 +82,8 @@ struct TensorBlockV2ResourceRequirements {
                : internal::kSkewedInnerDims;
   }
 
-  static TensorBlockV2ResourceRequirements
+  EIGEN_DEVICE_FUNC
+  static EIGEN_STRONG_INLINE TensorBlockV2ResourceRequirements
   merge(const TensorBlockV2ResourceRequirements &lhs,
         const TensorBlockV2ResourceRequirements &rhs) {
     return {merge(lhs.shape_type, rhs.shape_type), merge(rhs.size, lhs.size)};
@@ -91,19 +92,22 @@ struct TensorBlockV2ResourceRequirements {
   // This is a resource requirement that should be returned from expressions
   // that do not have any block evaluation preference (e.g. default tensor
   // expression with raw buffer access).
-  static TensorBlockV2ResourceRequirements any() {
+  EIGEN_DEVICE_FUNC
+  static EIGEN_STRONG_INLINE TensorBlockV2ResourceRequirements any() {
     return {TensorBlockV2ShapeType::kUniformAllDims, 1};
   }
 
 private:
   using Requirements = TensorBlockV2ResourceRequirements;
 
-  static size_t merge(size_t lhs_size, size_t rhs_size) {
+  EIGEN_DEVICE_FUNC
+  static EIGEN_STRONG_INLINE size_t merge(size_t lhs_size, size_t rhs_size) {
     return numext::maxi(lhs_size, rhs_size);
   }
 
-  static TensorBlockV2ShapeType merge(TensorBlockV2ShapeType lhs,
-                                      TensorBlockV2ShapeType rhs) {
+  EIGEN_DEVICE_FUNC
+  static EIGEN_STRONG_INLINE TensorBlockV2ShapeType merge(TensorBlockV2ShapeType lhs,
+							  TensorBlockV2ShapeType rhs) {
     return (lhs == TensorBlockV2ShapeType::kSkewedInnerDims ||
             rhs == TensorBlockV2ShapeType::kSkewedInnerDims)
                ? TensorBlockV2ShapeType::kSkewedInnerDims
