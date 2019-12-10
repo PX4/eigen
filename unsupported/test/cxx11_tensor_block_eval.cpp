@@ -61,21 +61,21 @@ static TensorBlockParams<NumDims> RandomBlock(DSizes<Index, NumDims> dims,
 template <int Layout, int NumDims>
 static TensorBlockParams<NumDims> SkewedInnerBlock(
     DSizes<Index, NumDims> dims) {
-  using BlockMapper = internal::TensorBlockMapper<int, Index, NumDims, Layout>;
+  using BlockMapper = internal::TensorBlockV2Mapper<NumDims, Layout, Index>;
   BlockMapper block_mapper(dims,
-                           internal::TensorBlockShapeType::kSkewedInnerDims,
-                           internal::random<Index>(1, dims.TotalSize()));
+                           {internal::TensorBlockV2ShapeType::kSkewedInnerDims,
+                            internal::random<size_t>(1, dims.TotalSize())});
 
-  Index total_blocks = block_mapper.total_block_count();
+  Index total_blocks = block_mapper.blockCount();
   Index block_index = internal::random<Index>(0, total_blocks - 1);
-  auto block = block_mapper.GetBlockForIndex(block_index, nullptr);
-  DSizes<Index, NumDims> sizes = block.block_sizes();
+  auto block = block_mapper.blockDescriptor(block_index);
+  DSizes<Index, NumDims> sizes = block.dimensions();
 
   auto strides = internal::strides<Layout>(dims);
   DSizes<Index, NumDims> offsets;
 
   // Compute offsets for the first block coefficient.
-  Index index = block.first_coeff_index();
+  Index index = block.offset();
   if (static_cast<int>(Layout) == static_cast<int>(ColMajor)) {
     for (int i = NumDims - 1; i > 0; --i) {
       const Index idx = index / strides[i];
@@ -92,8 +92,7 @@ static TensorBlockParams<NumDims> SkewedInnerBlock(
     if (NumDims > 0) offsets[NumDims - 1] = index;
   }
 
-  auto desc = TensorBlockDescriptor<NumDims>(block.first_coeff_index(), sizes);
-  return {offsets, sizes, desc};
+  return {offsets, sizes, block};
 }
 
 template <int NumDims>

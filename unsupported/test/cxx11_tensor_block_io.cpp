@@ -22,14 +22,15 @@ static DSizes<Index, NumDims> RandomDims(Index min, Index max) {
   return DSizes<Index, NumDims>(dims);
 }
 
-static internal::TensorBlockShapeType RandomBlockShape() {
-  return internal::random<bool>() ? internal::kUniformAllDims
-                                  : internal::kSkewedInnerDims;
+static internal::TensorBlockV2ShapeType RandomBlockShape() {
+  return internal::random<bool>()
+         ? internal::TensorBlockV2ShapeType::kUniformAllDims
+         : internal::TensorBlockV2ShapeType::kSkewedInnerDims;
 }
 
 template <int NumDims>
-static Index RandomTargetBlockSize(const DSizes<Index, NumDims>& dims) {
-  return internal::random<Index>(1, dims.TotalSize());
+static size_t RandomTargetBlockSize(const DSizes<Index, NumDims>& dims) {
+  return internal::random<size_t>(1, dims.TotalSize());
 }
 
 template <int Layout, int NumDims>
@@ -73,12 +74,12 @@ static void test_block_io_copy_data_from_source_to_target() {
 
   // Construct a tensor block mapper.
   using TensorBlockMapper =
-      internal::TensorBlockMapper<T, Index, NumDims, Layout>;
-  TensorBlockMapper block_mapper(dims, RandomBlockShape(),
-                                 RandomTargetBlockSize(dims));
+      internal::TensorBlockV2Mapper<NumDims, Layout, Index>;
+  TensorBlockMapper block_mapper(dims, {RandomBlockShape(),
+                                        RandomTargetBlockSize(dims)});
 
   // We will copy data from input to output through this buffer.
-  Tensor<T, NumDims, Layout> block(block_mapper.block_dim_sizes());
+  Tensor<T, NumDims, Layout> block(block_mapper.blockDimensions());
 
   // Precompute strides for TensorBlockIO::Copy.
   auto input_strides = internal::strides<Layout>(dims);
@@ -88,24 +89,23 @@ static void test_block_io_copy_data_from_source_to_target() {
   T* output_data = output.data();
   T* block_data = block.data();
 
-  for (int i = 0; i < block_mapper.total_block_count(); ++i) {
-    using TensorBlock = internal::TensorBlock<T, Index, NumDims, Layout>;
-    TensorBlock blk = block_mapper.GetBlockForIndex(i, block_data);
+  for (int i = 0; i < block_mapper.blockCount(); ++i) {
+    auto desc = block_mapper.blockDescriptor(i);
 
-    auto blk_dims = blk.block_sizes();
+    auto blk_dims = desc.dimensions();
     auto blk_strides = internal::strides<Layout>(blk_dims);
 
     {
       // Read from input into a block buffer.
       IODst dst(blk_dims, blk_strides, block_data, 0);
-      IOSrc src(input_strides, input_data, blk.first_coeff_index());
+      IOSrc src(input_strides, input_data, desc.offset());
 
       TensorBlockIO::Copy(dst, src);
     }
 
     {
       // Write from block buffer to output.
-      IODst dst(blk_dims, output_strides, output_data, blk.first_coeff_index());
+      IODst dst(blk_dims, output_strides, output_data, desc.offset());
       IOSrc src(blk_strides, block_data, 0);
 
       TensorBlockIO::Copy(dst, src);
@@ -145,12 +145,12 @@ static void test_block_io_copy_using_reordered_dimensions() {
   // Construct a tensor block mapper.
   // NOTE: Tensor block mapper works with shuffled dimensions.
   using TensorBlockMapper =
-      internal::TensorBlockMapper<T, Index, NumDims, Layout>;
-  TensorBlockMapper block_mapper(output_tensor_dims, RandomBlockShape(),
-                                 RandomTargetBlockSize(output_tensor_dims));
+      internal::TensorBlockV2Mapper<NumDims, Layout, Index>;
+  TensorBlockMapper block_mapper(output_tensor_dims, {RandomBlockShape(),
+                                 RandomTargetBlockSize(output_tensor_dims)});
 
   // We will copy data from input to output through this buffer.
-  Tensor<T, NumDims, Layout> block(block_mapper.block_dim_sizes());
+  Tensor<T, NumDims, Layout> block(block_mapper.blockDimensions());
 
   // Precompute strides for TensorBlockIO::Copy.
   auto input_strides = internal::strides<Layout>(dims);
@@ -160,12 +160,11 @@ static void test_block_io_copy_using_reordered_dimensions() {
   T* output_data = output.data();
   T* block_data = block.data();
 
-  for (Index i = 0; i < block_mapper.total_block_count(); ++i) {
-    using TensorBlock = internal::TensorBlock<T, Index, NumDims, Layout>;
-    TensorBlock blk = block_mapper.GetBlockForIndex(i, block_data);
+  for (Index i = 0; i < block_mapper.blockCount(); ++i) {
+    auto desc = block_mapper.blockDescriptor(i);
 
     const Index first_coeff_index = GetInputIndex<Layout, NumDims>(
-        blk.first_coeff_index(), output_to_input_dim_map, input_strides,
+        desc.offset(), output_to_input_dim_map, input_strides,
         output_strides);
 
     // NOTE: Block dimensions are in the same order as output dimensions.
@@ -174,7 +173,7 @@ static void test_block_io_copy_using_reordered_dimensions() {
     using IODst = typename TensorBlockIO::Dst;
     using IOSrc = typename TensorBlockIO::Src;
 
-    auto blk_dims = blk.block_sizes();
+    auto blk_dims = desc.dimensions();
     auto blk_strides = internal::strides<Layout>(blk_dims);
 
     {
@@ -236,16 +235,13 @@ static void test_block_io_copy_using_reordered_dimensions_do_not_squeeze() {
   float* tensor_data = tensor.data();
   float* block_data = block.data();
 
-  typedef internal::TensorBlock<float, Index, 3, Layout> TensorBlock;
-  TensorBlock blk(0, block_dims, block_strides, tensor_strides, block_data);
-
   using TensorBlockIO = internal::TensorBlockIOV2<float, Index, 3, Layout>;
   using IODst = typename TensorBlockIO::Dst;
   using IOSrc = typename TensorBlockIO::Src;
 
   // Read from a tensor into a block.
-  IODst dst(blk.block_sizes(), block_strides, block_data, 0);
-  IOSrc src(tensor_strides, tensor_data, blk.first_coeff_index());
+  IODst dst(block_dims, block_strides, block_data, 0);
+  IOSrc src(tensor_strides, tensor_data, 0);
 
   TensorBlockIO::Copy(dst, src, /*dst_to_src_dim_map=*/block_to_tensor_dim);
 
@@ -287,16 +283,13 @@ static void test_block_io_copy_using_reordered_dimensions_squeeze() {
   float* tensor_data = tensor.data();
   float* block_data = block.data();
 
-  typedef internal::TensorBlock<float, Index, 4, Layout> TensorBlock;
-  TensorBlock blk(0, block_dims, block_strides, tensor_strides, block_data);
-
   using TensorBlockIO = internal::TensorBlockIOV2<float, Index, 4, Layout>;
   using IODst = typename TensorBlockIO::Dst;
   using IOSrc = typename TensorBlockIO::Src;
 
   // Read from a tensor into a block.
-  IODst dst(blk.block_sizes(), block_strides, block_data, 0);
-  IOSrc src(tensor_strides, tensor_data, blk.first_coeff_index());
+  IODst dst(block_dims, block_strides, block_data, 0);
+  IOSrc src(tensor_strides, tensor_data, 0);
 
   TensorBlockIO::Copy(dst, src, /*dst_to_src_dim_map=*/block_to_tensor_dim);
 

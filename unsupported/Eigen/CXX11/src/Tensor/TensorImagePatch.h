@@ -238,9 +238,6 @@ struct TensorEvaluator<const TensorImagePatchOp<Rows, Cols, ArgType>, Device>
     RawAccess         = false
   };
 
-  typedef internal::TensorBlock<Scalar, Index, NumDims, Layout>
-      OutputTensorBlock;
-
   //===- Tensor block evaluation strategy (see TensorBlock.h) -------------===//
   typedef internal::TensorBlockNotImplemented TensorBlockV2;
   //===--------------------------------------------------------------------===//

@@ -447,13 +447,6 @@ struct TensorEvaluator<TensorChippingOp<DimId, ArgType>, Device>
     RawAccess     = false
   };
 
-  typedef typename internal::remove_const<Scalar>::type ScalarNoConst;
-
-  typedef internal::TensorBlock<ScalarNoConst, Index, NumInputDims, Layout>
-      InputTensorBlock;
-  typedef internal::TensorBlock<ScalarNoConst, Index, NumDims, Layout>
-      OutputTensorBlock;
-
   //===- Tensor block evaluation strategy (see TensorBlock.h) -------------===//
   typedef internal::TensorBlockDescriptor<NumDims, Index> TensorBlockDesc;
   //===--------------------------------------------------------------------===//
@@ -504,50 +497,6 @@ struct TensorEvaluator<TensorChippingOp<DimId, ArgType>, Device>
         }
       }
     }
-  }
-
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void writeBlock(
-      const OutputTensorBlock& output_block) {
-    // Calculate input block sizes.
-    const DSizes<Index, NumDims>& output_block_sizes =
-        output_block.block_sizes();
-    const DSizes<Index, NumDims>& output_block_strides =
-        output_block.block_strides();
-    const Index chip_dim = this->m_dim.actualDim();
-    DSizes<Index, NumInputDims> input_block_sizes;
-    DSizes<Index, NumInputDims> input_block_strides;
-    for (Index i = 0; i < NumInputDims; ++i) {
-      if (i < chip_dim) {
-        input_block_sizes[i] = output_block_sizes[i];
-        input_block_strides[i] = output_block_strides[i];
-      } else if (i > chip_dim) {
-        input_block_sizes[i] = output_block_sizes[i - 1];
-        input_block_strides[i] = output_block_strides[i - 1];
-      } else {
-        input_block_sizes[i] = 1;
-      }
-    }
-    // Fix up input_block_stride for chip dimension.
-    if (static_cast<int>(Layout) == static_cast<int>(ColMajor)) {
-      if (chip_dim == 0) {
-        input_block_strides[chip_dim] = 1;
-      } else {
-        input_block_strides[chip_dim] =
-            input_block_strides[chip_dim - 1] * input_block_sizes[chip_dim - 1];
-      }
-    } else {
-      if (chip_dim == NumInputDims - 1) {
-        input_block_strides[chip_dim] = 1;
-      } else {
-        input_block_strides[chip_dim] =
-            input_block_strides[chip_dim + 1] * input_block_sizes[chip_dim + 1];
-      }
-    }
-    // Write input block.
-    this->m_impl.writeBlock(InputTensorBlock(
-        this->srcCoeff(output_block.first_coeff_index()), input_block_sizes,
-        input_block_strides, this->m_inputStrides,
-        const_cast<ScalarNoConst*>(output_block.data())));
   }
 
   template <typename TensorBlockV2>

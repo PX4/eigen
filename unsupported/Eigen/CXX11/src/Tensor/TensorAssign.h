@@ -116,20 +116,12 @@ struct TensorEvaluator<const TensorAssignOp<LeftArgType, RightArgType>, Device>
     RawAccess         = TensorEvaluator<LeftArgType, Device>::RawAccess
   };
 
-  typedef typename internal::TensorBlock<
-      typename internal::remove_const<Scalar>::type, Index, NumDims, Layout>
-      TensorBlock;
-
   //===- Tensor block evaluation strategy (see TensorBlock.h) -------------===//
   typedef internal::TensorBlockDescriptor<NumDims, Index> TensorBlockDesc;
   typedef internal::TensorBlockScratchAllocator<Device> TensorBlockScratch;
 
   typedef typename TensorEvaluator<const RightArgType, Device>::TensorBlockV2
       RightTensorBlock;
-
-  typedef internal::TensorBlockAssignment<
-      Scalar, NumDims, typename RightTensorBlock::XprType, Index>
-      TensorBlockAssignment;
   //===--------------------------------------------------------------------===//
 
   EIGEN_DEVICE_FUNC TensorEvaluator(const XprType& op, const Device& device) :

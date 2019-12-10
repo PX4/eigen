@@ -102,9 +102,6 @@ struct TensorEvaluator<const TensorGeneratorOp<Generator, ArgType>, Device>
 
   typedef internal::TensorIntDivisor<Index> IndexDivisor;
 
-  typedef internal::TensorBlock<CoeffReturnType, Index, NumDims, Layout>
-      TensorBlock;
-
   //===- Tensor block evaluation strategy (see TensorBlock.h) -------------===//
   typedef internal::TensorBlockDescriptor<NumDims, Index> TensorBlockDesc;
   typedef internal::TensorBlockScratchAllocator<Device> TensorBlockScratch;

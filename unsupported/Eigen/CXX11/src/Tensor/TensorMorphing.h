@@ -465,9 +465,6 @@ struct TensorEvaluator<const TensorSlicingOp<StartIndices, Sizes, ArgType>, Devi
 
   typedef typename internal::remove_const<Scalar>::type ScalarNoConst;
 
-  typedef internal::TensorBlock<ScalarNoConst, Index, NumDims, Layout> TensorBlock;
-  typedef typename TensorBlock::Dimensions TensorBlockDimensions;
-
   //===- Tensor block evaluation strategy (see TensorBlock.h) -------------===//
   typedef internal::TensorBlockDescriptor<NumDims, Index> TensorBlockDesc;
   typedef internal::TensorBlockScratchAllocator<Device> TensorBlockScratch;
@@ -757,9 +754,6 @@ struct TensorEvaluator<TensorSlicingOp<StartIndices, Sizes, ArgType>, Device>
 
   typedef typename internal::remove_const<Scalar>::type ScalarNoConst;
 
-  typedef internal::TensorBlock<ScalarNoConst, Index, NumDims, Layout> TensorBlock;
-  typedef typename TensorBlock::Dimensions TensorBlockDimensions;
-
   //===- Tensor block evaluation strategy (see TensorBlock.h) -------------===//
   typedef internal::TensorBlockDescriptor<NumDims, Index> TensorBlockDesc;
   typedef internal::TensorBlockScratchAllocator<Device> TensorBlockScratch;
@@ -827,14 +821,6 @@ struct TensorEvaluator<TensorSlicingOp<StartIndices, Sizes, ArgType>, Device>
         this->coeffRef(index+i) = values[i];
       }
     }
-  }
-
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void writeBlock(
-      const TensorBlock& block) {
-    this->m_impl.writeBlock(TensorBlock(
-        this->srcCoeff(block.first_coeff_index()), block.block_sizes(),
-        block.block_strides(), TensorBlockDimensions(this->m_inputStrides),
-        const_cast<ScalarNoConst*>(block.data())));
   }
 
   template<typename TensorBlockV2>

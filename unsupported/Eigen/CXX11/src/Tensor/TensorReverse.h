@@ -124,10 +124,6 @@ struct TensorEvaluator<const TensorReverseOp<ReverseDimensions, ArgType>, Device
 
   typedef internal::TensorIntDivisor<Index> IndexDivisor;
 
-  typedef typename internal::remove_const<Scalar>::type ScalarNoConst;
-  typedef internal::TensorBlock<ScalarNoConst, Index, NumDims, Layout>
-      OutputTensorBlock;
-
   //===- Tensor block evaluation strategy (see TensorBlock.h) -------------===//
   typedef internal::TensorBlockDescriptor<NumDims, Index> TensorBlockDesc;
   typedef internal::TensorBlockScratchAllocator<Device> TensorBlockScratch;
@@ -252,9 +248,8 @@ struct TensorEvaluator<const TensorReverseOp<ReverseDimensions, ArgType>, Device
   internal::TensorBlockV2ResourceRequirements getResourceRequirements() const {
     const size_t target_block_size =
         numext::maxi<size_t>(1, m_device.lastLevelCacheSize() / sizeof(Scalar));
-    return internal::TensorBlockV2ResourceRequirements::merge(
-        {internal::TensorBlockV2ShapeType::kSkewedInnerDims, target_block_size},
-        m_impl.getResourceRequirements());
+    return {internal::TensorBlockV2ShapeType::kSkewedInnerDims,
+            target_block_size};
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorBlockV2

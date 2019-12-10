@@ -76,12 +76,6 @@ struct TensorBlockV2ResourceRequirements {
   TensorBlockV2ShapeType shape_type;
   size_t size;
 
-  TensorBlockShapeType shapeV1() const {
-    return shape_type == TensorBlockV2ShapeType::kUniformAllDims
-               ? internal::kUniformAllDims
-               : internal::kSkewedInnerDims;
-  }
-
   EIGEN_DEVICE_FUNC
   static EIGEN_STRONG_INLINE TensorBlockV2ResourceRequirements
   merge(const TensorBlockV2ResourceRequirements &lhs,
@@ -272,6 +266,168 @@ class TensorBlockDescriptor {
   const IndexType m_offset;
   const Dimensions m_dimensions;
   DestinationBuffer m_destination;
+};
+
+// -------------------------------------------------------------------------- //
+// TensorBlockMapper is responsible for iterating over the blocks of a tensor.
+
+template <int NumDims, int Layout, typename IndexType = Eigen::Index>
+class TensorBlockV2Mapper {
+  typedef TensorBlockDescriptor<NumDims, IndexType> BlockDescriptor;
+
+ public:
+  typedef DSizes<IndexType, NumDims> Dimensions;
+
+  TensorBlockV2Mapper() = default;
+  TensorBlockV2Mapper(const DSizes<IndexType, NumDims>& dimensions,
+                      const TensorBlockV2ResourceRequirements& requirements)
+      : m_tensor_dimensions(dimensions), m_requirements(requirements) {
+    // Initialize `m_block_dimensions`.
+    InitializeBlockDimensions();
+
+    // Calculate block counts by dimension and total block count.
+    DSizes<IndexType, NumDims> block_count;
+    for (int i = 0; i < NumDims; ++i) {
+      block_count[i] = divup(m_tensor_dimensions[i], m_block_dimensions[i]);
+    }
+    m_total_block_count = array_prod(block_count);
+
+    // Calculate block strides (used for enumerating blocks).
+    m_tensor_strides = strides<Layout>(m_tensor_dimensions);
+    m_block_strides = strides<Layout>(block_count);
+  }
+
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE IndexType blockCount() const {
+    return m_total_block_count;
+  }
+
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE IndexType blockTotalSize() const {
+    return m_block_dimensions.TotalSize();
+  }
+
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const DSizes<IndexType, NumDims>&
+  blockDimensions() const {
+    return m_block_dimensions;
+  }
+
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
+  BlockDescriptor blockDescriptor(IndexType block_index) const {
+    static const bool isColMajor = Layout == static_cast<int>(ColMajor);
+
+    IndexType offset = 0;
+    DSizes<IndexType, NumDims> dimensions;
+
+    if (NumDims == 0) return BlockDescriptor(offset, dimensions);
+
+    // Iterate outer -> inner dimensions.
+    for (int i = NumDims - 1; i >= 0; --i) {
+      const int dim = isColMajor ? i : NumDims - i - 1;
+
+      const IndexType idx = block_index / m_block_strides[dim];
+      block_index -= idx * m_block_strides[dim];
+
+      const IndexType coord = idx * m_block_dimensions[dim];
+      dimensions[dim] = numext::mini(m_tensor_dimensions[dim] - coord,
+                                     m_block_dimensions[dim]);
+      offset += coord * m_tensor_strides[dim];
+    }
+
+    return {offset, dimensions};
+  }
+
+ private:
+  void InitializeBlockDimensions() {
+    // Requested block shape and size.
+    const TensorBlockV2ShapeType shape_type = m_requirements.shape_type;
+    const IndexType target_block_size =
+        numext::maxi<IndexType>(1, static_cast<IndexType>(m_requirements.size));
+
+    // Corner case: one of the dimensions is zero. Logic below is too complex
+    // to handle this case on a general basis, just use unit block size.
+    // Note: we must not yield blocks with zero dimensions (recipe for
+    // overflows/underflows, divisions by zero and NaNs later).
+    if (m_tensor_dimensions.TotalSize() == 0) {
+      for (int i = 0; i < NumDims; ++i) {
+        m_block_dimensions[i] = 1;
+      }
+      return;
+    }
+
+    // If tensor fits into a target block size, evaluate it as a single block.
+    if (m_tensor_dimensions.TotalSize() <= target_block_size) {
+      m_block_dimensions = m_tensor_dimensions;
+      return;
+    }
+
+    static const bool isColMajor = Layout == static_cast<int>(ColMajor);
+
+    // Block shape skewed towards inner dimension.
+    if (shape_type == TensorBlockV2ShapeType::kSkewedInnerDims) {
+      IndexType coeff_to_allocate = target_block_size;
+
+      for (int i = 0; i < NumDims; ++i) {
+        const int dim = isColMajor ? i : NumDims - i - 1;
+        m_block_dimensions[dim] =
+            numext::mini(coeff_to_allocate, m_tensor_dimensions[dim]);
+        coeff_to_allocate = divup(
+            coeff_to_allocate,
+            numext::maxi(static_cast<IndexType>(1), m_block_dimensions[dim]));
+      }
+      eigen_assert(coeff_to_allocate == 1);
+
+    } else if (shape_type == TensorBlockV2ShapeType::kUniformAllDims) {
+      // Tensor will not fit within 'target_block_size' budget: calculate tensor
+      // block dimension sizes based on "square" dimension size target.
+      const IndexType dim_size_target = convert_index<IndexType>(
+          std::pow(static_cast<float>(target_block_size),
+                   1.0f / static_cast<float>(m_block_dimensions.rank())));
+
+      for (int i = 0; i < NumDims; ++i) {
+        // TODO(andydavis) Adjust the inner most 'block_dim_size' to make it
+        // a multiple of the packet size. Note that reducing
+        // 'block_dim_size' in this manner can increase the number of
+        // blocks, and so will amplify any per-block overhead.
+        m_block_dimensions[i] =
+            numext::mini(dim_size_target, m_tensor_dimensions[i]);
+      }
+
+      // Add any un-allocated coefficients to inner dimension(s).
+      IndexType total_size = m_block_dimensions.TotalSize();
+      for (int i = 0; i < NumDims; ++i) {
+        const int dim = isColMajor ? i : NumDims - i - 1;
+
+        if (m_block_dimensions[dim] < m_tensor_dimensions[dim]) {
+          const IndexType total_size_other_dims =
+              total_size / m_block_dimensions[dim];
+          const IndexType alloc_avail =
+              divup<IndexType>(target_block_size, total_size_other_dims);
+          if (alloc_avail == m_block_dimensions[dim]) {
+            // Insufficient excess coefficients to allocate.
+            break;
+          }
+          m_block_dimensions[dim] =
+              numext::mini(m_tensor_dimensions[dim], alloc_avail);
+          total_size = total_size_other_dims * m_block_dimensions[dim];
+        }
+      }
+
+    } else {
+      eigen_assert(false);  // unknown block shape
+    }
+
+    eigen_assert(m_block_dimensions.TotalSize() >=
+                 numext::mini<IndexType>(target_block_size,
+                                     m_tensor_dimensions.TotalSize()));
+  }
+
+  DSizes<IndexType, NumDims> m_tensor_dimensions;
+  TensorBlockV2ResourceRequirements m_requirements;
+
+  DSizes<IndexType, NumDims> m_block_dimensions;
+  IndexType m_total_block_count;
+
+  DSizes<IndexType, NumDims> m_tensor_strides;
+  DSizes<IndexType, NumDims> m_block_strides;
 };
 
 // -------------------------------------------------------------------------- //

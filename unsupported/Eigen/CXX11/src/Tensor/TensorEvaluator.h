@@ -471,8 +471,6 @@ struct TensorEvaluator<const TensorCwiseUnaryOp<UnaryOp, ArgType>, Device>
   typedef StorageMemory<CoeffReturnType, Device> Storage;
   typedef typename Storage::Type EvaluatorPointerType;
   static const int NumDims = internal::array_size<Dimensions>::value;
-  typedef internal::TensorBlock<ScalarNoConst, Index, NumDims, Layout>
-      TensorBlock;
 
   //===- Tensor block evaluation strategy (see TensorBlock.h) -------------===//
   typedef internal::TensorBlockDescriptor<NumDims, Index> TensorBlockDesc;
@@ -592,11 +590,6 @@ struct TensorEvaluator<const TensorCwiseBinaryOp<BinaryOp, LeftArgType, RightArg
 
   static const int NumDims = internal::array_size<
       typename TensorEvaluator<LeftArgType, Device>::Dimensions>::value;
-
-  typedef internal::TensorBlock<
-      typename internal::remove_const<Scalar>::type, Index, NumDims,
-      TensorEvaluator<LeftArgType, Device>::Layout>
-      TensorBlock;
 
   //===- Tensor block evaluation strategy (see TensorBlock.h) -------------===//
   typedef internal::TensorBlockDescriptor<NumDims, Index> TensorBlockDesc;
