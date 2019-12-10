@@ -22,10 +22,10 @@ static DSizes<Index, NumDims> RandomDims(Index min, Index max) {
   return DSizes<Index, NumDims>(dims);
 }
 
-static internal::TensorBlockV2ShapeType RandomBlockShape() {
+static internal::TensorBlockShapeType RandomBlockShape() {
   return internal::random<bool>()
-         ? internal::TensorBlockV2ShapeType::kUniformAllDims
-         : internal::TensorBlockV2ShapeType::kSkewedInnerDims;
+         ? internal::TensorBlockShapeType::kUniformAllDims
+         : internal::TensorBlockShapeType::kSkewedInnerDims;
 }
 
 template <int NumDims>
@@ -60,7 +60,7 @@ static Index GetInputIndex(Index output_index,
 
 template <typename T, int NumDims, int Layout>
 static void test_block_io_copy_data_from_source_to_target() {
-  using TensorBlockIO = internal::TensorBlockIOV2<T, Index, NumDims, Layout>;
+  using TensorBlockIO = internal::TensorBlockIO<T, Index, NumDims, Layout>;
   using IODst = typename TensorBlockIO::Dst;
   using IOSrc = typename TensorBlockIO::Src;
 
@@ -74,7 +74,7 @@ static void test_block_io_copy_data_from_source_to_target() {
 
   // Construct a tensor block mapper.
   using TensorBlockMapper =
-      internal::TensorBlockV2Mapper<NumDims, Layout, Index>;
+      internal::TensorBlockMapper<NumDims, Layout, Index>;
   TensorBlockMapper block_mapper(dims, {RandomBlockShape(),
                                         RandomTargetBlockSize(dims)});
 
@@ -145,7 +145,7 @@ static void test_block_io_copy_using_reordered_dimensions() {
   // Construct a tensor block mapper.
   // NOTE: Tensor block mapper works with shuffled dimensions.
   using TensorBlockMapper =
-      internal::TensorBlockV2Mapper<NumDims, Layout, Index>;
+      internal::TensorBlockMapper<NumDims, Layout, Index>;
   TensorBlockMapper block_mapper(output_tensor_dims, {RandomBlockShape(),
                                  RandomTargetBlockSize(output_tensor_dims)});
 
@@ -169,7 +169,7 @@ static void test_block_io_copy_using_reordered_dimensions() {
 
     // NOTE: Block dimensions are in the same order as output dimensions.
 
-    using TensorBlockIO = internal::TensorBlockIOV2<T, Index, NumDims, Layout>;
+    using TensorBlockIO = internal::TensorBlockIO<T, Index, NumDims, Layout>;
     using IODst = typename TensorBlockIO::Dst;
     using IOSrc = typename TensorBlockIO::Src;
 
@@ -181,7 +181,7 @@ static void test_block_io_copy_using_reordered_dimensions() {
       IODst dst(blk_dims, blk_strides, block_data, 0);
       IOSrc src(input_strides, input_data, first_coeff_index);
 
-      // TODO(ezhulenev): Remove when fully switched to TensorBlockV2.
+      // TODO(ezhulenev): Remove when fully switched to TensorBlock.
       DSizes<int, NumDims> dim_map;
       for (int j = 0; j < NumDims; ++j)
         dim_map[j] = static_cast<int>(output_to_input_dim_map[j]);
@@ -199,7 +199,7 @@ static void test_block_io_copy_using_reordered_dimensions() {
       IODst dst(dst_dims, input_strides, output_data, first_coeff_index);
       IOSrc src(blk_strides, block_data, 0);
 
-      // TODO(ezhulenev): Remove when fully switched to TensorBlockV2.
+      // TODO(ezhulenev): Remove when fully switched to TensorBlock.
       DSizes<int, NumDims> dim_map;
       for (int j = 0; j < NumDims; ++j)
         dim_map[j] = static_cast<int>(input_to_output_dim_map[j]);
@@ -235,7 +235,7 @@ static void test_block_io_copy_using_reordered_dimensions_do_not_squeeze() {
   float* tensor_data = tensor.data();
   float* block_data = block.data();
 
-  using TensorBlockIO = internal::TensorBlockIOV2<float, Index, 3, Layout>;
+  using TensorBlockIO = internal::TensorBlockIO<float, Index, 3, Layout>;
   using IODst = typename TensorBlockIO::Dst;
   using IOSrc = typename TensorBlockIO::Src;
 
@@ -283,7 +283,7 @@ static void test_block_io_copy_using_reordered_dimensions_squeeze() {
   float* tensor_data = tensor.data();
   float* block_data = block.data();
 
-  using TensorBlockIO = internal::TensorBlockIOV2<float, Index, 4, Layout>;
+  using TensorBlockIO = internal::TensorBlockIO<float, Index, 4, Layout>;
   using IODst = typename TensorBlockIO::Dst;
   using IOSrc = typename TensorBlockIO::Src;
 
@@ -334,7 +334,7 @@ static void test_block_io_zero_stride() {
   Tensor<float, 5, Layout> output(output_tensor_dims);
   output.setRandom();
 
-  using TensorBlockIO = internal::TensorBlockIOV2<float, Index, 5, Layout>;
+  using TensorBlockIO = internal::TensorBlockIO<float, Index, 5, Layout>;
   using IODst = typename TensorBlockIO::Dst;
   using IOSrc = typename TensorBlockIO::Src;
 
@@ -360,7 +360,7 @@ static void test_block_io_zero_stride() {
 
 template <int Layout>
 static void test_block_io_squeeze_ones() {
-  using TensorBlockIO = internal::TensorBlockIOV2<float, Index, 5, Layout>;
+  using TensorBlockIO = internal::TensorBlockIO<float, Index, 5, Layout>;
   using IODst = typename TensorBlockIO::Dst;
   using IOSrc = typename TensorBlockIO::Src;
 

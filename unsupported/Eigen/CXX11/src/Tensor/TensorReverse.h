@@ -115,7 +115,7 @@ struct TensorEvaluator<const TensorReverseOp<ReverseDimensions, ArgType>, Device
   enum {
     IsAligned         = false,
     PacketAccess      = TensorEvaluator<ArgType, Device>::PacketAccess,
-    BlockAccessV2     = NumDims > 0,
+    BlockAccess       = NumDims > 0,
     PreferBlockAccess = true,
     Layout            = TensorEvaluator<ArgType, Device>::Layout,
     CoordAccess       = false,  // to be implemented
@@ -128,12 +128,12 @@ struct TensorEvaluator<const TensorReverseOp<ReverseDimensions, ArgType>, Device
   typedef internal::TensorBlockDescriptor<NumDims, Index> TensorBlockDesc;
   typedef internal::TensorBlockScratchAllocator<Device> TensorBlockScratch;
 
-  typedef typename TensorEvaluator<const ArgType, Device>::TensorBlockV2
+  typedef typename TensorEvaluator<const ArgType, Device>::TensorBlock
       ArgTensorBlock;
 
   typedef typename internal::TensorMaterializedBlock<CoeffReturnType, NumDims,
                                                      Layout, Index>
-      TensorBlockV2;
+      TensorBlock;
   //===--------------------------------------------------------------------===//
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorEvaluator(const XprType& op,
@@ -245,15 +245,15 @@ struct TensorEvaluator<const TensorReverseOp<ReverseDimensions, ArgType>, Device
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
-  internal::TensorBlockV2ResourceRequirements getResourceRequirements() const {
+  internal::TensorBlockResourceRequirements getResourceRequirements() const {
     const size_t target_block_size =
         numext::maxi<size_t>(1, m_device.lastLevelCacheSize() / sizeof(Scalar));
-    return {internal::TensorBlockV2ShapeType::kSkewedInnerDims,
+    return {internal::TensorBlockShapeType::kSkewedInnerDims,
             target_block_size};
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorBlockV2
-  blockV2(TensorBlockDesc& desc, TensorBlockScratch& scratch,
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorBlock
+  block(TensorBlockDesc& desc, TensorBlockScratch& scratch,
           bool /*root_of_expr_ast*/ = false) const {
     // TODO(ezhulenev): If underlying tensor expression supports and prefers
     // block evaluation we must use it. Currently we use coeff and packet
@@ -322,8 +322,8 @@ struct TensorEvaluator<const TensorReverseOp<ReverseDimensions, ArgType>, Device
     const Index inner_dim_size = it[effective_inner_dim].size;
 
     // Prepare storage for the materialized reverse result.
-    const typename TensorBlockV2::Storage block_storage =
-        TensorBlockV2::prepareStorage(desc, scratch);
+    const typename TensorBlock::Storage block_storage =
+        TensorBlock::prepareStorage(desc, scratch);
     CoeffReturnType* block_buffer = block_storage.data();
 
     while (it[NumDims - 1].count < it[NumDims - 1].size) {
@@ -433,7 +433,7 @@ struct TensorEvaluator<TensorReverseOp<ReverseDimensions, ArgType>, Device>
   enum {
     IsAligned = false,
     PacketAccess = TensorEvaluator<ArgType, Device>::PacketAccess,
-    BlockAccessV2 = false,
+    BlockAccess = false,
     PreferBlockAccess = false,
     Layout = TensorEvaluator<ArgType, Device>::Layout,
     CoordAccess = false,  // to be implemented
@@ -449,7 +449,7 @@ struct TensorEvaluator<TensorReverseOp<ReverseDimensions, ArgType>, Device>
   static const int PacketSize = PacketType<CoeffReturnType, Device>::size;
 
   //===- Tensor block evaluation strategy (see TensorBlock.h) -------------===//
-  typedef internal::TensorBlockNotImplemented TensorBlockV2;
+  typedef internal::TensorBlockNotImplemented TensorBlock;
   //===--------------------------------------------------------------------===//
   
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE

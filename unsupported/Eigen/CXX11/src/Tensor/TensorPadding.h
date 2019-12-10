@@ -98,7 +98,7 @@ struct TensorEvaluator<const TensorPaddingOp<PaddingDimensions, ArgType>, Device
   enum {
     IsAligned         = true,
     PacketAccess      = TensorEvaluator<ArgType, Device>::PacketAccess,
-    BlockAccessV2     = TensorEvaluator<ArgType, Device>::RawAccess,
+    BlockAccess       = TensorEvaluator<ArgType, Device>::RawAccess,
     PreferBlockAccess = true,
     Layout            = TensorEvaluator<ArgType, Device>::Layout,
     CoordAccess       = true,
@@ -113,7 +113,7 @@ struct TensorEvaluator<const TensorPaddingOp<PaddingDimensions, ArgType>, Device
 
   typedef typename internal::TensorMaterializedBlock<ScalarNoConst, NumDims,
                                                      Layout, Index>
-      TensorBlockV2;
+      TensorBlock;
   //===--------------------------------------------------------------------===//
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorEvaluator(const XprType& op, const Device& device)
@@ -228,20 +228,20 @@ struct TensorEvaluator<const TensorPaddingOp<PaddingDimensions, ArgType>, Device
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
-  internal::TensorBlockV2ResourceRequirements getResourceRequirements() const {
+  internal::TensorBlockResourceRequirements getResourceRequirements() const {
     const size_t target_block_size =
         numext::maxi<size_t>(1, m_device.lastLevelCacheSize() / sizeof(Scalar));
-    return internal::TensorBlockV2ResourceRequirements::merge(
-        {internal::TensorBlockV2ShapeType::kSkewedInnerDims, target_block_size},
+    return internal::TensorBlockResourceRequirements::merge(
+        {internal::TensorBlockShapeType::kSkewedInnerDims, target_block_size},
         m_impl.getResourceRequirements());
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorBlockV2
-  blockV2(TensorBlockDesc& desc, TensorBlockScratch& scratch,
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorBlock
+  block(TensorBlockDesc& desc, TensorBlockScratch& scratch,
           bool /*root_of_expr_ast*/ = false) const {
     // If one of the dimensions is zero, return empty block view.
     if (desc.size() == 0) {
-      return TensorBlockV2(internal::TensorBlockKind::kView, NULL,
+      return TensorBlock(internal::TensorBlockKind::kView, NULL,
                            desc.dimensions());
     }
 
@@ -355,8 +355,8 @@ struct TensorEvaluator<const TensorPaddingOp<PaddingDimensions, ArgType>, Device
     typedef internal::StridedLinearBufferCopy<ScalarNoConst, Index> LinCopy;
 
     // Prepare storage for the materialized padding result.
-    const typename TensorBlockV2::Storage block_storage =
-        TensorBlockV2::prepareStorage(desc, scratch);
+    const typename TensorBlock::Storage block_storage =
+        TensorBlock::prepareStorage(desc, scratch);
 
     // Iterate copying data from `m_impl.data()` to the output buffer.
     for (Index size = 0; size < output_size; size += output_inner_dim_size) {

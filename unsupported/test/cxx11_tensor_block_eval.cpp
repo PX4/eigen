@@ -61,9 +61,9 @@ static TensorBlockParams<NumDims> RandomBlock(DSizes<Index, NumDims> dims,
 template <int Layout, int NumDims>
 static TensorBlockParams<NumDims> SkewedInnerBlock(
     DSizes<Index, NumDims> dims) {
-  using BlockMapper = internal::TensorBlockV2Mapper<NumDims, Layout, Index>;
+  using BlockMapper = internal::TensorBlockMapper<NumDims, Layout, Index>;
   BlockMapper block_mapper(dims,
-                           {internal::TensorBlockV2ShapeType::kSkewedInnerDims,
+                           {internal::TensorBlockShapeType::kSkewedInnerDims,
                             internal::random<size_t>(1, dims.TotalSize())});
 
   Index total_blocks = block_mapper.blockCount();
@@ -158,7 +158,7 @@ static void VerifyBlockEvaluator(Expression expr, GenBlockParams gen_block) {
   }
 
   const bool root_of_expr = internal::random<bool>();
-  auto tensor_block = eval.blockV2(block_params.desc, scratch, root_of_expr);
+  auto tensor_block = eval.block(block_params.desc, scratch, root_of_expr);
 
   if (tensor_block.kind() == internal::TensorBlockKind::kMaterializedInOutput) {
     // Copy data from destination buffer.
@@ -596,7 +596,7 @@ static void VerifyBlockAssignment(Tensor<T, NumDims, Layout>& tensor,
   tensor.setZero();
 
   // Use evaluator to write block into a tensor.
-  eval.writeBlockV2(block_params.desc, blk);
+  eval.writeBlock(block_params.desc, blk);
 
   // Make a copy of the result after assignment.
   Tensor<T, NumDims, Layout> block_assigned = tensor;

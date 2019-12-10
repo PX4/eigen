@@ -110,7 +110,7 @@ struct TensorEvaluator<const TensorEvalToOp<ArgType, MakePointer_>, Device>
   enum {
     IsAligned         = TensorEvaluator<ArgType, Device>::IsAligned,
     PacketAccess      = TensorEvaluator<ArgType, Device>::PacketAccess,
-    BlockAccessV2     = true,
+    BlockAccess       = true,
     PreferBlockAccess = false,
     Layout            = TensorEvaluator<ArgType, Device>::Layout,
     CoordAccess       = false,  // to be implemented
@@ -123,7 +123,7 @@ struct TensorEvaluator<const TensorEvalToOp<ArgType, MakePointer_>, Device>
   typedef internal::TensorBlockDescriptor<NumDims, Index> TensorBlockDesc;
   typedef internal::TensorBlockScratchAllocator<Device> TensorBlockScratch;
 
-  typedef typename TensorEvaluator<const ArgType, Device>::TensorBlockV2
+  typedef typename TensorEvaluator<const ArgType, Device>::TensorBlock
       ArgTensorBlock;
 
   typedef internal::TensorBlockAssignment<
@@ -165,11 +165,11 @@ struct TensorEvaluator<const TensorEvalToOp<ArgType, MakePointer_>, Device>
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
-  internal::TensorBlockV2ResourceRequirements getResourceRequirements() const {
+  internal::TensorBlockResourceRequirements getResourceRequirements() const {
     return m_impl.getResourceRequirements();
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void evalBlockV2(
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void evalBlock(
       TensorBlockDesc& desc, TensorBlockScratch& scratch) {
     // Add `m_buffer` as destination buffer to the block descriptor.
     desc.template AddDestinationBuffer<Layout>(
@@ -177,7 +177,7 @@ struct TensorEvaluator<const TensorEvalToOp<ArgType, MakePointer_>, Device>
         /*dst_strides=*/internal::strides<Layout>(m_impl.dimensions()));
 
     ArgTensorBlock block =
-        m_impl.blockV2(desc, scratch, /*root_of_expr_ast=*/true);
+        m_impl.block(desc, scratch, /*root_of_expr_ast=*/true);
 
     // If block was evaluated into a destination buffer, there is no need to do
     // an assignment.

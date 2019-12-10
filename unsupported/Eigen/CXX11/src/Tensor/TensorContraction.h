@@ -381,7 +381,7 @@ struct TensorContractionEvaluatorBase
   enum {
     IsAligned         = true,
     PacketAccess      = (PacketType<CoeffReturnType, Device>::size > 1),
-    BlockAccessV2     = false,
+    BlockAccess       = false,
     PreferBlockAccess = false,
     Layout            = TensorEvaluator<LeftArgType, Device>::Layout,
     CoordAccess       = false,  // to be implemented
@@ -389,7 +389,7 @@ struct TensorContractionEvaluatorBase
   };
 
   //===- Tensor block evaluation strategy (see TensorBlock.h) -------------===//
-  typedef internal::TensorBlockNotImplemented TensorBlockV2;
+  typedef internal::TensorBlockNotImplemented TensorBlock;
   //===--------------------------------------------------------------------===//
 
   // Most of the code is assuming that both input tensors are ColMajor. If the

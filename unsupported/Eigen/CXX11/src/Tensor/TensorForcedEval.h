@@ -96,7 +96,7 @@ struct TensorEvaluator<const TensorForcedEvalOp<ArgType_>, Device>
   enum {
     IsAligned         = true,
     PacketAccess      = (PacketType<CoeffReturnType, Device>::size > 1),
-    BlockAccessV2     = internal::is_arithmetic<CoeffReturnType>::value,
+    BlockAccess       = internal::is_arithmetic<CoeffReturnType>::value,
     PreferBlockAccess = false,
     Layout            = TensorEvaluator<ArgType, Device>::Layout,
     RawAccess         = true
@@ -110,7 +110,7 @@ struct TensorEvaluator<const TensorForcedEvalOp<ArgType_>, Device>
 
   typedef typename internal::TensorMaterializedBlock<CoeffReturnType, NumDims,
                                                      Layout, Index>
-      TensorBlockV2;
+      TensorBlock;
   //===--------------------------------------------------------------------===//
 
   EIGEN_DEVICE_FUNC TensorEvaluator(const XprType& op, const Device& device)
@@ -177,15 +177,15 @@ struct TensorEvaluator<const TensorForcedEvalOp<ArgType_>, Device>
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
-  internal::TensorBlockV2ResourceRequirements getResourceRequirements() const {
-    return internal::TensorBlockV2ResourceRequirements::any();
+  internal::TensorBlockResourceRequirements getResourceRequirements() const {
+    return internal::TensorBlockResourceRequirements::any();
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorBlockV2
-  blockV2(TensorBlockDesc& desc, TensorBlockScratch& scratch,
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorBlock
+  block(TensorBlockDesc& desc, TensorBlockScratch& scratch,
           bool /*root_of_expr_ast*/ = false) const {
     assert(m_buffer != NULL);
-    return TensorBlockV2::materialize(m_buffer, m_impl.dimensions(), desc, scratch);
+    return TensorBlock::materialize(m_buffer, m_impl.dimensions(), desc, scratch);
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorOpCost costPerCoeff(bool vectorized) const {

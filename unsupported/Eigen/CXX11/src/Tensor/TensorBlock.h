@@ -5,8 +5,8 @@
 // Public License v. 2.0. If a copy of the MPL was not distributed
 // with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef EIGEN_CXX11_TENSOR_TENSOR_BLOCK_V2_H
-#define EIGEN_CXX11_TENSOR_TENSOR_BLOCK_V2_H
+#ifndef EIGEN_CXX11_TENSOR_TENSOR_BLOCK_H
+#define EIGEN_CXX11_TENSOR_TENSOR_BLOCK_H
 
 namespace Eigen {
 namespace internal {
@@ -14,7 +14,7 @@ namespace internal {
 // -------------------------------------------------------------------------- //
 // Forward declarations for templates defined below.
 template <typename Scalar, typename IndexType, int NumDims, int Layout>
-class TensorBlockIOV2;
+class TensorBlockIO;
 
 // -------------------------------------------------------------------------- //
 // Helper function to compute strides for densely stored buffer of given
@@ -70,16 +70,16 @@ EIGEN_STRONG_INLINE DSizes<std::ptrdiff_t, sizeof...(Indices)> strides(
 //  - kUniformAllDims: 100 blocks of size 10x10
 //  - kSkewedInnerDims: 100 blocks of size 100x1 (or 1x100 depending on a column
 //                      or row major layout)
-enum class TensorBlockV2ShapeType { kUniformAllDims, kSkewedInnerDims };
+enum class TensorBlockShapeType { kUniformAllDims, kSkewedInnerDims };
 
-struct TensorBlockV2ResourceRequirements {
-  TensorBlockV2ShapeType shape_type;
+struct TensorBlockResourceRequirements {
+  TensorBlockShapeType shape_type;
   size_t size;
 
   EIGEN_DEVICE_FUNC
-  static EIGEN_STRONG_INLINE TensorBlockV2ResourceRequirements
-  merge(const TensorBlockV2ResourceRequirements &lhs,
-        const TensorBlockV2ResourceRequirements &rhs) {
+  static EIGEN_STRONG_INLINE TensorBlockResourceRequirements
+  merge(const TensorBlockResourceRequirements &lhs,
+        const TensorBlockResourceRequirements &rhs) {
     return {merge(lhs.shape_type, rhs.shape_type), merge(rhs.size, lhs.size)};
   }
 
@@ -87,12 +87,12 @@ struct TensorBlockV2ResourceRequirements {
   // that do not have any block evaluation preference (e.g. default tensor
   // expression with raw buffer access).
   EIGEN_DEVICE_FUNC
-  static EIGEN_STRONG_INLINE TensorBlockV2ResourceRequirements any() {
-    return {TensorBlockV2ShapeType::kUniformAllDims, 1};
+  static EIGEN_STRONG_INLINE TensorBlockResourceRequirements any() {
+    return {TensorBlockShapeType::kUniformAllDims, 1};
   }
 
 private:
-  using Requirements = TensorBlockV2ResourceRequirements;
+  using Requirements = TensorBlockResourceRequirements;
 
   EIGEN_DEVICE_FUNC
   static EIGEN_STRONG_INLINE size_t merge(size_t lhs_size, size_t rhs_size) {
@@ -100,12 +100,12 @@ private:
   }
 
   EIGEN_DEVICE_FUNC
-  static EIGEN_STRONG_INLINE TensorBlockV2ShapeType merge(TensorBlockV2ShapeType lhs,
-							  TensorBlockV2ShapeType rhs) {
-    return (lhs == TensorBlockV2ShapeType::kSkewedInnerDims ||
-            rhs == TensorBlockV2ShapeType::kSkewedInnerDims)
-               ? TensorBlockV2ShapeType::kSkewedInnerDims
-               : TensorBlockV2ShapeType::kUniformAllDims;
+  static EIGEN_STRONG_INLINE TensorBlockShapeType merge(TensorBlockShapeType lhs,
+							  TensorBlockShapeType rhs) {
+    return (lhs == TensorBlockShapeType::kSkewedInnerDims ||
+            rhs == TensorBlockShapeType::kSkewedInnerDims)
+               ? TensorBlockShapeType::kSkewedInnerDims
+               : TensorBlockShapeType::kUniformAllDims;
   }
 };
 
@@ -272,15 +272,15 @@ class TensorBlockDescriptor {
 // TensorBlockMapper is responsible for iterating over the blocks of a tensor.
 
 template <int NumDims, int Layout, typename IndexType = Eigen::Index>
-class TensorBlockV2Mapper {
+class TensorBlockMapper {
   typedef TensorBlockDescriptor<NumDims, IndexType> BlockDescriptor;
 
  public:
   typedef DSizes<IndexType, NumDims> Dimensions;
 
-  TensorBlockV2Mapper() = default;
-  TensorBlockV2Mapper(const DSizes<IndexType, NumDims>& dimensions,
-                      const TensorBlockV2ResourceRequirements& requirements)
+  TensorBlockMapper() = default;
+  TensorBlockMapper(const DSizes<IndexType, NumDims>& dimensions,
+                      const TensorBlockResourceRequirements& requirements)
       : m_tensor_dimensions(dimensions), m_requirements(requirements) {
     // Initialize `m_block_dimensions`.
     InitializeBlockDimensions();
@@ -338,7 +338,7 @@ class TensorBlockV2Mapper {
  private:
   void InitializeBlockDimensions() {
     // Requested block shape and size.
-    const TensorBlockV2ShapeType shape_type = m_requirements.shape_type;
+    const TensorBlockShapeType shape_type = m_requirements.shape_type;
     const IndexType target_block_size =
         numext::maxi<IndexType>(1, static_cast<IndexType>(m_requirements.size));
 
@@ -362,7 +362,7 @@ class TensorBlockV2Mapper {
     static const bool isColMajor = Layout == static_cast<int>(ColMajor);
 
     // Block shape skewed towards inner dimension.
-    if (shape_type == TensorBlockV2ShapeType::kSkewedInnerDims) {
+    if (shape_type == TensorBlockShapeType::kSkewedInnerDims) {
       IndexType coeff_to_allocate = target_block_size;
 
       for (int i = 0; i < NumDims; ++i) {
@@ -375,7 +375,7 @@ class TensorBlockV2Mapper {
       }
       eigen_assert(coeff_to_allocate == 1);
 
-    } else if (shape_type == TensorBlockV2ShapeType::kUniformAllDims) {
+    } else if (shape_type == TensorBlockShapeType::kUniformAllDims) {
       // Tensor will not fit within 'target_block_size' budget: calculate tensor
       // block dimension sizes based on "square" dimension size target.
       const IndexType dim_size_target = convert_index<IndexType>(
@@ -421,7 +421,7 @@ class TensorBlockV2Mapper {
   }
 
   DSizes<IndexType, NumDims> m_tensor_dimensions;
-  TensorBlockV2ResourceRequirements m_requirements;
+  TensorBlockResourceRequirements m_requirements;
 
   DSizes<IndexType, NumDims> m_block_dimensions;
   IndexType m_total_block_count;
@@ -722,7 +722,7 @@ class TensorMaterializedBlock {
       // Reuse destination buffer or allocate new buffer with scratch allocator.
       const Storage storage = prepareStorage(desc, scratch);
 
-      typedef internal::TensorBlockIOV2<Scalar, IndexType, NumDims, Layout>
+      typedef internal::TensorBlockIO<Scalar, IndexType, NumDims, Layout>
           TensorBlockIO;
       typedef typename TensorBlockIO::Dst TensorBlockIODst;
       typedef typename TensorBlockIO::Src TensorBlockIOSrc;
@@ -1062,7 +1062,7 @@ class StridedLinearBufferCopy {
 // `src` we need to know only stride to navigate through source memory buffer.
 
 template <typename Scalar, typename IndexType, int NumDims, int Layout>
-class TensorBlockIOV2 {
+class TensorBlockIO {
   static const bool IsColMajor = (Layout == ColMajor);
 
   typedef StridedLinearBufferCopy<Scalar, IndexType> LinCopy;
@@ -1478,4 +1478,4 @@ class TensorBlockAssignment {
 }  // namespace internal
 }  // namespace Eigen
 
-#endif  // EIGEN_CXX11_TENSOR_TENSOR_BLOCK_V2_H
+#endif  // EIGEN_CXX11_TENSOR_TENSOR_BLOCK_H

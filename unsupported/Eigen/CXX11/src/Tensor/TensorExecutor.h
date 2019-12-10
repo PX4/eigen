@@ -172,7 +172,7 @@ class TensorExecutor<Expression, DefaultDevice, Vectorizable,
   EIGEN_DEVICE_FUNC
   static EIGEN_STRONG_INLINE void run(const Expression& expr,
                          const DefaultDevice& device = DefaultDevice()) {
-    typedef TensorBlockV2Mapper<NumDims, Evaluator::Layout, StorageIndex>
+    typedef TensorBlockMapper<NumDims, Evaluator::Layout, StorageIndex>
         TensorBlockMapper;
 
     typedef internal::TensorBlockDescriptor<NumDims, StorageIndex>
@@ -187,7 +187,7 @@ class TensorExecutor<Expression, DefaultDevice, Vectorizable,
 
     if (needs_assign) {
       // Query expression tree for desired block size/shape.
-      const TensorBlockV2ResourceRequirements requirements =
+      const TensorBlockResourceRequirements requirements =
           evaluator.getResourceRequirements();
 
       const TensorBlockMapper block_mapper(
@@ -200,7 +200,7 @@ class TensorExecutor<Expression, DefaultDevice, Vectorizable,
       const StorageIndex total_block_count = block_mapper.blockCount();
       for (StorageIndex i = 0; i < total_block_count; ++i) {
         TensorBlockDesc desc = block_mapper.blockDescriptor(i);
-        evaluator.evalBlockV2(desc, scratch);
+        evaluator.evalBlock(desc, scratch);
         scratch.reset();
       }
     }
@@ -257,7 +257,7 @@ TensorExecutorTilingContext<TensorBlockMapper> GetTensorExecutorTilingContext(
     const ThreadPoolDevice& device, const Evaluator& evaluator,
     bool allocate_buffer = true) {
   // Query expression tree for desired block size/shape.
-  const TensorBlockV2ResourceRequirements requirements =
+  const TensorBlockResourceRequirements requirements =
       evaluator.getResourceRequirements();
 
   int num_threads = device.numThreads();
@@ -377,7 +377,7 @@ class TensorExecutor<Expression, ThreadPoolDevice, Vectorizable,
   static const int NumDims = traits<Expression>::NumDimensions;
 
   typedef TensorEvaluator<Expression, ThreadPoolDevice> Evaluator;
-  typedef TensorBlockV2Mapper<NumDims, Evaluator::Layout, IndexType> BlockMapper;
+  typedef TensorBlockMapper<NumDims, Evaluator::Layout, IndexType> BlockMapper;
   typedef TensorExecutorTilingContext<BlockMapper> TilingContext;
 
   typedef internal::TensorBlockDescriptor<NumDims, IndexType>
@@ -402,7 +402,7 @@ class TensorExecutor<Expression, ThreadPoolDevice, Vectorizable,
 
         for (IndexType block_idx = firstBlockIdx; block_idx < lastBlockIdx; ++block_idx) {
           TensorBlockDesc desc = tiling.block_mapper.blockDescriptor(block_idx);
-          evaluator.evalBlockV2(desc, scratch);
+          evaluator.evalBlock(desc, scratch);
           scratch.reset();
         }
       };
@@ -478,7 +478,7 @@ class TensorAsyncExecutor<Expression, ThreadPoolDevice, DoneCallback,
   static const int NumDims = traits<Expression>::NumDimensions;
 
   typedef TensorEvaluator<Expression, ThreadPoolDevice> Evaluator;
-  typedef TensorBlockV2Mapper<NumDims, Evaluator::Layout, IndexType> BlockMapper;
+  typedef TensorBlockMapper<NumDims, Evaluator::Layout, IndexType> BlockMapper;
   typedef TensorExecutorTilingContext<BlockMapper> TilingContext;
 
   typedef internal::TensorBlockDescriptor<NumDims, IndexType> TensorBlockDesc;
@@ -510,7 +510,7 @@ class TensorAsyncExecutor<Expression, ThreadPoolDevice, DoneCallback,
              ++block_idx) {
           TensorBlockDesc desc =
               ctx->tiling.block_mapper.blockDescriptor(block_idx);
-          ctx->evaluator.evalBlockV2(desc, scratch);
+          ctx->evaluator.evalBlock(desc, scratch);
           scratch.reset();
         }
       };

@@ -41,7 +41,7 @@ class TensorFixedSize : public TensorBase<TensorFixedSize<Scalar_, Dimensions_, 
     enum {
       IsAligned = bool(EIGEN_MAX_ALIGN_BYTES>0),
       PacketAccess = (internal::packet_traits<Scalar>::size > 1),
-      BlockAccessV2 = false,
+      BlockAccess = false,
       PreferBlockAccess = false,
       Layout = Options_ & RowMajor ? RowMajor : ColMajor,
       CoordAccess = true,
@@ -49,7 +49,7 @@ class TensorFixedSize : public TensorBase<TensorFixedSize<Scalar_, Dimensions_, 
     };
 
   //===- Tensor block evaluation strategy (see TensorBlock.h) -------------===//
-  typedef internal::TensorBlockNotImplemented TensorBlockV2;
+  typedef internal::TensorBlockNotImplemented TensorBlock;
   //===--------------------------------------------------------------------===//
 
   typedef Dimensions_ Dimensions;

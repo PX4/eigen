@@ -115,7 +115,7 @@ struct TensorEvaluator<const TensorShufflingOp<Shuffle, ArgType>, Device>
   enum {
     IsAligned         = false,
     PacketAccess      = (PacketType<CoeffReturnType, Device>::size > 1),
-    BlockAccessV2     = TensorEvaluator<ArgType, Device>::RawAccess,
+    BlockAccess       = TensorEvaluator<ArgType, Device>::RawAccess,
     PreferBlockAccess = true,
     Layout            = TensorEvaluator<ArgType, Device>::Layout,
     CoordAccess       = false,  // to be implemented
@@ -130,7 +130,7 @@ struct TensorEvaluator<const TensorShufflingOp<Shuffle, ArgType>, Device>
 
   typedef typename internal::TensorMaterializedBlock<ScalarNoConst, NumDims,
                                                      Layout, Index>
-      TensorBlockV2;
+      TensorBlock;
   //===--------------------------------------------------------------------===//
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorEvaluator(const XprType& op,
@@ -245,7 +245,7 @@ struct TensorEvaluator<const TensorShufflingOp<Shuffle, ArgType>, Device>
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
-  internal::TensorBlockV2ResourceRequirements getResourceRequirements() const {
+  internal::TensorBlockResourceRequirements getResourceRequirements() const {
     static const int inner_dim =
         Layout == static_cast<int>(ColMajor) ? 0 : NumDims - 1;
 
@@ -254,23 +254,23 @@ struct TensorEvaluator<const TensorShufflingOp<Shuffle, ArgType>, Device>
 
     const bool inner_dim_shuffled = m_shuffle[inner_dim] != inner_dim;
     return {inner_dim_shuffled
-                ? internal::TensorBlockV2ShapeType::kUniformAllDims
-                : internal::TensorBlockV2ShapeType::kSkewedInnerDims,
+                ? internal::TensorBlockShapeType::kUniformAllDims
+                : internal::TensorBlockShapeType::kSkewedInnerDims,
             target_block_size};
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorBlockV2
-  blockV2(TensorBlockDesc& desc, TensorBlockScratch& scratch,
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorBlock
+  block(TensorBlockDesc& desc, TensorBlockScratch& scratch,
           bool root_of_expr_ast = false) const {
     assert(m_impl.data() != NULL);
 
-    typedef internal::TensorBlockIOV2<ScalarNoConst, Index, NumDims, Layout>
+    typedef internal::TensorBlockIO<ScalarNoConst, Index, NumDims, Layout>
         TensorBlockIO;
     typedef typename TensorBlockIO::Dst TensorBlockIODst;
     typedef typename TensorBlockIO::Src TensorBlockIOSrc;
 
-    const typename TensorBlockV2::Storage block_storage =
-        TensorBlockV2::prepareStorage(
+    const typename TensorBlock::Storage block_storage =
+        TensorBlock::prepareStorage(
             desc, scratch, /*allow_strided_storage=*/root_of_expr_ast);
 
     typename TensorBlockIO::Dimensions input_strides(m_unshuffledInputStrides);
@@ -380,7 +380,7 @@ struct TensorEvaluator<TensorShufflingOp<Shuffle, ArgType>, Device>
   enum {
     IsAligned         = false,
     PacketAccess      = (PacketType<CoeffReturnType, Device>::size > 1),
-    BlockAccessV2     = TensorEvaluator<ArgType, Device>::RawAccess,
+    BlockAccess       = TensorEvaluator<ArgType, Device>::RawAccess,
     PreferBlockAccess = true,
     Layout            = TensorEvaluator<ArgType, Device>::Layout,
     RawAccess         = false
@@ -414,12 +414,12 @@ struct TensorEvaluator<TensorShufflingOp<Shuffle, ArgType>, Device>
     }
   }
 
-  template <typename TensorBlockV2>
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void writeBlockV2(
-      const TensorBlockDesc& desc, const TensorBlockV2& block) {
+  template <typename TensorBlock>
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void writeBlock(
+      const TensorBlockDesc& desc, const TensorBlock& block) {
     eigen_assert(this->m_impl.data() != NULL);
 
-    typedef internal::TensorBlockIOV2<ScalarNoConst, Index, NumDims, Layout>
+    typedef internal::TensorBlockIO<ScalarNoConst, Index, NumDims, Layout>
         TensorBlockIO;
     typedef typename TensorBlockIO::Dst TensorBlockIODst;
     typedef typename TensorBlockIO::Src TensorBlockIOSrc;
@@ -434,7 +434,7 @@ struct TensorEvaluator<TensorShufflingOp<Shuffle, ArgType>, Device>
       ScalarNoConst* buf = static_cast<ScalarNoConst*>(mem);
 
       typedef internal::TensorBlockAssignment<
-          ScalarNoConst, NumDims, typename TensorBlockV2::XprType, Index>
+          ScalarNoConst, NumDims, typename TensorBlock::XprType, Index>
           TensorBlockAssignment;
 
       TensorBlockAssignment::Run(

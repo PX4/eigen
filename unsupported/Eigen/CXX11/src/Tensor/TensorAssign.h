@@ -108,8 +108,8 @@ struct TensorEvaluator<const TensorAssignOp<LeftArgType, RightArgType>, Device>
                         TensorEvaluator<RightArgType, Device>::IsAligned,
     PacketAccess      = TensorEvaluator<LeftArgType, Device>::PacketAccess &
                         TensorEvaluator<RightArgType, Device>::PacketAccess,
-    BlockAccessV2     = TensorEvaluator<LeftArgType, Device>::BlockAccessV2 &
-                        TensorEvaluator<RightArgType, Device>::BlockAccessV2,
+    BlockAccess       = TensorEvaluator<LeftArgType, Device>::BlockAccess &
+                        TensorEvaluator<RightArgType, Device>::BlockAccess,
     PreferBlockAccess = TensorEvaluator<LeftArgType, Device>::PreferBlockAccess |
                         TensorEvaluator<RightArgType, Device>::PreferBlockAccess,
     Layout            = TensorEvaluator<LeftArgType, Device>::Layout,
@@ -120,7 +120,7 @@ struct TensorEvaluator<const TensorAssignOp<LeftArgType, RightArgType>, Device>
   typedef internal::TensorBlockDescriptor<NumDims, Index> TensorBlockDesc;
   typedef internal::TensorBlockScratchAllocator<Device> TensorBlockScratch;
 
-  typedef typename TensorEvaluator<const RightArgType, Device>::TensorBlockV2
+  typedef typename TensorEvaluator<const RightArgType, Device>::TensorBlock
       RightTensorBlock;
   //===--------------------------------------------------------------------===//
 
@@ -201,13 +201,13 @@ struct TensorEvaluator<const TensorAssignOp<LeftArgType, RightArgType>, Device>
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
-  internal::TensorBlockV2ResourceRequirements getResourceRequirements() const {
-    return internal::TensorBlockV2ResourceRequirements::merge(
+  internal::TensorBlockResourceRequirements getResourceRequirements() const {
+    return internal::TensorBlockResourceRequirements::merge(
         m_leftImpl.getResourceRequirements(),
         m_rightImpl.getResourceRequirements());
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void evalBlockV2(
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void evalBlock(
       TensorBlockDesc& desc, TensorBlockScratch& scratch) {
     if (TensorEvaluator<LeftArgType, Device>::RawAccess &&
         m_leftImpl.data() != NULL) {
@@ -218,10 +218,10 @@ struct TensorEvaluator<const TensorAssignOp<LeftArgType, RightArgType>, Device>
           /*dst_strides=*/internal::strides<Layout>(m_leftImpl.dimensions()));
     }
 
-    RightTensorBlock block = m_rightImpl.blockV2(desc, scratch, /*root_of_expr_ast=*/true);
+    RightTensorBlock block = m_rightImpl.block(desc, scratch, /*root_of_expr_ast=*/true);
     // If block was evaluated into a destination, there is no need to do assignment.
     if (block.kind() != internal::TensorBlockKind::kMaterializedInOutput) {
-      m_leftImpl.writeBlockV2(desc, block);
+      m_leftImpl.writeBlock(desc, block);
     }
     block.cleanup();
   }
