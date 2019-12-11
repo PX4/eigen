@@ -223,30 +223,14 @@ class TensorExecutor<Expression, DefaultDevice, Vectorizable,
 
 template <typename TensorBlockMapper>
 struct TensorExecutorTilingContext {
-  TensorExecutorTilingContext() : buffer(nullptr) {}
   TensorExecutorTilingContext(const TensorBlockMapper& b_mapper,
-                              const TensorOpCost& b_cost, void* b_buffer,
-                              size_t b_aligned_size)
+                              const TensorOpCost& b_cost, size_t b_aligned_size)
       : block_mapper(b_mapper),
         cost(b_cost),
-        buffer(b_buffer),
         aligned_blocksize(b_aligned_size) {}
-
-  template <typename Scalar>
-  Scalar* GetCurrentThreadBuffer(const ThreadPoolDevice& device) const {
-    // ThreadPoolDevice::currentThreadId() returns -1 if called from a thread
-    // not in the thread pool, such as the main thread dispatching Eigen
-    // expressions.
-    const int thread_idx = device.currentThreadId();
-    eigen_assert(thread_idx >= -1 && thread_idx < device.numThreads());
-
-    const Index offset = aligned_blocksize * (thread_idx + 1);
-    return reinterpret_cast<Scalar*>(static_cast<char*>(buffer) + offset);
-  }
 
   TensorBlockMapper block_mapper;  // navigate through blocks
   TensorOpCost cost;               // cost of computing a single block
-  void* buffer;                    // temporary buffer for blocks
   size_t aligned_blocksize;        // block size after memory alignment
 };
 
@@ -254,37 +238,27 @@ struct TensorExecutorTilingContext {
 // for blocks. See TensorExecutor/TensorAsyncExecutor (Tiling=On) below.
 template <typename Evaluator, typename TensorBlockMapper, bool Vectorizable>
 TensorExecutorTilingContext<TensorBlockMapper> GetTensorExecutorTilingContext(
-    const ThreadPoolDevice& device, const Evaluator& evaluator,
-    bool allocate_buffer = true) {
+    const Evaluator& evaluator) {
   // Query expression tree for desired block size/shape.
-  const TensorBlockResourceRequirements requirements =
+  TensorBlockResourceRequirements requirements =
       evaluator.getResourceRequirements();
 
-  int num_threads = device.numThreads();
-
-  // Estimate minimum block size based on cost.
+  // Update target block size based on cost model.
   TensorOpCost cost = evaluator.costPerCoeff(Vectorizable);
   double taskSize = TensorCostModel<ThreadPoolDevice>::taskSize(1, cost);
-  size_t block_size = static_cast<size_t>(1.0 / taskSize);
+  requirements.size = static_cast<size_t>(1.0 / taskSize);
 
   TensorBlockMapper block_mapper(
       typename TensorBlockMapper::Dimensions(evaluator.dimensions()),
       requirements);
 
-  block_size = block_mapper.blockTotalSize();
+  size_t block_size = block_mapper.blockTotalSize();
   const size_t align = numext::maxi(EIGEN_MAX_ALIGN_BYTES, 1);
   const size_t aligned_blocksize =
       align *
       divup<size_t>(block_size * sizeof(typename Evaluator::Scalar), align);
 
-  // TODO(ezhulenev): In new block evaluation framework there is no need for
-  // allocating temporary buffers, remove this after migration.
-  void* buf = NULL;
-  if (allocate_buffer) {
-    buf = device.allocate((num_threads + 1) * aligned_blocksize);
-  }
-
-  return {block_mapper, cost * block_size, buf, aligned_blocksize};
+  return {block_mapper, cost * block_size, aligned_blocksize};
 }
 
 template <typename Evaluator, typename StorageIndex, bool Vectorizable>
@@ -393,8 +367,7 @@ class TensorExecutor<Expression, ThreadPoolDevice, Vectorizable,
     if (needs_assign) {
       const TilingContext tiling =
           internal::GetTensorExecutorTilingContext<Evaluator, BlockMapper,
-                                                   Vectorizable>(
-              device, evaluator, /*allocate_buffer=*/false);
+                                                   Vectorizable>(evaluator);
 
       auto eval_block = [&device, &evaluator, &tiling](IndexType firstBlockIdx,
                                                        IndexType lastBlockIdx) {
@@ -498,10 +471,8 @@ class TensorAsyncExecutor<Expression, ThreadPoolDevice, DoneCallback,
         return;
       }
 
-      ctx->tiling =
-          internal::GetTensorExecutorTilingContext<Evaluator, BlockMapper,
-                                                   Vectorizable>(
-              ctx->device, ctx->evaluator, /*allocate_buffer=*/false);
+      ctx->tiling = internal::GetTensorExecutorTilingContext<
+          Evaluator, BlockMapper, Vectorizable>(ctx->evaluator);
 
       auto eval_block = [ctx](IndexType firstBlockIdx, IndexType lastBlockIdx) {
         TensorBlockScratch scratch(ctx->device);
@@ -531,7 +502,6 @@ class TensorAsyncExecutor<Expression, ThreadPoolDevice, DoneCallback,
           on_done(std::move(done)) {}
 
     ~TensorAsyncExecutorContext() {
-      device.deallocate(tiling.buffer);
       evaluator.cleanup();
       on_done();
     }
