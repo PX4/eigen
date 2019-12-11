@@ -223,6 +223,7 @@ class TensorExecutor<Expression, DefaultDevice, Vectorizable,
 
 template <typename TensorBlockMapper>
 struct TensorExecutorTilingContext {
+  TensorExecutorTilingContext() = default;
   TensorExecutorTilingContext(const TensorBlockMapper& b_mapper,
                               const TensorOpCost& b_cost, size_t b_aligned_size)
       : block_mapper(b_mapper),
