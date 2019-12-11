@@ -463,21 +463,25 @@ template<typename ArgType, int BlockRows, int BlockCols, bool InnerPanel>
 class unary_evaluator<Block<ArgType,BlockRows,BlockCols,InnerPanel>, IteratorBased>::InnerVectorInnerIterator
  : public EvalIterator
 {
+  // NOTE MSVC fails to compile if we don't explicitely "import" IsRowMajor from unary_evaluator
+  //      because the base class EvalIterator has a private IsRowMajor enum too. (bug #1786)
+  // NOTE We cannot call it IsRowMajor because it would shadow unary_evaluator::IsRowMajor
+  enum { XprIsRowMajor = unary_evaluator::IsRowMajor };
   const XprType& m_block;
   Index m_end;
 public:
 
   EIGEN_STRONG_INLINE InnerVectorInnerIterator(const unary_evaluator& aEval, Index outer)
-    : EvalIterator(aEval.m_argImpl, outer + (IsRowMajor ? aEval.m_block.startRow() : aEval.m_block.startCol())),
+    : EvalIterator(aEval.m_argImpl, outer + (XprIsRowMajor ? aEval.m_block.startRow() : aEval.m_block.startCol())),
       m_block(aEval.m_block),
-      m_end(IsRowMajor ? aEval.m_block.startCol()+aEval.m_block.blockCols() : aEval.m_block.startRow()+aEval.m_block.blockRows())
+      m_end(XprIsRowMajor ? aEval.m_block.startCol()+aEval.m_block.blockCols() : aEval.m_block.startRow()+aEval.m_block.blockRows())
   {
-    while( (EvalIterator::operator bool()) && (EvalIterator::index() < (IsRowMajor ? m_block.startCol() : m_block.startRow())) )
+    while( (EvalIterator::operator bool()) && (EvalIterator::index() < (XprIsRowMajor ? m_block.startCol() : m_block.startRow())) )
       EvalIterator::operator++();
   }
 
-  inline StorageIndex index() const { return EvalIterator::index() - convert_index<StorageIndex>(IsRowMajor ? m_block.startCol() : m_block.startRow()); }
-  inline Index outer()  const { return EvalIterator::outer() - (IsRowMajor ? m_block.startRow() : m_block.startCol()); }
+  inline StorageIndex index() const { return EvalIterator::index() - convert_index<StorageIndex>(XprIsRowMajor ? m_block.startCol() : m_block.startRow()); }
+  inline Index outer()  const { return EvalIterator::outer() - (XprIsRowMajor ? m_block.startRow() : m_block.startCol()); }
   inline Index row()    const { return EvalIterator::row()   - m_block.startRow(); }
   inline Index col()    const { return EvalIterator::col()   - m_block.startCol(); }
 
@@ -487,6 +491,8 @@ public:
 template<typename ArgType, int BlockRows, int BlockCols, bool InnerPanel>
 class unary_evaluator<Block<ArgType,BlockRows,BlockCols,InnerPanel>, IteratorBased>::OuterVectorInnerIterator
 {
+  // NOTE see above
+  enum { XprIsRowMajor = unary_evaluator::IsRowMajor };
   const unary_evaluator& m_eval;
   Index m_outerPos;
   const Index m_innerIndex;
@@ -496,9 +502,9 @@ public:
 
   EIGEN_STRONG_INLINE OuterVectorInnerIterator(const unary_evaluator& aEval, Index outer)
     : m_eval(aEval),
-      m_outerPos( (IsRowMajor ? aEval.m_block.startCol() : aEval.m_block.startRow()) ),
-      m_innerIndex(IsRowMajor ? aEval.m_block.startRow() : aEval.m_block.startCol()),
-      m_end(IsRowMajor ? aEval.m_block.startCol()+aEval.m_block.blockCols() : aEval.m_block.startRow()+aEval.m_block.blockRows()),
+      m_outerPos( (XprIsRowMajor ? aEval.m_block.startCol() : aEval.m_block.startRow()) ),
+      m_innerIndex(XprIsRowMajor ? aEval.m_block.startRow() : aEval.m_block.startCol()),
+      m_end(XprIsRowMajor ? aEval.m_block.startCol()+aEval.m_block.blockCols() : aEval.m_block.startRow()+aEval.m_block.blockRows()),
       m_it(m_eval.m_argImpl, m_outerPos)
   {
     EIGEN_UNUSED_VARIABLE(outer);
@@ -509,10 +515,10 @@ public:
       ++(*this);
   }
 
-  inline StorageIndex index() const { return convert_index<StorageIndex>(m_outerPos - (IsRowMajor ? m_eval.m_block.startCol() : m_eval.m_block.startRow())); }
+  inline StorageIndex index() const { return convert_index<StorageIndex>(m_outerPos - (XprIsRowMajor ? m_eval.m_block.startCol() : m_eval.m_block.startRow())); }
   inline Index outer()  const { return 0; }
-  inline Index row()    const { return IsRowMajor ? 0 : index(); }
-  inline Index col()    const { return IsRowMajor ? index() : 0; }
+  inline Index row()    const { return XprIsRowMajor ? 0 : index(); }
+  inline Index col()    const { return XprIsRowMajor ? index() : 0; }
 
   inline Scalar value() const { return m_it.value(); }
   inline Scalar& valueRef() { return m_it.valueRef(); }
