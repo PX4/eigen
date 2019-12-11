@@ -66,6 +66,9 @@ namespace Eigen {
 #include "src/SpecialFunctions/BesselFunctionsFunctors.h"
 #include "src/SpecialFunctions/BesselFunctionsArrayAPI.h"
 #include "src/SpecialFunctions/SpecialFunctionsImpl.h"
+#if defined(EIGEN_HIPCC)
+#include "src/SpecialFunctions/HipVectorCompatibility.h"
+#endif
 #include "src/SpecialFunctions/SpecialFunctionsPacketMath.h"
 #include "src/SpecialFunctions/SpecialFunctionsHalf.h"
 #include "src/SpecialFunctions/SpecialFunctionsFunctors.h"
