@@ -246,6 +246,7 @@ struct TensorEvaluator<const TensorPaddingOp<PaddingDimensions, ArgType>, Device
     }
 
     static const bool IsColMajor = Layout == static_cast<int>(ColMajor);
+    const int inner_dim_idx = IsColMajor ? 0 : NumDims - 1;
 
     Index offset = desc.offset();
 
@@ -257,7 +258,7 @@ struct TensorEvaluator<const TensorPaddingOp<PaddingDimensions, ArgType>, Device
       output_offsets[dim] = offset / m_outputStrides[stride_dim];
       offset -= output_offsets[dim] * m_outputStrides[stride_dim];
     }
-    output_offsets[IsColMajor ? 0 : NumDims - 1] = offset;
+    output_offsets[inner_dim_idx] = offset;
 
     // Offsets in the input corresponding to output offsets.
     DSizes<Index, NumDims> input_offsets = output_offsets;
@@ -303,7 +304,8 @@ struct TensorEvaluator<const TensorPaddingOp<PaddingDimensions, ArgType>, Device
       it[i].output_span = it[i].output_stride * (it[i].size - 1);
     }
 
-    const int inner_dim_idx = IsColMajor ? 0 : NumDims - 1;
+    const Index input_inner_dim_size =
+        static_cast<Index>(m_impl.dimensions()[inner_dim_idx]);
 
     // Total output size.
     const Index output_size = desc.size();
@@ -326,10 +328,9 @@ struct TensorEvaluator<const TensorPaddingOp<PaddingDimensions, ArgType>, Device
         // Want to copy from input.
         (output_inner_dim_size - output_inner_pad_before_size),
         // Can copy from input.
-        numext::maxi(
-            static_cast<Index>(m_impl.dimensions()[inner_dim_idx]) -
-                (input_offsets[inner_dim_idx] + output_inner_pad_before_size),
-            Index(0)));
+        numext::maxi(input_inner_dim_size - (input_offsets[inner_dim_idx] +
+                                             output_inner_pad_before_size),
+                     Index(0)));
 
     eigen_assert(output_inner_copy_size >= 0);
 
@@ -358,8 +359,31 @@ struct TensorEvaluator<const TensorPaddingOp<PaddingDimensions, ArgType>, Device
     const typename TensorBlock::Storage block_storage =
         TensorBlock::prepareStorage(desc, scratch);
 
+    // TODO(ezhulenev): Squeeze multiple non-padded inner dimensions into a
+    // single logical inner dimension.
+
+    // When possible we squeeze writes for the innermost (only if non-padded)
+    // dimension with the first padded dimension. This allows to reduce the
+    // number of calls to LinCopy and better utilize vector instructions.
+    const bool squeeze_writes = NumDims > 1 &&
+                                // inner dimension is not padded
+                                input_inner_dim_size == output_inner_dim_size;
+
+    const int squeeze_dim = IsColMajor ? inner_dim_idx + 1 : inner_dim_idx - 1;
+
+    // Maximum coordinate on a squeeze dimension that we can write to.
+    const Index squeeze_max_coord =
+        squeeze_writes ? numext::mini(
+                             // max non-padded element in the input
+                             static_cast<Index>(m_dimensions[squeeze_dim] -
+                                                m_padding[squeeze_dim].second),
+                             // max element in the output buffer
+                             static_cast<Index>(output_offsets[squeeze_dim] +
+                                                desc.dimension(squeeze_dim)))
+                       : static_cast<Index>(0);
+
     // Iterate copying data from `m_impl.data()` to the output buffer.
-    for (Index size = 0; size < output_size; size += output_inner_dim_size) {
+    for (Index size = 0; size < output_size;) {
       // Detect if we are in the padded region (exclude innermost dimension).
       bool is_padded = false;
       for (int j = 1; j < NumDims; ++j) {
@@ -369,13 +393,39 @@ struct TensorEvaluator<const TensorPaddingOp<PaddingDimensions, ArgType>, Device
       }
 
       if (is_padded) {
-        // Fill with padding value.
+        // Fill single innermost dimension with padding value.
+        size += output_inner_dim_size;
+
         LinCopy::template Run<LinCopy::Kind::FillLinear>(
             typename LinCopy::Dst(output_offset, 1, block_storage.data()),
             typename LinCopy::Src(0, 0, &m_paddingValue),
             output_inner_dim_size);
 
+
+      } else if (squeeze_writes) {
+        // Squeeze multiple reads from innermost dimensions.
+        const Index squeeze_num = squeeze_max_coord - output_coord[squeeze_dim];
+        size += output_inner_dim_size * squeeze_num;
+
+        // Copy `squeeze_num` inner dimensions from input to output.
+        LinCopy::template Run<LinCopy::Kind::Linear>(
+            typename LinCopy::Dst(output_offset, 1, block_storage.data()),
+            typename LinCopy::Src(input_offset, 1, m_impl.data()),
+            output_inner_dim_size * squeeze_num);
+
+        // Update iteration state for only `squeeze_num - 1` processed inner
+        // dimensions, because we have another iteration state update at the end
+        // of the loop that will update iteration state for the last inner
+        // processed dimension.
+        it[0].count += (squeeze_num - 1);
+        input_offset += it[0].input_stride * (squeeze_num - 1);
+        output_offset += it[0].output_stride * (squeeze_num - 1);
+        output_coord[squeeze_dim] += (squeeze_num - 1);
+
       } else {
+        // Single read from innermost dimension.
+        size += output_inner_dim_size;
+
         {  // Fill with padding before copying from input inner dimension.
           const Index out = output_offset;
 
