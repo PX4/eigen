@@ -17,19 +17,25 @@ namespace internal {
 
 /** \internal \returns the hyperbolic tan of \a a (coeff-wise)
     Doesn't do anything fancy, just a 13/6-degree rational interpolant which
-    is accurate up to a couple of ulp in the range [-9, 9], outside of which
-    the tanh(x) = +/-1.
+    is accurate up to a couple of ulps in the (approximate) range [-8, 8], 
+    outside of which tanh(x) = +/-1 in single precision. This is done by
+    Clamp the inputs to the range [-c, c]. The value c is chosen as the smallest
+    value where the approximation evaluates to exactly 1.
 
     This implementation works on both scalars and packets.
 */
 template<typename T>
 T generic_fast_tanh_float(const T& a_x)
 {
-  // Clamp the inputs to the range [-9, 9] since anything outside
-  // this range is +/-1.0f in single-precision.
-  const T plus_9 = pset1<T>(9.f);
-  const T minus_9 = pset1<T>(-9.f);
-  const T x = pmax(pmin(a_x, plus_9), minus_9);
+  // Clamp the inputs to the range [-c, c]
+#ifdef EIGEN_VECTORIZE_FMA
+  const T plus_clamp = pset1<T>(7.99881172180175781);
+  const T minus_clamp = pset1<T>(-7.99881172180175781);
+#else
+  const T plus_clamp = pset1<T>(7.90531110763549805);
+  const T minus_clamp = pset1<T>(-7.90531110763549805);
+#endif
+  const T x = pmax(pmin(a_x, plus_clamp), minus_clamp);
   // The monomial coefficients of the numerator polynomial (odd).
   const T alpha_1 = pset1<T>(4.89352455891786e-03f);
   const T alpha_3 = pset1<T>(6.37261928875436e-04f);
