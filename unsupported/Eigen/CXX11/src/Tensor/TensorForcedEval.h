@@ -126,6 +126,12 @@ struct TensorEvaluator<const TensorForcedEvalOp<ArgType_>, Device>
   EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType) {
     const Index numValues =  internal::array_prod(m_impl.dimensions());
     m_buffer = m_device.get((CoeffReturnType*)m_device.allocate_temp(numValues * sizeof(CoeffReturnType)));
+
+    // Initialize non-trivially constructible types.
+    if (!internal::is_arithmetic<CoeffReturnType>::value) {
+      for (Index i = 0; i < numValues; ++i) new (m_buffer + i) CoeffReturnType();
+    }
+
     typedef TensorEvalToOp< const typename internal::remove_const<ArgType>::type > EvalTo;
     EvalTo evalToTmp(m_device.get(m_buffer), m_op);
 
