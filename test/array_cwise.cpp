@@ -429,6 +429,11 @@ template<typename ArrayType> void array_complex(const ArrayType& m)
   VERIFY_IS_APPROX(m1.exp(), exp(m1));
   VERIFY_IS_APPROX(m1.exp() / m2.exp(),(m1-m2).exp());
 
+  VERIFY_IS_APPROX(m1.expm1(), expm1(m1));
+  VERIFY_IS_APPROX(expm1(m1), exp(m1) - 1.);
+  // Check for larger magnitude complex numbers that expm1 matches exp - 1.
+  VERIFY_IS_APPROX(expm1(10. * m1), exp(10. * m1) - 1.);
+
   VERIFY_IS_APPROX(sinh(m1), 0.5*(exp(m1)-exp(-m1)));
   VERIFY_IS_APPROX(cosh(m1), 0.5*(exp(m1)+exp(-m1)));
   VERIFY_IS_APPROX(tanh(m1), (0.5*(exp(m1)-exp(-m1)))/(0.5*(exp(m1)+exp(-m1))));
