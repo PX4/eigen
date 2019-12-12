@@ -421,8 +421,20 @@ template<int N> EIGEN_STRONG_INLINE Packet4i pshiftright(Packet4i a) { return _m
 template<int N> EIGEN_STRONG_INLINE Packet4i pshiftleft(Packet4i a) { return _mm_slli_epi32(a,N); }
 
 #ifdef EIGEN_VECTORIZE_SSE4_1
-template<> EIGEN_STRONG_INLINE Packet4f pround<Packet4f>(const Packet4f& a) { return _mm_round_ps(a, 0); }
-template<> EIGEN_STRONG_INLINE Packet2d pround<Packet2d>(const Packet2d& a) { return _mm_round_pd(a, 0); }
+template<> EIGEN_STRONG_INLINE Packet4f pround<Packet4f>(const Packet4f& a)
+{
+  // Unfortunatly _mm_round_ps doesn't have a rounding mode to implement numext::round.
+  const Packet4f mask = pset1frombits<Packet4f>(0x80000000u);
+  const Packet4f prev0dot5 = pset1frombits<Packet4f>(0x3EFFFFFFu);
+  return _mm_round_ps(padd(por(pand(a, mask), prev0dot5), a), _MM_FROUND_TO_ZERO);
+}
+
+template<> EIGEN_STRONG_INLINE Packet2d pround<Packet2d>(const Packet2d& a)
+{
+  const Packet2d mask = _mm_castsi128_pd(_mm_set_epi64x(0x8000000000000000ull, 0x8000000000000000ull));
+  const Packet2d prev0dot5 = _mm_castsi128_pd(_mm_set_epi64x(0x3FDFFFFFFFFFFFFFull, 0x3FDFFFFFFFFFFFFFull));
+  return _mm_round_pd(padd(por(pand(a, mask), prev0dot5), a), _MM_FROUND_TO_ZERO);
+}
 
 template<> EIGEN_STRONG_INLINE Packet4f pceil<Packet4f>(const Packet4f& a) { return _mm_ceil_ps(a); }
 template<> EIGEN_STRONG_INLINE Packet2d pceil<Packet2d>(const Packet2d& a) { return _mm_ceil_pd(a); }

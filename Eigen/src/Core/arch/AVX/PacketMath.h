@@ -311,9 +311,6 @@ template<> EIGEN_STRONG_INLINE Packet8i pcmp_eq(const Packet8i& a, const Packet8
 #endif
 }
 
-template<> EIGEN_STRONG_INLINE Packet8f pround<Packet8f>(const Packet8f& a) { return _mm256_round_ps(a, _MM_FROUND_CUR_DIRECTION); }
-template<> EIGEN_STRONG_INLINE Packet4d pround<Packet4d>(const Packet4d& a) { return _mm256_round_pd(a, _MM_FROUND_CUR_DIRECTION); }
-
 template<> EIGEN_STRONG_INLINE Packet8f pceil<Packet8f>(const Packet8f& a) { return _mm256_ceil_ps(a); }
 template<> EIGEN_STRONG_INLINE Packet4d pceil<Packet4d>(const Packet4d& a) { return _mm256_ceil_pd(a); }
 
@@ -389,6 +386,19 @@ template<> EIGEN_STRONG_INLINE Packet8i pandnot<Packet8i>(const Packet8i& a, con
 #else
   return _mm256_castps_si256(_mm256_andnot_ps(_mm256_castsi256_ps(b),_mm256_castsi256_ps(a)));
 #endif
+}
+
+template<> EIGEN_STRONG_INLINE Packet8f pround<Packet8f>(const Packet8f& a)
+{
+  const Packet8f mask = pset1frombits<Packet8f>(0x80000000u);
+  const Packet8f prev0dot5 = pset1frombits<Packet8f>(0x3EFFFFFFu);
+  return _mm256_round_ps(padd(por(pand(a, mask), prev0dot5), a), _MM_FROUND_TO_ZERO);
+}
+template<> EIGEN_STRONG_INLINE Packet4d pround<Packet4d>(const Packet4d& a)
+{
+  const Packet4d mask = _mm256_castsi256_pd(_mm256_set_epi64x(0x8000000000000000ull, 0x8000000000000000ull, 0x8000000000000000ull, 0x8000000000000000ull));
+  const Packet4d prev0dot5 = _mm256_castsi256_pd(_mm256_set_epi64x(0x3FDFFFFFFFFFFFFFull, 0x3FDFFFFFFFFFFFFFull, 0x3FDFFFFFFFFFFFFFull, 0x3FDFFFFFFFFFFFFFull));
+  return _mm256_round_pd(padd(por(pand(a, mask), prev0dot5), a), _MM_FROUND_TO_ZERO);
 }
 
 template<> EIGEN_STRONG_INLINE Packet8f pselect<Packet8f>(const Packet8f& mask, const Packet8f& a, const Packet8f& b)

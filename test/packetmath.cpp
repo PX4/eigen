@@ -518,6 +518,14 @@ template<typename Scalar,typename Packet> void packetmath_real()
   CHECK_CWISE1_IF(PacketTraits::HasCeil, numext::ceil, internal::pceil);
   CHECK_CWISE1_IF(PacketTraits::HasFloor, numext::floor, internal::pfloor);
 
+  // See bug 1785.
+  for (int i=0; i<size; ++i)
+   {
+     data1[i] = -1.5 + i;
+     data2[i] = -1.5 + i;
+   }
+  CHECK_CWISE1_IF(PacketTraits::HasRound, numext::round, internal::pround);
+
   for (int i=0; i<size; ++i)
   {
     data1[i] = internal::random<Scalar>(-1,1);
