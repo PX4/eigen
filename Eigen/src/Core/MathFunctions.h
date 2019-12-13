@@ -540,8 +540,11 @@ struct expm1_impl<std::complex<RealScalar> > {
     //          = exp(x) * cos(y) - 1.
     //          = expm1(x) + exp(x) * (cos(y) - 1)
     //          = expm1(x) + exp(x) * (2 * sin(y / 2) ** 2)
-    RealScalar erm1 = std_fallback::expm1(xr);
+
+    // TODO better use numext::expm1 and numext::sin (but that would require forward declarations or moving this specialization down).
+    RealScalar erm1 = expm1_impl<RealScalar>::run(xr);
     RealScalar er = erm1 + RealScalar(1.);
+    EIGEN_USING_STD_MATH(sin);
     RealScalar sin2 = sin(xi / RealScalar(2.));
     sin2 = sin2 * sin2;
     RealScalar s = sin(xi);
