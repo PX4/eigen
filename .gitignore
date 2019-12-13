@@ -1,4 +1,3 @@
-syntax: glob
 qrc_*cxx
 *.orig
 *.pyc
