@@ -905,14 +905,106 @@ struct scalar_logistic_op {
   }
 };
 
+/** \internal
+  * \brief Template specialization of the logistic function for float.
+  *
+  *  Uses just a 9/10-degree rational interpolant which
+  *  interpolates 1/(1+exp(-x)) - 0.5 up to a couple of ulps in the range
+  *  [-9, 18]. Below -9 we use the more accurate approximation
+  *  1/(1+exp(-x)) ~= exp(x), and above 18 the logistic function is 1 withing
+  *  one ulp. The shifted logistic is interpolated because it was easier to
+  *  make the fit converge.
+  *
+  */
+template <>
+struct scalar_logistic_op<float> {
+  EIGEN_EMPTY_STRUCT_CTOR(scalar_logistic_op)
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE float operator()(const float& x) const {
+    // The upper cut-off is the smallest x for which the rational approximation evaluates to 1.
+    // Choosing this value saves us a few instructions clamping the results at the end.
+#ifdef EIGEN_VECTORIZE_FMA
+    const float cutoff_upper = 16.285715103149414062f;
+#else
+    const float cutoff_upper = 16.619047164916992188f;
+#endif
+    const float cutoff_lower = -9.f;
+    if (x > cutoff_upper) return 1.0f;
+    else if (x < cutoff_lower) return numext::exp(x);
+    else return 1.0f / (1.0f + numext::exp(-x));
+  }
+
+  template <typename Packet> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
+  Packet packetOp(const Packet& _x) const {
+    const Packet cutoff_lower = pset1<Packet>(-9.f);
+    const Packet lt_mask = pcmp_lt<Packet>(_x, cutoff_lower);
+    const bool any_small = predux(lt_mask);
+
+    // Clamp the input to be at most 'cutoff_upper'.
+#ifdef EIGEN_VECTORIZE_FMA
+    const Packet cutoff_upper = pset1<Packet>(16.285715103149414062f);
+#else
+    const Packet cutoff_upper = pset1<Packet>(16.619047164916992188f);
+#endif
+    const Packet x = pmin(_x, cutoff_upper);
+
+    // The monomial coefficients of the numerator polynomial (odd).
+    const Packet alpha_1 = pset1<Packet>(2.48287947061529e-01f);
+    const Packet alpha_3 = pset1<Packet>(8.51377133304701e-03f);
+    const Packet alpha_5 = pset1<Packet>(6.08574864600143e-05f);
+    const Packet alpha_7 = pset1<Packet>(1.15627324459942e-07f);
+    const Packet alpha_9 = pset1<Packet>(4.37031012579801e-11f);
+
+    // The monomial coefficients of the denominator polynomial (even).
+    const Packet beta_0 = pset1<Packet>(9.93151921023180e-01f);
+    const Packet beta_2 = pset1<Packet>(1.16817656904453e-01f);
+    const Packet beta_4 = pset1<Packet>(1.70198817374094e-03f);
+    const Packet beta_6 = pset1<Packet>(6.29106785017040e-06f);
+    const Packet beta_8 = pset1<Packet>(5.76102136993427e-09f);
+    const Packet beta_10 = pset1<Packet>(6.10247389755681e-13f);
+
+    // Since the polynomials are odd/even, we need x^2.
+    const Packet x2 = pmul(x, x);
+
+    // Evaluate the numerator polynomial p.
+    Packet p = pmadd(x2, alpha_9, alpha_7);
+    p = pmadd(x2, p, alpha_5);
+    p = pmadd(x2, p, alpha_3);
+    p = pmadd(x2, p, alpha_1);
+    p = pmul(x, p);
+
+    // Evaluate the denominator polynomial q.
+    Packet q = pmadd(x2, beta_10, beta_8);
+    q = pmadd(x2, q, beta_6);
+    q = pmadd(x2, q, beta_4);
+    q = pmadd(x2, q, beta_2);
+    q = pmadd(x2, q, beta_0);
+    // Divide the numerator by the denominator and shift it up.
+    const Packet logistic = padd(pdiv(p, q), pset1<Packet>(0.5f));
+    if (EIGEN_PREDICT_FALSE(any_small)) {
+      const Packet exponential = pexp(_x);
+      return pselect(lt_mask, exponential, logistic);
+    } else {
+      return logistic;
+    }
+  }
+};
+
 template <typename T>
 struct functor_traits<scalar_logistic_op<T> > {
   enum {
+    // The cost estimate for float here here is for the common(?) case where
+    // all arguments are greater than -9.
     Cost = scalar_div_cost<T, packet_traits<T>::HasDiv>::value +
-        NumTraits<T>::AddCost * 2 + functor_traits<scalar_exp_op<T> >::Cost,
+           (internal::is_same<T, float>::value
+                ? NumTraits<T>::AddCost * 15 + NumTraits<T>::MulCost * 11
+                : NumTraits<T>::AddCost * 2 +
+                      functor_traits<scalar_exp_op<T> >::Cost),
     PacketAccess =
         packet_traits<T>::HasAdd && packet_traits<T>::HasDiv &&
-        packet_traits<T>::HasNegate && packet_traits<T>::HasExp
+        (internal::is_same<T, float>::value
+             ? packet_traits<T>::HasMul && packet_traits<T>::HasMax &&
+                   packet_traits<T>::HasMin
+             : packet_traits<T>::HasNegate && packet_traits<T>::HasExp)
   };
 };
 

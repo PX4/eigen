@@ -156,6 +156,15 @@ EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE double eq_mask(const double& a,
   return __longlong_as_double(a == b ? 0xffffffffffffffffull : 0ull);
 }
 
+EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE float lt_mask(const float& a,
+                                                    const float& b) {
+  return __int_as_float(a < b ? 0xffffffffu : 0u);
+}
+EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE double lt_mask(const double& a,
+                                                     const double& b) {
+  return __longlong_as_double(a < b ? 0xffffffffffffffffull : 0ull);
+}
+
 }  // namespace
 
 template <>
@@ -213,9 +222,20 @@ EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE float4 pcmp_eq<float4>(const float4& a,
                      eq_mask(a.w, b.w));
 }
 template <>
+EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE float4 pcmp_lt<float4>(const float4& a,
+                                                             const float4& b) {
+  return make_float4(lt_mask(a.x, b.x), lt_mask(a.y, b.y), lt_mask(a.z, b.z),
+                     lt_mask(a.w, b.w));
+}
+template <>
 EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE double2
 pcmp_eq<double2>(const double2& a, const double2& b) {
   return make_double2(eq_mask(a.x, b.x), eq_mask(a.y, b.y));
+}
+template <>
+EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE double2
+pcmp_lt<double2>(const double2& a, const double2& b) {
+  return make_double2(lt_mask(a.x, b.x), lt_mask(a.y, b.y));
 }
 #endif  // EIGEN_CUDA_ARCH || defined(EIGEN_HIP_DEVICE_COMPILE)
 
@@ -643,6 +663,20 @@ EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE half2 pcmp_eq<half2>(const half2& a,
   half b2 = __high2half(b);
   half eq1 = __half2float(a1) == __half2float(b1) ? true_half : false_half;
   half eq2 = __half2float(a2) == __half2float(b2) ? true_half : false_half;
+  return __halves2half2(eq1, eq2);
+}
+
+template <>
+EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE half2 pcmp_lt<half2>(const half2& a,
+                                                           const half2& b) {
+  half true_half = half_impl::raw_uint16_to_half(0xffffu);
+  half false_half = half_impl::raw_uint16_to_half(0x0000u);
+  half a1 = __low2half(a);
+  half a2 = __high2half(a);
+  half b1 = __low2half(b);
+  half b2 = __high2half(b);
+  half eq1 = __half2float(a1) < __half2float(b1) ? true_half : false_half;
+  half eq2 = __half2float(a2) < __half2float(b2) ? true_half : false_half;
   return __halves2half2(eq1, eq2);
 }
 

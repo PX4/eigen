@@ -17,10 +17,11 @@ namespace internal {
 
 /** \internal \returns the hyperbolic tan of \a a (coeff-wise)
     Doesn't do anything fancy, just a 13/6-degree rational interpolant which
-    is accurate up to a couple of ulps in the (approximate) range [-8, 8], 
-    outside of which tanh(x) = +/-1 in single precision. This is done by
-    Clamp the inputs to the range [-c, c]. The value c is chosen as the smallest
-    value where the approximation evaluates to exactly 1.
+    is accurate up to a couple of ulps in the (approximate) range [-8, 8],
+    outside of which tanh(x) = +/-1 in single precision. The input is clamped
+    to the range [-c, c]. The value c is chosen as the smallest value where
+    the approximation evaluates to exactly 1. In the reange [-0.0004, 0.0004]
+    the approxmation tanh(x) ~= x is used for better accuracy as x tends to zero.
 
     This implementation works on both scalars and packets.
 */
@@ -29,13 +30,15 @@ T generic_fast_tanh_float(const T& a_x)
 {
   // Clamp the inputs to the range [-c, c]
 #ifdef EIGEN_VECTORIZE_FMA
-  const T plus_clamp = pset1<T>(7.99881172180175781);
-  const T minus_clamp = pset1<T>(-7.99881172180175781);
+  const T plus_clamp = pset1<T>(7.99881172180175781f);
+  const T minus_clamp = pset1<T>(-7.99881172180175781f);
 #else
-  const T plus_clamp = pset1<T>(7.90531110763549805);
-  const T minus_clamp = pset1<T>(-7.90531110763549805);
+  const T plus_clamp = pset1<T>(7.90531110763549805f);
+  const T minus_clamp = pset1<T>(-7.90531110763549805f);
 #endif
+  const T tiny = pset1<T>(0.0004f);
   const T x = pmax(pmin(a_x, plus_clamp), minus_clamp);
+  const T tiny_mask = pcmp_lt(pabs(a_x), tiny);
   // The monomial coefficients of the numerator polynomial (odd).
   const T alpha_1 = pset1<T>(4.89352455891786e-03f);
   const T alpha_3 = pset1<T>(6.37261928875436e-04f);
@@ -63,13 +66,13 @@ T generic_fast_tanh_float(const T& a_x)
   p = pmadd(x2, p, alpha_1);
   p = pmul(x, p);
 
-  // Evaluate the denominator polynomial p.
+  // Evaluate the denominator polynomial q.
   T q = pmadd(x2, beta_6, beta_4);
   q = pmadd(x2, q, beta_2);
   q = pmadd(x2, q, beta_0);
 
   // Divide the numerator by the denominator.
-  return pdiv(p, q);
+  return pselect(tiny_mask, x, pdiv(p, q));
 }
 
 template<typename RealScalar>

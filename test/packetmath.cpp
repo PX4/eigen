@@ -545,6 +545,7 @@ template<typename Scalar,typename Packet> void packetmath_real()
     data1[i] = internal::random<Scalar>(-1,1) * std::pow(Scalar(10), internal::random<Scalar>(-6,6));
     data2[i] = internal::random<Scalar>(-1,1) * std::pow(Scalar(10), internal::random<Scalar>(-6,6));
   }
+  data1[0] = 1e-20;
   CHECK_CWISE1_IF(PacketTraits::HasTanh, std::tanh, internal::ptanh);
   if(PacketTraits::HasExp && PacketSize>=2)
   {
