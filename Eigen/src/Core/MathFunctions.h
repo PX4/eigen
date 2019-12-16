@@ -430,6 +430,38 @@ struct round_retval
 };
 
 /****************************************************************************
+* Implementation of rint                                                    *
+****************************************************************************/
+
+template<typename Scalar>
+struct rint_impl {
+  static inline Scalar run(const Scalar& x)
+  {
+    EIGEN_STATIC_ASSERT((!NumTraits<Scalar>::IsComplex), NUMERIC_TYPE_MUST_BE_REAL)
+#if EIGEN_HAS_CXX11_MATH
+      EIGEN_USING_STD_MATH(rint);
+#endif
+    return rint(x);
+  }
+};
+
+#if !EIGEN_HAS_CXX11_MATH
+template<>
+struct rint_impl<float> {
+  static inline float run(const float& x)
+  {
+    return rintf(x);
+  }
+};
+#endif
+
+template<typename Scalar>
+struct rint_retval
+{
+  typedef Scalar type;
+};
+
+/****************************************************************************
 * Implementation of arg                                                     *
 ****************************************************************************/
 
@@ -1193,6 +1225,13 @@ SYCL_SPECIALIZE_FLOATING_TYPES_UNARY_FUNC_RET_TYPE(isnan, isnan, bool)
 SYCL_SPECIALIZE_FLOATING_TYPES_UNARY_FUNC_RET_TYPE(isinf, isinf, bool)
 SYCL_SPECIALIZE_FLOATING_TYPES_UNARY_FUNC_RET_TYPE(isfinite, isfinite, bool)
 #endif
+
+template<typename Scalar>
+EIGEN_DEVICE_FUNC
+inline EIGEN_MATHFUNC_RETVAL(rint, Scalar) rint(const Scalar& x)
+{
+  return EIGEN_MATHFUNC_IMPL(rint, Scalar)::run(x);
+}
 
 template<typename Scalar>
 EIGEN_DEVICE_FUNC

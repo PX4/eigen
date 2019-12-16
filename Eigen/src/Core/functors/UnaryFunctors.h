@@ -736,6 +736,25 @@ struct functor_traits<scalar_floor_op<Scalar> >
 };
 
 /** \internal
+  * \brief Template functor to compute the rounded (with current rounding mode)  value of a scalar
+  * \sa class CwiseUnaryOp, ArrayBase::rint()
+  */
+template<typename Scalar> struct scalar_rint_op {
+  EIGEN_EMPTY_STRUCT_CTOR(scalar_rint_op)
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Scalar operator() (const Scalar& a) const { return numext::rint(a); }
+  template <typename Packet>
+  EIGEN_DEVICE_FUNC inline Packet packetOp(const Packet& a) const { return internal::print(a); }
+};
+template<typename Scalar>
+struct functor_traits<scalar_rint_op<Scalar> >
+{
+  enum {
+    Cost = NumTraits<Scalar>::MulCost,
+    PacketAccess = packet_traits<Scalar>::HasRint
+  };
+};
+
+/** \internal
   * \brief Template functor to compute the ceil of a scalar
   * \sa class CwiseUnaryOp, ArrayBase::ceil()
   */

@@ -395,6 +395,17 @@ This also means that, unless specified, if the function \c std::foo is available
   <td>SSE4,AVX,ZVector (f,d)</td>
 </tr>
 <tr>
+  <td class="code">
+  \anchor cwisetable_rint
+  a.\link ArrayBase::rint rint\endlink(); \n
+  \link Eigen::rint rint\endlink(a);
+  </td>
+  <td>nearest integer, \n rounding to nearest even in halfway cases</td>
+  <td>built-in generic implementation using <a href="http://en.cppreference.com/w/cpp/numeric/math/rint">\c std::rint</a>
+  or <a href="http://en.cppreference.com/w/c/numeric/math/rint">\c rintf</a>; </td>
+  <td>SSE4,AVX (f,d)</td>
+</tr>
+<tr>
 <th colspan="4">Floating point manipulation functions</th>
 </tr>
 <tr>

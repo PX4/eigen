@@ -81,7 +81,8 @@ template<> struct packet_traits<float>  : default_packet_traits
     HasBlend = 1,
     HasRound = 1,
     HasFloor = 1,
-    HasCeil = 1
+    HasCeil = 1,
+    HasRint = 1
   };
 };
 template<> struct packet_traits<double> : default_packet_traits
@@ -316,6 +317,8 @@ template<> EIGEN_STRONG_INLINE Packet8i pcmp_eq(const Packet8i& a, const Packet8
 #endif
 }
 
+template<> EIGEN_STRONG_INLINE Packet8f print<Packet8f>(const Packet8f& a) { return _mm256_round_ps(a, _MM_FROUND_CUR_DIRECTION); }
+template<> EIGEN_STRONG_INLINE Packet4d print<Packet4d>(const Packet4d& a) { return _mm256_round_pd(a, _MM_FROUND_CUR_DIRECTION); }
 
 template<> EIGEN_STRONG_INLINE Packet8f pceil<Packet8f>(const Packet8f& a) { return _mm256_ceil_ps(a); }
 template<> EIGEN_STRONG_INLINE Packet4d pceil<Packet4d>(const Packet4d& a) { return _mm256_ceil_pd(a); }

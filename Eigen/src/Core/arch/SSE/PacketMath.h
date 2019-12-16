@@ -124,6 +124,7 @@ struct packet_traits<float> : default_packet_traits {
 
 #ifdef EIGEN_VECTORIZE_SSE4_1
     ,
+    HasRint = 1,
     HasRound = 1,
     HasCeil = 1
 #endif
@@ -148,6 +149,7 @@ struct packet_traits<double> : default_packet_traits {
 #ifdef EIGEN_VECTORIZE_SSE4_1
     ,
     HasRound = 1,
+    HasRint = 1,
     HasFloor = 1,
     HasCeil = 1
 #endif
@@ -442,6 +444,9 @@ template<> EIGEN_STRONG_INLINE Packet2d pround<Packet2d>(const Packet2d& a)
   const Packet2d prev0dot5 = _mm_castsi128_pd(_mm_set_epi64x(0x3FDFFFFFFFFFFFFFull, 0x3FDFFFFFFFFFFFFFull));
   return _mm_round_pd(padd(por(pand(a, mask), prev0dot5), a), _MM_FROUND_TO_ZERO);
 }
+
+template<> EIGEN_STRONG_INLINE Packet4f print<Packet4f>(const Packet4f& a) { return _mm_round_ps(a, _MM_FROUND_CUR_DIRECTION); }
+template<> EIGEN_STRONG_INLINE Packet2d print<Packet2d>(const Packet2d& a) { return _mm_round_pd(a, _MM_FROUND_CUR_DIRECTION); }
 
 template<> EIGEN_STRONG_INLINE Packet4f pceil<Packet4f>(const Packet4f& a) { return _mm_ceil_ps(a); }
 template<> EIGEN_STRONG_INLINE Packet2d pceil<Packet2d>(const Packet2d& a) { return _mm_ceil_pd(a); }
