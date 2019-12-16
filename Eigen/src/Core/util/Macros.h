@@ -1115,6 +1115,9 @@ namespace Eigen {
 #if EIGEN_HAS_BUILTIN(__builtin_expect) || EIGEN_COMP_GNUC
 #define EIGEN_PREDICT_FALSE(x) (__builtin_expect(x, false))
 #define EIGEN_PREDICT_TRUE(x) (__builtin_expect(false || (x), true))
+#else
+#define EIGEN_PREDICT_FALSE(x) (x)
+#define EIGEN_PREDICT_TRUE(x) (x)
 #endif
 
 // the expression type of a standard coefficient wise binary operation
