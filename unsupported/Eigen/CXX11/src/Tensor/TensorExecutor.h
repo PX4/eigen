@@ -374,15 +374,23 @@ class TensorExecutor<Expression, ThreadPoolDevice, Vectorizable,
                                                        IndexType lastBlockIdx) {
         TensorBlockScratch scratch(device);
 
-        for (IndexType block_idx = firstBlockIdx; block_idx < lastBlockIdx; ++block_idx) {
+        for (IndexType block_idx = firstBlockIdx; block_idx < lastBlockIdx;
+             ++block_idx) {
           TensorBlockDesc desc = tiling.block_mapper.blockDescriptor(block_idx);
           evaluator.evalBlock(desc, scratch);
           scratch.reset();
         }
       };
 
-      device.parallelFor(tiling.block_mapper.blockCount(), tiling.cost,
-                         eval_block);
+      // Evaluate small expressions directly as a single block.
+      if (tiling.block_mapper.blockCount() == 1) {
+        TensorBlockScratch scratch(device);
+        TensorBlockDesc desc(0, tiling.block_mapper.blockDimensions());
+        evaluator.evalBlock(desc, scratch);
+      } else {
+        device.parallelFor(tiling.block_mapper.blockCount(), tiling.cost,
+                           eval_block);
+      }
     }
     evaluator.cleanup();
   }
@@ -486,8 +494,18 @@ class TensorAsyncExecutor<Expression, ThreadPoolDevice, DoneCallback,
           scratch.reset();
         }
       };
-      ctx->device.parallelForAsync(ctx->tiling.block_mapper.blockCount(),
-                                   ctx->tiling.cost, eval_block, [ctx]() { delete ctx; });
+
+      // Evaluate small expressions directly as a single block.
+      if (ctx->tiling.block_mapper.blockCount() == 1) {
+        TensorBlockScratch scratch(ctx->device);
+        TensorBlockDesc desc(0, ctx->tiling.block_mapper.blockDimensions());
+        ctx->evaluator.evalBlock(desc, scratch);
+        delete ctx;
+      } else {
+        ctx->device.parallelForAsync(ctx->tiling.block_mapper.blockCount(),
+                                     ctx->tiling.cost, eval_block,
+                                     [ctx]() { delete ctx; });
+      }
     };
 
     ctx->evaluator.evalSubExprsIfNeededAsync(nullptr, on_eval_subexprs);
