@@ -246,10 +246,12 @@ struct TensorEvaluator<const TensorReverseOp<ReverseDimensions, ArgType>, Device
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
   internal::TensorBlockResourceRequirements getResourceRequirements() const {
-    const size_t target_block_size =
-        numext::maxi<size_t>(1, m_device.lastLevelCacheSize() / sizeof(Scalar));
-    return {internal::TensorBlockShapeType::kSkewedInnerDims,
-            target_block_size};
+    const size_t target_size = m_device.lastLevelCacheSize();
+    // Block evaluation reads underlying memory in reverse order, and default
+    // cost model does not properly catch this in bytes stored/loaded.
+    return internal::TensorBlockResourceRequirements::skewed<Scalar>(
+               target_size)
+        .addCostPerCoeff({0, 0, 24});
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorBlock

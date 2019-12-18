@@ -64,7 +64,8 @@ static TensorBlockParams<NumDims> SkewedInnerBlock(
   using BlockMapper = internal::TensorBlockMapper<NumDims, Layout, Index>;
   BlockMapper block_mapper(dims,
                            {internal::TensorBlockShapeType::kSkewedInnerDims,
-                            internal::random<size_t>(1, dims.TotalSize())});
+                            internal::random<size_t>(1, dims.TotalSize()),
+                            {0, 0, 0}});
 
   Index total_blocks = block_mapper.blockCount();
   Index block_index = internal::random<Index>(0, total_blocks - 1);

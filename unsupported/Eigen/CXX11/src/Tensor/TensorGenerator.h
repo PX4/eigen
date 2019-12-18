@@ -166,10 +166,10 @@ struct TensorEvaluator<const TensorGeneratorOp<Generator, ArgType>, Device>
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
   internal::TensorBlockResourceRequirements getResourceRequirements() const {
-    const size_t target_block_size = numext::maxi<size_t>(
-        1, m_device.firstLevelCacheSize() / sizeof(Scalar));
-    return {internal::TensorBlockShapeType::kSkewedInnerDims,
-            target_block_size};
+    const size_t target_size = m_device.firstLevelCacheSize();
+    // TODO(ezhulenev): Generator should have a cost.
+    return internal::TensorBlockResourceRequirements::skewed<Scalar>(
+        target_size);
   }
 
   struct BlockIteratorState {

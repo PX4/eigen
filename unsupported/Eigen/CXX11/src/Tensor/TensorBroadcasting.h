@@ -620,12 +620,10 @@ struct TensorEvaluator<const TensorBroadcastingOp<Broadcast, ArgType>, Device>
   internal::TensorBlockResourceRequirements getResourceRequirements() const {
     // TODO(wuke): Targeting L1 size is 30% faster than targeting L{-1} on large
     // tensors. But this might need further tuning.
-    const size_t target_block_size = numext::maxi<size_t>(
-        1, m_device.firstLevelCacheSize() / sizeof(Scalar));
-
+    const size_t target_size = m_device.firstLevelCacheSize();
     return internal::TensorBlockResourceRequirements::merge(
-        {internal::TensorBlockShapeType::kSkewedInnerDims, target_block_size},
-        m_impl.getResourceRequirements());
+        m_impl.getResourceRequirements(),
+        internal::TensorBlockResourceRequirements::skewed<Scalar>(target_size));
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorBlock

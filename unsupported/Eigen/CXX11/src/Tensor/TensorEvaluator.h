@@ -521,7 +521,9 @@ struct TensorEvaluator<const TensorCwiseUnaryOp<UnaryOp, ArgType>, Device>
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
   internal::TensorBlockResourceRequirements getResourceRequirements() const {
-    return m_argImpl.getResourceRequirements();
+    static const double functor_cost = internal::functor_traits<UnaryOp>::Cost;
+    return m_argImpl.getResourceRequirements().addCostPerCoeff(
+        {0, 0, functor_cost / PacketSize});
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorBlock
@@ -654,9 +656,11 @@ struct TensorEvaluator<const TensorCwiseBinaryOp<BinaryOp, LeftArgType, RightArg
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
   internal::TensorBlockResourceRequirements getResourceRequirements() const {
+    static const double functor_cost = internal::functor_traits<BinaryOp>::Cost;
     return internal::TensorBlockResourceRequirements::merge(
-        m_leftImpl.getResourceRequirements(),
-        m_rightImpl.getResourceRequirements());
+               m_leftImpl.getResourceRequirements(),
+               m_rightImpl.getResourceRequirements())
+        .addCostPerCoeff({0, 0, functor_cost / PacketSize});
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorBlock
@@ -934,11 +938,16 @@ struct TensorEvaluator<const TensorSelectOp<IfArgType, ThenArgType, ElseArgType>
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
   internal::TensorBlockResourceRequirements getResourceRequirements() const {
+    auto then_req = m_thenImpl.getResourceRequirements();
+    auto else_req = m_elseImpl.getResourceRequirements();
+
+    auto merged_req =
+        internal::TensorBlockResourceRequirements::merge(then_req, else_req);
+    merged_req.cost_per_coeff =
+        then_req.cost_per_coeff.cwiseMax(else_req.cost_per_coeff);
+
     return internal::TensorBlockResourceRequirements::merge(
-        m_condImpl.getResourceRequirements(),
-        internal::TensorBlockResourceRequirements::merge(
-            m_thenImpl.getResourceRequirements(),
-            m_elseImpl.getResourceRequirements()));
+        m_condImpl.getResourceRequirements(), merged_req);
   }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorBlock

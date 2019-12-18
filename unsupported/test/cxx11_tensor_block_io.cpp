@@ -75,8 +75,8 @@ static void test_block_io_copy_data_from_source_to_target() {
   // Construct a tensor block mapper.
   using TensorBlockMapper =
       internal::TensorBlockMapper<NumDims, Layout, Index>;
-  TensorBlockMapper block_mapper(dims, {RandomBlockShape(),
-                                        RandomTargetBlockSize(dims)});
+  TensorBlockMapper block_mapper(
+      dims, {RandomBlockShape(), RandomTargetBlockSize(dims), {0, 0, 0}});
 
   // We will copy data from input to output through this buffer.
   Tensor<T, NumDims, Layout> block(block_mapper.blockDimensions());
@@ -146,8 +146,10 @@ static void test_block_io_copy_using_reordered_dimensions() {
   // NOTE: Tensor block mapper works with shuffled dimensions.
   using TensorBlockMapper =
       internal::TensorBlockMapper<NumDims, Layout, Index>;
-  TensorBlockMapper block_mapper(output_tensor_dims, {RandomBlockShape(),
-                                 RandomTargetBlockSize(output_tensor_dims)});
+  TensorBlockMapper block_mapper(output_tensor_dims,
+                                 {RandomBlockShape(),
+                                  RandomTargetBlockSize(output_tensor_dims),
+                                  {0, 0, 0}});
 
   // We will copy data from input to output through this buffer.
   Tensor<T, NumDims, Layout> block(block_mapper.blockDimensions());
