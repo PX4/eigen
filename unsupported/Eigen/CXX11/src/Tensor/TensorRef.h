@@ -408,7 +408,7 @@ struct TensorEvaluator<const TensorRef<Derived>, Device>
     return m_ref.coeffRef(index);
   }
 
-  EIGEN_DEVICE_FUNC Scalar* data() const { return m_ref.data(); }
+  EIGEN_DEVICE_FUNC const Scalar* data() const { return m_ref.data(); }
 
  protected:
   TensorRef<Derived> m_ref;
