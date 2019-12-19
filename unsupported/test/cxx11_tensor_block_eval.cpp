@@ -548,7 +548,7 @@ static void test_eval_tensor_chipping_of_bcast() {
   Tensor<T, 3, Layout> input(1, dim1, dim2);
   input.setRandom();
 
-  Eigen::array<Index, 3> bcast({dim0, 1, 1});
+  Eigen::array<Index, 3> bcast = {{dim0, 1, 1}};
   DSizes<Index, 2> chipped_dims(dim0, dim2);
 
   VerifyBlockEvaluator<T, 2, Layout>(
