@@ -155,7 +155,7 @@ struct TensorEvaluator<const TensorForcedEvalOp<ArgType_>, Device>
         EvalTo;
     EvalTo evalToTmp(m_device.get(m_buffer), m_op);
 
-    auto on_done = std::bind([](EvalSubExprsCallback done) { done(true); },
+    auto on_done = std::bind([](EvalSubExprsCallback done_) { done_(true); },
                              std::move(done));
     internal::TensorAsyncExecutor<
         const EvalTo, typename internal::remove_const<Device>::type,
