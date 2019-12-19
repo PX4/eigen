@@ -364,9 +364,12 @@ struct TensorEvaluator<const TensorPaddingOp<PaddingDimensions, ArgType>, Device
     // When possible we squeeze writes for the innermost (only if non-padded)
     // dimension with the first padded dimension. This allows to reduce the
     // number of calls to LinCopy and better utilize vector instructions.
-    const bool squeeze_writes = NumDims > 1 &&
-                                // inner dimension is not padded
-                                input_inner_dim_size == output_inner_dim_size;
+    const bool squeeze_writes =
+        NumDims > 1 &&
+        // inner dimension is not padded
+        (input_inner_dim_size == m_dimensions[inner_dim_idx]) &&
+        // and equal to the block inner dimension
+        (input_inner_dim_size == output_inner_dim_size);
 
     const int squeeze_dim = IsColMajor ? inner_dim_idx + 1 : inner_dim_idx - 1;
 
