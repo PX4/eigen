@@ -37,6 +37,7 @@ struct numeric_list { constexpr static std::size_t count = sizeof...(nn); };
 template<typename T, T n, T... nn>
 struct numeric_list<T, n, nn...> { static const std::size_t count = sizeof...(nn) + 1; const static T first_value = n; };
 
+#ifndef EIGEN_PARSED_BY_DOXYGEN
 /* numeric list constructors
  *
  * equivalencies:
@@ -95,6 +96,7 @@ template<int n, typename t, typename... tt> struct h_skip_helper_type<n, t, tt..
 template<typename t, typename... tt>        struct h_skip_helper_type<0, t, tt...> { typedef type_list<t, tt...> type; };
 template<int n>                             struct h_skip_helper_type<n>           { typedef type_list<> type; };
 template<>                                  struct h_skip_helper_type<0>           { typedef type_list<> type; };
+#endif //not EIGEN_PARSED_BY_DOXYGEN
 
 template<int n>
 struct h_skip {
