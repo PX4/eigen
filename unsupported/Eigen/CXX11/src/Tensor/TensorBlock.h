@@ -77,6 +77,17 @@ struct TensorBlockResourceRequirements {
   size_t size;                      // target block size
   TensorOpCost cost_per_coeff;      // cost of computing a single block element
 
+#ifdef EIGEN_HIPCC
+  // For HIPCC, we need to explicitly declare as a "device fun", the constructor
+  // which is implicitly invoked in the "merge" / "any" routines. else HIPCC
+  // errors out complaining about the lack of a matching constructor
+  EIGEN_DEVICE_FUNC
+  TensorBlockResourceRequirements(TensorBlockShapeType shape_type_, size_t size_,
+				  TensorOpCost cost_)
+    : shape_type(shape_type_), size(size_), cost_per_coeff(cost_)
+  {}
+#endif
+
   template <typename Scalar>
   EIGEN_DEVICE_FUNC static TensorBlockResourceRequirements withShapeAndSize(
       TensorBlockShapeType shape_type, size_t size_in_bytes,
