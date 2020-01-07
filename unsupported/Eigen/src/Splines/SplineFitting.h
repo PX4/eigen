@@ -385,7 +385,7 @@ namespace Eigen
     {
       const DenseIndex span = SplineType::Span(parameters[i], degree, knots);
 
-      if (derivativeIndices[derivativeIndex] == i)
+      if (derivativeIndex < derivativeIndices.size() && derivativeIndices[derivativeIndex] == i)
       {
         A.block(row, span - degree, 2, degree + 1)
           = SplineType::BasisFunctionDerivatives(parameters[i], 1, degree, knots);
@@ -395,8 +395,9 @@ namespace Eigen
       }
       else
       {
-        A.row(row++).segment(span - degree, degree + 1)
+        A.row(row).segment(span - degree, degree + 1)
           = SplineType::BasisFunctions(parameters[i], degree, knots);
+        b.col(row++) = points.col(i);
       }
     }
     b.col(0) = points.col(0);
