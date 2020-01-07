@@ -147,7 +147,7 @@ struct PacketWrapper<PacketReturnType, 4> {
   typedef typename ::Eigen::internal::unpacket_traits<PacketReturnType>::type
       Scalar;
   template <typename Index>
-  EIGEN_DEVICE_FUNC static Scalar scalarize(Index index, PacketReturnType &in) {
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE static Scalar scalarize(Index index, PacketReturnType &in) {
     switch (index) {
       case 0:
         return in.x();
@@ -158,17 +158,18 @@ struct PacketWrapper<PacketReturnType, 4> {
       case 3:
         return in.w();
       default:
-        eigen_assert(false && "INDEX MUST BE BETWEEN 0 and 3");
-        abort();
+      //INDEX MUST BE BETWEEN 0 and 3.There is no abort function in SYCL kernel. so we cannot use abort here. 
+      // The code will never reach here
+      __builtin_unreachable();
     }
     __builtin_unreachable();
-
   }
-  EIGEN_DEVICE_FUNC static PacketReturnType convert_to_packet_type(
+
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE static PacketReturnType convert_to_packet_type(
       Scalar in, Scalar other) {
     return PacketReturnType(in, other, other, other);
   }
-  EIGEN_DEVICE_FUNC static void set_packet(PacketReturnType &lhs, Scalar *rhs) {
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE static void set_packet(PacketReturnType &lhs, Scalar *rhs) {
     lhs = PacketReturnType(rhs[0], rhs[1], rhs[2], rhs[3]);
   }
 };
@@ -178,14 +179,14 @@ struct PacketWrapper<PacketReturnType, 1> {
   typedef typename ::Eigen::internal::unpacket_traits<PacketReturnType>::type
       Scalar;
   template <typename Index>
-  EIGEN_DEVICE_FUNC static Scalar scalarize(Index, PacketReturnType &in) {
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE static Scalar scalarize(Index, PacketReturnType &in) {
     return in;
   }
-  EIGEN_DEVICE_FUNC static PacketReturnType convert_to_packet_type(Scalar in,
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE static PacketReturnType convert_to_packet_type(Scalar in,
                                                                    Scalar) {
     return PacketReturnType(in);
   }
-  EIGEN_DEVICE_FUNC static void set_packet(PacketReturnType &lhs, Scalar *rhs) {
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE static void set_packet(PacketReturnType &lhs, Scalar *rhs) {
     lhs = rhs[0];
   }
 };
@@ -195,24 +196,25 @@ struct PacketWrapper<PacketReturnType, 2> {
   typedef typename ::Eigen::internal::unpacket_traits<PacketReturnType>::type
       Scalar;
   template <typename Index>
-  EIGEN_DEVICE_FUNC static Scalar scalarize(Index index, PacketReturnType &in) {
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE static Scalar scalarize(Index index, PacketReturnType &in) {
     switch (index) {
       case 0:
         return in.x();
       case 1:
         return in.y();
       default:
-        eigen_assert(false && "INDEX MUST BE BETWEEN 0 and 1");
-        abort();
+        //INDEX MUST BE BETWEEN 0 and 1.There is no abort function in SYCL kernel. so we cannot use abort here. 
+      // The code will never reach here
+        __builtin_unreachable();
     }
     __builtin_unreachable();
-  
   }
-  EIGEN_DEVICE_FUNC static PacketReturnType convert_to_packet_type(
+  
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE static PacketReturnType convert_to_packet_type(
       Scalar in, Scalar other) {
     return PacketReturnType(in, other);
   }
-  EIGEN_DEVICE_FUNC static void set_packet(PacketReturnType &lhs, Scalar *rhs) {
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE static void set_packet(PacketReturnType &lhs, Scalar *rhs) {
     lhs = PacketReturnType(rhs[0], rhs[1]);
   }
 };
