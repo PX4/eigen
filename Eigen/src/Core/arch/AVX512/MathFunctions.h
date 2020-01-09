@@ -72,7 +72,7 @@ plog<Packet16f>(const Packet16f& _x) {
   x = pmax(x, p16f_min_norm_pos);
 
   // Extract the shifted exponents.
-  Packet16f emm0 = _mm512_cvtepi32_ps(_mm512_srli_epi32(preinterpret<Packet16i,Packet16f>(x), 23));
+  Packet16f emm0 = _mm512_cvtepi32_ps(_mm512_srli_epi32((preinterpret<Packet16i,Packet16f>(x)), 23));
   Packet16f e = _mm512_sub_ps(emm0, p16f_126f);
 
   // Set the exponents to -1, i.e. x are in the range [0.5,1).
