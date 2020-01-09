@@ -402,6 +402,7 @@ inline NewType cast(const OldType& x)
 #if EIGEN_HAS_CXX11_MATH
   template<typename Scalar>
   struct round_impl {
+    EIGEN_DEVICE_FUNC
     static inline Scalar run(const Scalar& x)
     {
       EIGEN_STATIC_ASSERT((!NumTraits<Scalar>::IsComplex), NUMERIC_TYPE_MUST_BE_REAL)
@@ -413,6 +414,7 @@ inline NewType cast(const OldType& x)
   template<typename Scalar>
   struct round_impl
   {
+    EIGEN_DEVICE_FUNC
     static inline Scalar run(const Scalar& x)
     {
       EIGEN_STATIC_ASSERT((!NumTraits<Scalar>::IsComplex), NUMERIC_TYPE_MUST_BE_REAL)
@@ -435,6 +437,7 @@ struct round_retval
 
 template<typename Scalar>
 struct rint_impl {
+  EIGEN_DEVICE_FUNC
   static inline Scalar run(const Scalar& x)
   {
     EIGEN_STATIC_ASSERT((!NumTraits<Scalar>::IsComplex), NUMERIC_TYPE_MUST_BE_REAL)
@@ -448,6 +451,7 @@ struct rint_impl {
 #if !EIGEN_HAS_CXX11_MATH
 template<>
 struct rint_impl<float> {
+  EIGEN_DEVICE_FUNC
   static inline float run(const float& x)
   {
     return rintf(x);
@@ -468,6 +472,7 @@ struct rint_retval
 #if EIGEN_HAS_CXX11_MATH
   template<typename Scalar>
   struct arg_impl {
+    EIGEN_DEVICE_FUNC
     static inline Scalar run(const Scalar& x)
     {
       #if defined(EIGEN_HIP_DEVICE_COMPILE)
@@ -695,16 +700,18 @@ struct random_retval
   typedef Scalar type;
 };
 
-template<typename Scalar> inline EIGEN_MATHFUNC_RETVAL(random, Scalar) random(const Scalar& x, const Scalar& y);
-template<typename Scalar> inline EIGEN_MATHFUNC_RETVAL(random, Scalar) random();
+template<typename Scalar> EIGEN_DEVICE_FUNC inline EIGEN_MATHFUNC_RETVAL(random, Scalar) random(const Scalar& x, const Scalar& y);
+template<typename Scalar> EIGEN_DEVICE_FUNC inline EIGEN_MATHFUNC_RETVAL(random, Scalar) random();
 
 template<typename Scalar>
 struct random_default_impl<Scalar, false, false>
 {
+  EIGEN_DEVICE_FUNC
   static inline Scalar run(const Scalar& x, const Scalar& y)
   {
     return x + (y-x) * Scalar(std::rand()) / Scalar(RAND_MAX);
   }
+  EIGEN_DEVICE_FUNC
   static inline Scalar run()
   {
     return run(Scalar(NumTraits<Scalar>::IsSigned ? -1 : 0), Scalar(1));
@@ -761,6 +768,7 @@ struct meta_floor_log2<n, lower, upper, meta_floor_log2_bogus>
 template<typename Scalar>
 struct random_default_impl<Scalar, false, true>
 {
+  EIGEN_DEVICE_FUNC
   static inline Scalar run(const Scalar& x, const Scalar& y)
   {
     if (y <= x)
@@ -788,6 +796,7 @@ struct random_default_impl<Scalar, false, true>
     return Scalar(ScalarX(x) + offset);
   }
 
+  EIGEN_DEVICE_FUNC
   static inline Scalar run()
   {
 #ifdef EIGEN_MAKING_DOCS
@@ -806,11 +815,13 @@ struct random_default_impl<Scalar, false, true>
 template<typename Scalar>
 struct random_default_impl<Scalar, true, false>
 {
+  EIGEN_DEVICE_FUNC
   static inline Scalar run(const Scalar& x, const Scalar& y)
   {
     return Scalar(random(x.real(), y.real()),
                   random(x.imag(), y.imag()));
   }
+  EIGEN_DEVICE_FUNC
   static inline Scalar run()
   {
     typedef typename NumTraits<Scalar>::Real RealScalar;
@@ -819,12 +830,14 @@ struct random_default_impl<Scalar, true, false>
 };
 
 template<typename Scalar>
+EIGEN_DEVICE_FUNC
 inline EIGEN_MATHFUNC_RETVAL(random, Scalar) random(const Scalar& x, const Scalar& y)
 {
   return EIGEN_MATHFUNC_IMPL(random, Scalar)::run(x, y);
 }
 
 template<typename Scalar>
+EIGEN_DEVICE_FUNC
 inline EIGEN_MATHFUNC_RETVAL(random, Scalar) random()
 {
   return EIGEN_MATHFUNC_IMPL(random, Scalar)::run();
@@ -1801,6 +1814,7 @@ inline bool isApproxOrLessThan(const Scalar& x, const Scalar& y,
 
 template<> struct random_impl<bool>
 {
+  EIGEN_DEVICE_FUNC
   static inline bool run()
   {
     return random<int>(0,1)==0 ? false : true;
