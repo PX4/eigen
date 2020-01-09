@@ -44,7 +44,7 @@ T apply_bit_op(Bits a, Bits b, Func f) {
   for(Index i = 0; i < data.size(); ++i)
     data[i] = f(a[i], b[i]);
   // Note: The reinterpret_cast works around GCC's class-memaccess warnings:
-  std::memcpy(reinterpret_cast<unsigned char*>(&res), &data, sizeof(T));
+  std::memcpy(reinterpret_cast<unsigned char*>(&res), data.data(), sizeof(T));
   return res;
 }
 
