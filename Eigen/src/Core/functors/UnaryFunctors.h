@@ -924,6 +924,7 @@ struct scalar_logistic_op {
   }
 };
 
+#ifndef EIGEN_GPU_COMPILE_PHASE
 /** \internal
   * \brief Template specialization of the logistic function for float.
   *
@@ -1007,6 +1008,7 @@ struct scalar_logistic_op<float> {
     }
   }
 };
+#endif  // #ifndef EIGEN_GPU_COMPILE_PHASE
 
 template <typename T>
 struct functor_traits<scalar_logistic_op<T> > {
