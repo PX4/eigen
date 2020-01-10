@@ -450,11 +450,19 @@ struct rint_impl {
 
 #if !EIGEN_HAS_CXX11_MATH
 template<>
+struct rint_impl<double> {
+  EIGEN_DEVICE_FUNC
+  static inline double run(const double& x)
+  {
+    return ::rint(x);
+  }
+};
+template<>
 struct rint_impl<float> {
   EIGEN_DEVICE_FUNC
   static inline float run(const float& x)
   {
-    return rintf(x);
+    return ::rintf(x);
   }
 };
 #endif
