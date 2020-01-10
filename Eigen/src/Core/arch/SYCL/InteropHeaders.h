@@ -65,6 +65,7 @@ struct sycl_packet_traits : default_packet_traits {
     HasAdd = 1,
     HasFloor = 1,
     HasRound = 1,
+    HasRint = 1,
     HasLog1p = 1,
     HasExpm1 = 1,
     HasCeil = 1,
