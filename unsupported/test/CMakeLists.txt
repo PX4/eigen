@@ -108,6 +108,7 @@ ei_add_test(levenberg_marquardt)
 ei_add_test(kronecker_product)
 ei_add_test(bessel_functions)
 ei_add_test(special_functions)
+ei_add_test(special_packetmath "-DEIGEN_FAST_MATH=1")
 
 if(EIGEN_TEST_CXX11)
   if(EIGEN_TEST_SYCL)
