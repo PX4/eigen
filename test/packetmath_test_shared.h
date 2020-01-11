@@ -100,8 +100,12 @@ template<typename Scalar> bool areApprox(const Scalar* a, const Scalar* b, int s
 {
   for (int i=0; i<size; ++i)
   {
-    if ((!internal::biteq(a[i],b[i])) && a[i]!=b[i] && !internal::isApprox(a[i],b[i]))
+    if (a[i]!=b[i] && !internal::isApprox(a[i],b[i]))
     {
+      if((numext::isnan)(a[i]) && (numext::isnan)(b[i]))
+      {
+        continue;
+      }
       std::cout << "ref: [" << Map<const Matrix<Scalar,1,Dynamic> >(a,size) << "]" << " != vec: [" << Map<const Matrix<Scalar,1,Dynamic> >(b,size) << "]\n";
       return false;
     }
