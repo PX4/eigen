@@ -618,13 +618,35 @@ template<> struct packet_traits<double>  : default_packet_traits
     size = 2,
     HasHalfPacket = 0,
 
-    HasDiv  = 1,
-    // FIXME check the Has*
+    HasCast      = 1,
+    HasCmp       = 1,
+    HasAdd       = 1,
+    HasSub       = 1,
+    HasShift     = 1,
+    HasMul       = 1,
+    HasNegate    = 1,
+    HasAbs       = 1,
+    HasArg       = 0,
+    HasAbs2      = 1,
+    HasAbsDiff   = 1,
+    HasMin       = 1,
+    HasMax       = 1,
+    HasConj      = 1,
+    HasSetLinear = 0,
+    HasBlend     = 0,
+    HasInsert    = 1,
+    HasReduxp    = 1,
+
+    HasDiv   = 1,
+    HasFloor = 0,
+
     HasSin  = 0,
     HasCos  = 0,
     HasLog  = 0,
     HasExp  = 0,
-    HasSqrt = 0
+    HasSqrt = 0,
+    HasTanh = 0,
+    HasErf  = 0
   };
 };
 
