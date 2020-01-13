@@ -35,6 +35,10 @@ inline std::ptrdiff_t manage_caching_sizes_helper(std::ptrdiff_t a, std::ptrdiff
 const std::ptrdiff_t defaultL1CacheSize = 32*1024;
 const std::ptrdiff_t defaultL2CacheSize = 256*1024;
 const std::ptrdiff_t defaultL3CacheSize = 2*1024*1024;
+#elif EIGEN_ARCH_PPC
+const std::ptrdiff_t defaultL1CacheSize = 64*1024;
+const std::ptrdiff_t defaultL2CacheSize = 512*1024;
+const std::ptrdiff_t defaultL3CacheSize = 4*1024*1024;
 #else
 const std::ptrdiff_t defaultL1CacheSize = 16*1024;
 const std::ptrdiff_t defaultL2CacheSize = 512*1024;
