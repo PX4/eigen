@@ -194,8 +194,20 @@ template<typename T> struct unpacket_traits
   };
 };
 
+// If we vectorize regardless of alignment, always pick the full-sized packet,
+// if we have enough data to process.
+//
+// Otherwise, pick the packet size we know is going to work with the alignment
+// of the given data. See
+// <https://gitlab.com/libeigen/eigen/merge_requests/46#note_270578113> for more
+// information.
+#if EIGEN_UNALIGNED_VECTORIZE
 template<int Size, typename PacketType,
          bool Stop = Size==Dynamic || Size >= unpacket_traits<PacketType>::size || is_same<PacketType,typename unpacket_traits<PacketType>::half>::value>
+#else
+template<int Size, typename PacketType,
+         bool Stop = Size==Dynamic || (Size%unpacket_traits<PacketType>::size)==0 || is_same<PacketType,typename unpacket_traits<PacketType>::half>::value>
+#endif
 struct find_best_packet_helper;
 
 template< int Size, typename PacketType>
