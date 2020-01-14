@@ -10,8 +10,6 @@
 #ifndef EIGEN_TYPE_CASTING_NEON_H
 #define EIGEN_TYPE_CASTING_NEON_H
 
-#include <Eigen/src/Core/util/Meta.h>
-
 namespace Eigen {
 
 namespace internal {
