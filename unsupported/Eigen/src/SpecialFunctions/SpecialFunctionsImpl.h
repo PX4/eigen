@@ -713,6 +713,18 @@ struct cephes_helper<double> {
 
 enum IgammaComputationMode { VALUE, DERIVATIVE, SAMPLE_DERIVATIVE };
 
+template <typename Scalar>
+static EIGEN_STRONG_INLINE Scalar main_igamma_term(Scalar a, Scalar x) {
+    /* Compute  x**a * exp(-x) / gamma(a)  */
+    Scalar logax = a * numext::log(x) - x - lgamma_impl<Scalar>::run(a);
+    if (logax < -numext::log(NumTraits<Scalar>::highest()) ||
+        // Assuming x and a aren't Nan.
+        (numext::isnan)(logax)) {
+      return Scalar(0);
+    }
+    return numext::exp(logax);
+}
+
 template <typename Scalar, IgammaComputationMode mode>
 EIGEN_DEVICE_FUNC
 int igamma_num_iterations() {
@@ -752,6 +764,15 @@ struct igammac_cf_impl {
     const Scalar biginv = cephes_helper<Scalar>::biginv();
 
     if ((numext::isinf)(x)) {
+      return zero;
+    }
+
+    Scalar ax = main_igamma_term<Scalar>(a, x);
+    // This is independent of mode. If this value is zero,
+    // then the function value is zero. If the function value is zero,
+    // then we are in a neighborhood where the function value evalutes to zero,
+    // so the derivative is zero.
+    if (ax == zero) {
       return zero;
     }
 
@@ -825,9 +846,7 @@ struct igammac_cf_impl {
     }
 
     /* Compute  x**a * exp(-x) / gamma(a)  */
-    Scalar logax = a * numext::log(x) - x - lgamma_impl<Scalar>::run(a);
     Scalar dlogax_da = numext::log(x) - digamma_impl<Scalar>::run(a);
-    Scalar ax = numext::exp(logax);
     Scalar dax_da = ax * dlogax_da;
 
     switch (mode) {
@@ -858,6 +877,18 @@ struct igamma_series_impl {
     const Scalar one = 1;
     const Scalar machep = cephes_helper<Scalar>::machep();
 
+    Scalar ax = main_igamma_term<Scalar>(a, x);
+
+    // This is independent of mode. If this value is zero,
+    // then the function value is zero. If the function value is zero,
+    // then we are in a neighborhood where the function value evalutes to zero,
+    // so the derivative is zero.
+    if (ax == zero) {
+      return zero;
+    }
+
+    ax /= a;
+
     /* power series */
     Scalar r = a;
     Scalar c = one;
@@ -886,10 +917,7 @@ struct igamma_series_impl {
       }
     }
 
-    /* Compute  x**a * exp(-x) / gamma(a + 1)  */
-    Scalar logax = a * numext::log(x) - x - lgamma_impl<Scalar>::run(a + one);
     Scalar dlogax_da = numext::log(x) - digamma_impl<Scalar>::run(a + one);
-    Scalar ax = numext::exp(logax);
     Scalar dax_da = ax * dlogax_da;
 
     switch (mode) {

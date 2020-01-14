@@ -7,6 +7,7 @@
 // Public License v. 2.0. If a copy of the MPL was not distributed
 // with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <limits.h>
 #include "main.h"
 #include "../Eigen/SpecialFunctions"
 
@@ -74,6 +75,7 @@ template<typename ArrayType> void array_special_functions()
       ArrayType gamma_a_x = Eigen::igamma(a, x) * a.lgamma().exp();
       ArrayType gamma_a_m1_x = Eigen::igamma(a_m1, x) * a_m1.lgamma().exp();
 
+
       // Gamma(a, 0) == Gamma(a)
       VERIFY_IS_APPROX(Eigen::igammac(a, zero), one);
 
@@ -85,6 +87,19 @@ template<typename ArrayType> void array_special_functions()
 
       // gamma(a, x) == (a - 1) * gamma(a-1, x) - x^(a-1) * exp(-x)
       VERIFY_IS_APPROX(gamma_a_x, (a - 1) * gamma_a_m1_x - x.pow(a-1) * (-x).exp());
+    }
+    {
+      // Verify for large a and x that values are between 0 and 1.
+      ArrayType m1 = ArrayType::Random(rows,cols);
+      ArrayType m2 = ArrayType::Random(rows,cols);
+      Scalar max_exponent = std::numeric_limits<Scalar>::max_exponent10;
+      ArrayType a = m1.abs() *  pow(10., max_exponent - 1);
+      ArrayType x = m2.abs() *  pow(10., max_exponent - 1);
+      for (int i = 0; i < a.size(); ++i) {
+        Scalar igam = numext::igamma(a(i), x(i));
+        VERIFY(0 <= igam);
+        VERIFY(igam <= 1);
+      }
     }
 
     {
