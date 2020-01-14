@@ -194,8 +194,12 @@ template<typename T> struct unpacket_traits
   };
 };
 
-// If we vectorize regardless of alignment, always pick the full-sized packet,
-// if we have enough data to process.
+// If we vectorize regardless of alignment, pick the full-sized packet if:
+// * The size is large enough;
+// * Picking it will result in less operations than picking the half size.
+//   Consider the case where the size is 12, the full packet is 8, and the
+//   half packet is 4. If we pick the full packet we'd have 1 + 4 operations,
+//   but only 3 operations if we pick the half-packet.
 //
 // Otherwise, pick the packet size we know is going to work with the alignment
 // of the given data. See
@@ -203,7 +207,15 @@ template<typename T> struct unpacket_traits
 // information.
 #if EIGEN_UNALIGNED_VECTORIZE
 template<int Size, typename PacketType,
-         bool Stop = Size==Dynamic || Size >= unpacket_traits<PacketType>::size || is_same<PacketType,typename unpacket_traits<PacketType>::half>::value>
+         bool Stop =
+           Size==Dynamic ||
+           (Size >= unpacket_traits<PacketType>::size &&
+             // If the packet size is 1 we're always good -- it will always divide things perfectly.
+             // We have this check since otherwise 1/2 would be 0 in the division below.
+             (unpacket_traits<PacketType>::size == 1 ||
+               (Size/unpacket_traits<PacketType>::size + Size%unpacket_traits<PacketType>::size) <=
+               (Size/(unpacket_traits<PacketType>::size/2) + Size%(unpacket_traits<PacketType>::size/2)))) ||
+           is_same<PacketType,typename unpacket_traits<PacketType>::half>::value>
 #else
 template<int Size, typename PacketType,
          bool Stop = Size==Dynamic || (Size%unpacket_traits<PacketType>::size)==0 || is_same<PacketType,typename unpacket_traits<PacketType>::half>::value>
