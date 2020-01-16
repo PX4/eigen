@@ -714,6 +714,7 @@ struct cephes_helper<double> {
 enum IgammaComputationMode { VALUE, DERIVATIVE, SAMPLE_DERIVATIVE };
 
 template <typename Scalar>
+EIGEN_DEVICE_FUNC
 static EIGEN_STRONG_INLINE Scalar main_igamma_term(Scalar a, Scalar x) {
     /* Compute  x**a * exp(-x) / gamma(a)  */
     Scalar logax = a * numext::log(x) - x - lgamma_impl<Scalar>::run(a);
