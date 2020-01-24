@@ -266,7 +266,38 @@ struct vectorization_logic
 
     VERIFY(test_redux(VectorX(10),
       LinearVectorizedTraversal,NoUnrolling));
+
+    // Some static checks for packet-picking -- see
+    // <https://gitlab.com/libeigen/eigen/merge_requests/46#note_271497656> for context.
+
+    // Any multiple of the packet size itself will result in the normal packet
+    STATIC_CHECK((
+      internal::is_same<typename internal::find_best_packet<Scalar, PacketSize>::type, PacketType>::value
+    ));
+    STATIC_CHECK((
+      internal::is_same<typename internal::find_best_packet<Scalar, PacketSize*2>::type, PacketType>::value
+    ));
+    STATIC_CHECK((
+      internal::is_same<typename internal::find_best_packet<Scalar, PacketSize*5>::type, PacketType>::value
+    ));
+    // Moreover, situations where the size is _not_ a multiple but picking the full packet
+    // is convenient will also work, but only with unaligned vectorize
+    STATIC_CHECK((
+      !(EIGEN_UNALIGNED_VECTORIZE || PacketSize == HalfPacketSize) ||
+      internal::is_same<typename internal::find_best_packet<Scalar, PacketSize*5+1>::type, PacketType>::value
+    ));
+    STATIC_CHECK((
+      !(EIGEN_UNALIGNED_VECTORIZE || PacketSize == HalfPacketSize) ||
+      internal::is_same<typename internal::find_best_packet<Scalar, PacketSize*5+2>::type, PacketType>::value
+    ));
+    // In situations where the picking the full-packet would be detrimental the half-packet
+    // is chosen.
+    STATIC_CHECK((
+      !(PacketSize > 2) ||
+      internal::is_same<typename internal::find_best_packet<Scalar, PacketSize*2-1>::type, HalfPacketType>::value
+    ));
   }
+
 };
 
 template<typename Scalar> struct vectorization_logic<Scalar,false>
