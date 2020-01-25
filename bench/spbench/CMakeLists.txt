@@ -29,6 +29,13 @@ if(UMFPACK_FOUND AND BLAS_FOUND)
   set(UMFPACK_ALL_LIBS ${UMFPACK_LIBRARIES} ${BLAS_LIBRARIES})
 endif()
 
+find_package(KLU)
+if(KLU_FOUND)
+  add_definitions("-DEIGEN_KLU_SUPPORT")
+  include_directories(${KLU_INCLUDES})
+  set(SPARSE_LIBS ${SPARSE_LIBS} ${KLU_LIBRARIES})
+endif()
+
 find_package(SuperLU 4.0)
 if(SUPERLU_FOUND AND BLAS_FOUND)
   add_definitions("-DEIGEN_SUPERLU_SUPPORT")
