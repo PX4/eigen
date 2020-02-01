@@ -33,7 +33,7 @@ function(workaround_9220 language language_works)
   file(WRITE ${CMAKE_BINARY_DIR}/language_tests/${language}/CMakeLists.txt
     ${text})
   execute_process(
-    COMMAND ${CMAKE_COMMAND} . -G "${CMAKE_GENERATOR}"
+    COMMAND ${CMAKE_COMMAND} . -G "${CMAKE_GENERATOR}" -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/language_tests/${language}
     RESULT_VARIABLE return_code
     OUTPUT_QUIET
@@ -43,7 +43,7 @@ function(workaround_9220 language language_works)
   if(return_code EQUAL 0)
     # Second run
     execute_process (
-      COMMAND ${CMAKE_COMMAND} . -G "${CMAKE_GENERATOR}"
+      COMMAND ${CMAKE_COMMAND} . -G "${CMAKE_GENERATOR}" -DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/language_tests/${language}
       RESULT_VARIABLE return_code
       OUTPUT_QUIET
