@@ -83,11 +83,14 @@ class TensorExecutor {
   typedef typename Expression::Index StorageIndex;
 
   // Including `unsupported/Eigen/CXX11/Tensor` in different translation units
-  // with/without `EIGEN_USE_THREADS` is an ODR violation. If this template
-  // is instantiated with a thread pool device, it means that this header
-  // file was included without defining `EIGEN_USE_THREADS`.
-  static_assert(!std::is_same<Device, ThreadPoolDevice>::value,
-                "You are missing `#define EIGEN_USE_THREADS`");
+  // with/without `EIGEN_USE_THREADS` or `EIGEN_USE_GPU` is a potential ODR
+  // violation. If this template is instantiated with a non-default device, it
+  // means that this header file was included without defining
+  // `EIGEN_USE_THREADS`, `EIGEN_USE_GPU` or `EIGEN_USE_SYCL`.
+  static_assert(std::is_same<Device, DefaultDevice>::value,
+                "Default executor instantiated with non-default device. "
+                "You must #define EIGEN_USE_THREADS, EIGEN_USE_GPU or "
+                "EIGEN_USE_SYCL before including Eigen headers.");
 
   EIGEN_DEVICE_FUNC
   static EIGEN_STRONG_INLINE void run(const Expression& expr,
