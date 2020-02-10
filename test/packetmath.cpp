@@ -17,7 +17,6 @@
 
 template<typename Scalar,typename Packet> void packetmath()
 {
-  using std::abs;
   typedef internal::packet_traits<Scalar> PacketTraits;
   const int PacketSize = internal::unpacket_traits<Packet>::size;
   typedef typename NumTraits<Scalar>::Real RealScalar;
@@ -39,7 +38,7 @@ template<typename Scalar,typename Packet> void packetmath()
   {
     data1[i] = internal::random<Scalar>()/RealScalar(PacketSize);
     data2[i] = internal::random<Scalar>()/RealScalar(PacketSize);
-    refvalue = (std::max)(refvalue,abs(data1[i]));
+    refvalue = (std::max)(refvalue, numext::abs(data1[i]));
   }
 
   internal::pstore(data2, internal::pload<Packet>(data1));
@@ -325,7 +324,6 @@ template<typename Scalar,typename Packet> void packetmath()
 
 template<typename Scalar,typename Packet> void packetmath_real()
 {
-  using std::abs;
   typedef internal::packet_traits<Scalar> PacketTraits;
   const int PacketSize = internal::unpacket_traits<Packet>::size;
 
@@ -538,7 +536,6 @@ template<typename Scalar,typename Packet> void packetmath_real()
 
 template<typename Scalar,typename Packet> void packetmath_notcomplex()
 {
-  using std::abs;
   typedef internal::packet_traits<Scalar> PacketTraits;
   const int PacketSize = internal::unpacket_traits<Packet>::size;
 
@@ -558,7 +555,7 @@ template<typename Scalar,typename Packet> void packetmath_notcomplex()
 
   CHECK_CWISE2_IF(PacketTraits::HasMin, (std::min), internal::pmin);
   CHECK_CWISE2_IF(PacketTraits::HasMax, (std::max), internal::pmax);
-  CHECK_CWISE1(abs, internal::pabs);
+  CHECK_CWISE1(numext::abs, internal::pabs);
 
   ref[0] = data1[0];
   for (int i=0; i<PacketSize; ++i)
@@ -729,10 +726,17 @@ EIGEN_DECLARE_TEST(packetmath)
 
     CALL_SUBTEST_1( test::runner<float>::run() );
     CALL_SUBTEST_2( test::runner<double>::run() );
-    CALL_SUBTEST_3( test::runner<int>::run() );
-    CALL_SUBTEST_4( test::runner<std::complex<float> >::run() );
-    CALL_SUBTEST_5( test::runner<std::complex<double> >::run() );
-    CALL_SUBTEST_6(( packetmath<half,internal::packet_traits<half>::type>() ));
+    CALL_SUBTEST_3( test::runner<int8_t>::run() );
+    CALL_SUBTEST_4( test::runner<uint8_t>::run() );
+    CALL_SUBTEST_5( test::runner<int16_t>::run() );
+    CALL_SUBTEST_6( test::runner<uint16_t>::run() );
+    CALL_SUBTEST_7( test::runner<int32_t>::run() );
+    CALL_SUBTEST_8( test::runner<uint32_t>::run() );
+    CALL_SUBTEST_9( test::runner<int64_t>::run() );
+    CALL_SUBTEST_10( test::runner<uint64_t>::run() );
+    CALL_SUBTEST_11( test::runner<std::complex<float> >::run() );
+    CALL_SUBTEST_12( test::runner<std::complex<double> >::run() );
+    CALL_SUBTEST_13(( packetmath<half,internal::packet_traits<half>::type>() ));
     g_first_pass = false;
   }
 }
