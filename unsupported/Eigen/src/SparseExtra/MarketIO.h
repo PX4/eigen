@@ -163,7 +163,7 @@ bool loadMarket(SparseMatrixType& mat, const std::string& filename)
     {
       std::stringstream line(buffer);
       line >> M >> N >> NNZ;
-      if(M > 0 && N > 0 && NNZ > 0) 
+      if(M > 0 && N > 0)
       {
         readsizes = true;
         mat.resize(M,N);
