@@ -72,6 +72,7 @@
 #include <cmath>
 #include <cassert>
 #include <functional>
+#include <sstream>
 #ifndef EIGEN_NO_IO
   #include <iosfwd>
 #endif
