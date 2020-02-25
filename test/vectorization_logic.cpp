@@ -292,11 +292,10 @@ struct vectorization_logic
     ));
     // In situations where the picking the full-packet would be detrimental the half-packet
     // is chosen.
-    // TODO(rmlarsen): Enable when AVX works as intended.
-    //STATIC_CHECK((
-    //  !(PacketSize > 2) ||
-    //  internal::is_same<typename internal::find_best_packet<Scalar, PacketSize*2-1>::type, HalfPacketType>::value
-    //));
+    STATIC_CHECK((
+      !(PacketSize > 2) ||
+      internal::is_same<typename internal::find_best_packet<Scalar, PacketSize*2-1>::type, HalfPacketType>::value
+    ));
   }
 
 };
