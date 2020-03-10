@@ -53,10 +53,12 @@ struct PacketType : internal::packet_traits<Scalar> {
 
 // For CUDA packet types when using a GpuDevice
 #if defined(EIGEN_USE_GPU) && defined(EIGEN_HAS_GPU_FP16)
-template <>
+
+typedef ulonglong2 Packet4h2;
+template<>
 struct PacketType<half, GpuDevice> {
-  typedef half2 type;
-  static const int size = 2;
+  typedef Packet4h2 type;
+  static const int size = 8;
   enum {
     HasAdd    = 1,
     HasSub    = 1,
