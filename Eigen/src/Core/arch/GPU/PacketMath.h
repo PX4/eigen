@@ -481,7 +481,7 @@ ptranspose(PacketBlock<double2,2>& kernel) {
 // Packet4h2 must be defined in the macro without EIGEN_CUDA_ARCH, meaning
 // its corresponding packet_traits<Eigen::half> must be visible on host.
 #if (defined(EIGEN_HAS_CUDA_FP16) && defined(EIGEN_CUDACC)) || \
-  (defined(EIGEN_HAS_HIP_FP16) && defined(EIGEN_HIPCC) && defined(EIGEN_HIP_DEVICE_COMPILE)) || \
+  (defined(EIGEN_HAS_HIP_FP16) && defined(EIGEN_HIPCC)) || \
   (defined(EIGEN_HAS_CUDA_FP16) && defined(__clang__) && defined(__CUDA__))
 
 typedef ulonglong2 Packet4h2;
@@ -515,11 +515,13 @@ template<> struct packet_traits<Eigen::half> : default_packet_traits
 
 template<>
 EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE half2 pset1<half2>(const Eigen::half& from) {
-#if !defined(EIGEN_CUDA_ARCH) && !defined(EIGEN_HIP_DEVICE_COMPILE)
+#if !defined(EIGEN_CUDA_ARCH) && !defined(EIGEN_HIPCC)
   half2 r;
   r.x = from;
   r.y = from;
   return r;
+#elif defined(EIGEN_HIPCC)
+  return __half2{from,from};
 #else
   return __half2half2(from);
 #endif
@@ -537,7 +539,7 @@ pset1<Packet4h2>(const Eigen::half& from) {
   return r;
 }
 
-#if defined(EIGEN_CUDA_ARCH) || defined(EIGEN_HIP_DEVICE_COMPILE) || (defined(EIGEN_CUDACC) && EIGEN_COMP_CLANG && !EIGEN_COMP_NVCC)
+#if defined(EIGEN_CUDA_ARCH) || defined(EIGEN_HIPCC) || (defined(EIGEN_CUDACC) && EIGEN_COMP_CLANG && !EIGEN_COMP_NVCC)
 namespace {
 
 EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE half2 pload(const Eigen::half* from) {
@@ -559,7 +561,7 @@ EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void pstore(Eigen::half* to,
 
 EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void pstoreu(Eigen::half* to,
                                                    const half2& from) {
-#if !defined(EIGEN_CUDA_ARCH) && !defined(EIGEN_HIP_DEVICE_COMPILE)
+#if !defined(EIGEN_CUDA_ARCH) && !defined(EIGEN_HIPCC)
   to[0] = from.x;
   to[1] = from.y;
 #else
@@ -1055,7 +1057,6 @@ EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE half2 prsqrt(const half2& a) {
 }
 #endif
 } // namespace
-
 
 template <>
 EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet4h2

@@ -306,11 +306,17 @@ __global__ void FullReductionKernelHalfFloat(Reducer reducer, const Self input, 
 #pragma unroll
   for (int offset = warpSize/2; offset > 0; offset /= 2) {
   #if defined(EIGEN_HIPCC)
-    // FIXME : remove this workaround once we have native half/half2 support for __shfl_down
-    union { int i; half2 h; } wka_in, wka_out;
-    wka_in.h = accum;
-    wka_out.i = __shfl_down(wka_in.i, offset, warpSize);
-    reducer.reducePacket(wka_out.h, &accum);
+    PacketType r1;
+    half2* hr = reinterpret_cast<half2*>(&r1);
+    half2* hacc = reinterpret_cast<half2*>(&accum);
+    for (int i = 0; i < packet_width / 2; i++) {
+      // FIXME : remove this workaround once we have native half/half2 support for __shfl_down
+      union { int i; half2 h; } wka_in, wka_out;
+      wka_in.h = hacc[i];
+      wka_out.i = __shfl_down(wka_in.i, offset, warpSize);
+      hr[i] = wka_out.h;
+    }
+    reducer.reducePacket(r1, &accum);
   #elif defined(EIGEN_CUDA_SDK_VER) && EIGEN_CUDA_SDK_VER < 90000
     PacketType r1;
     half2* hr = reinterpret_cast<half2*>(&r1);
@@ -661,16 +667,26 @@ __global__ void InnerReductionKernelHalfFloat(Reducer reducer, const Self input,
 #pragma unroll
       for (int offset = warpSize/2; offset > 0; offset /= 2) {
       #if defined(EIGEN_HIPCC)
-        // FIXME : remove this workaround once we have native half/half2 support for __shfl_down
-        union { int i; half2 h; } wka_in, wka_out;
+        PacketType r1;
+        PacketType r2;
+        half2* hr1 = reinterpret_cast<half2*>(&r1);
+        half2* hr2 = reinterpret_cast<half2*>(&r2);
+        half2* rv1 = reinterpret_cast<half2*>(&reduced_val1);
+        half2* rv2 = reinterpret_cast<half2*>(&reduced_val2);
+        for (int i = 0; i < packet_width / 2; i++) {
+	  // FIXME : remove this workaround once we have native half/half2 support for __shfl_down
+	  union { int i; half2 h; } wka_in1, wka_out1;
+	  wka_in1.h = rv1[i];
+	  wka_out1.i = __shfl_down(wka_in1.i, offset, warpSize);
+	  hr1[i] = wka_out1.h;
 
-        wka_in.h = reduced_val1;
-        wka_out.i = __shfl_down(wka_in.i, offset, warpSize);
-        reducer.reducePacket(wka_out.h, &reduced_val1);
-
-        wka_in.h = reduced_val2;
-        wka_out.i = __shfl_down(wka_in.i, offset, warpSize);
-        reducer.reducePacket(wka_out.h, &reduced_val2);
+	  union { int i; half2 h; } wka_in2, wka_out2;
+	  wka_in2.h = rv2[i];
+	  wka_out2.i = __shfl_down(wka_in2.i, offset, warpSize);
+	  hr2[i] = wka_out2.h;
+        }
+        reducer.reducePacket(r1, &reduced_val1);
+        reducer.reducePacket(r2, &reduced_val2);
       #elif defined(EIGEN_CUDA_SDK_VER) && EIGEN_CUDA_SDK_VER < 90000
         PacketType r1;
         PacketType r2;
