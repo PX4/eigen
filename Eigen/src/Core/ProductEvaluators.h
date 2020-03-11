@@ -854,7 +854,7 @@ public:
                       ||  (DiagonalType::SizeAtCompileTime==Dynamic && MatrixType::ColsAtCompileTime==1 && ProductOrder==OnTheRight)
   };
   
-  diagonal_product_evaluator_base(const MatrixType &mat, const DiagonalType &diag)
+  EIGEN_DEVICE_FUNC diagonal_product_evaluator_base(const MatrixType &mat, const DiagonalType &diag)
     : m_diagImpl(diag), m_matImpl(mat)
   {
     EIGEN_INTERNAL_CHECK_COST_VALUE(NumTraits<Scalar>::MulCost);
