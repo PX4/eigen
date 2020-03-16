@@ -45,16 +45,16 @@ struct linspaced_op_impl<Scalar,/*IsInteger*/false>
   typedef typename NumTraits<Scalar>::Real RealScalar;
 
   linspaced_op_impl(const Scalar& low, const Scalar& high, Index num_steps) :
-    m_low(low), m_high(high), m_size1(num_steps==1 ? 1 : num_steps-1), m_step(num_steps==1 ? Scalar() : (high-low)/RealScalar(num_steps-1)),
+    m_low(low), m_high(high), m_size1(num_steps==1 ? 1 : num_steps-1), m_step(num_steps==1 ? Scalar() : Scalar((high-low)/RealScalar(num_steps-1))),
     m_flip(numext::abs(high)<numext::abs(low))
   {}
 
   template<typename IndexType>
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Scalar operator() (IndexType i) const {
     if(m_flip)
-      return (i==0)? m_low : (m_high - RealScalar(m_size1-i)*m_step);
+      return (i==0)? m_low : Scalar(m_high - RealScalar(m_size1-i)*m_step);
     else
-      return (i==m_size1)? m_high : (m_low + RealScalar(i)*m_step);
+      return (i==m_size1)? m_high : Scalar(m_low + RealScalar(i)*m_step);
   }
 
   template<typename Packet, typename IndexType>
