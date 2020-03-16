@@ -42,10 +42,13 @@ typedef __vector unsigned char  Packet16uc;
 // and it doesn't really work to declare them global, so we define macros instead
 
 #define _EIGEN_DECLARE_CONST_FAST_Packet4f(NAME,X) \
-  Packet4f p4f_##NAME = reinterpret_cast<Packet4f>(vec_splat_s32(X))
+  Packet4f p4f_##NAME = {X, X, X, X}
 
 #define _EIGEN_DECLARE_CONST_FAST_Packet4i(NAME,X) \
   Packet4i p4i_##NAME = vec_splat_s32(X)
+
+#define _EIGEN_DECLARE_CONST_FAST_Packet4ui(NAME,X) \
+  Packet4ui p4ui_##NAME = {X, X, X, X}
 
 #define _EIGEN_DECLARE_CONST_Packet4f(NAME,X) \
   Packet4f p4f_##NAME = pset1<Packet4f>(X)
@@ -72,6 +75,8 @@ static _EIGEN_DECLARE_CONST_FAST_Packet4i(ZERO, 0); //{ 0, 0, 0, 0,}
 static _EIGEN_DECLARE_CONST_FAST_Packet4i(ONE,1); //{ 1, 1, 1, 1}
 static _EIGEN_DECLARE_CONST_FAST_Packet4i(MINUS16,-16); //{ -16, -16, -16, -16}
 static _EIGEN_DECLARE_CONST_FAST_Packet4i(MINUS1,-1); //{ -1, -1, -1, -1}
+static _EIGEN_DECLARE_CONST_FAST_Packet4ui(SIGN, 0x80000000u);
+static _EIGEN_DECLARE_CONST_FAST_Packet4ui(PREV0DOT5, 0x3EFFFFFFu);
 static Packet4f p4f_MZERO = (Packet4f) vec_sl((Packet4ui)p4i_MINUS1, (Packet4ui)p4i_MINUS1); //{ 0x80000000, 0x80000000, 0x80000000, 0x80000000}
 #ifndef __VSX__
 static Packet4f p4f_ONE = vec_ctf(p4i_ONE, 0); //{ 1.0, 1.0, 1.0, 1.0}
@@ -443,8 +448,16 @@ template<> EIGEN_STRONG_INLINE Packet4i pandnot<Packet4i>(const Packet4i& a, con
 template<> EIGEN_STRONG_INLINE Packet4f pselect(const Packet4f& mask, const Packet4f& a, const Packet4f& b) {
   return vec_sel(b, a, reinterpret_cast<Packet4ui>(mask));
 }
+template<> EIGEN_STRONG_INLINE Packet4f pround<Packet4f>(const Packet4f& a) {
+    Packet4f t = vec_add(reinterpret_cast<Packet4f>(vec_or(vec_and(reinterpret_cast<Packet4ui>(a), p4ui_SIGN), p4ui_PREV0DOT5)), a);
+    Packet4f res;
 
-template<> EIGEN_STRONG_INLINE Packet4f pround<Packet4f>(const Packet4f& a) { return vec_round(a); }
+    __asm__("vrfiz %0, %1\n\t"
+        : "=v" (res)
+        : "v" (t));
+
+    return res;
+}
 template<> EIGEN_STRONG_INLINE Packet4f pceil<Packet4f>(const  Packet4f& a) { return vec_ceil(a); }
 template<> EIGEN_STRONG_INLINE Packet4f pfloor<Packet4f>(const Packet4f& a) { return vec_floor(a); }
 
