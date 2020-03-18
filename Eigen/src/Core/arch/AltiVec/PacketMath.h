@@ -37,7 +37,8 @@ typedef __vector unsigned int            Packet4ui;
 typedef __vector __bool int              Packet4bi;
 typedef __vector short int               Packet8s;
 typedef __vector unsigned short int      Packet8us;
-typedef __vector unsigned char           Packet16uc;
+typedef __vector int8_t                  Packet16c;
+typedef __vector uint8_t                 Packet16uc;
 
 // We don't want to write the same code all the time, but we need to reuse the constants
 // and it doesn't really work to declare them global, so we define macros instead
@@ -53,6 +54,9 @@ typedef __vector unsigned char           Packet16uc;
 
 #define _EIGEN_DECLARE_CONST_FAST_Packet8us(NAME,X) \
   Packet8us p8us_##NAME = {X, X, X, X, X, X, X, X}
+
+#define _EIGEN_DECLARE_CONST_FAST_Packet16uc(NAME,X) \
+  Packet16uc p16uc_##NAME = {X, X, X, X, X, X, X, X, X, X, X, X, X, X, X, X}
 
 #define _EIGEN_DECLARE_CONST_Packet4f(NAME,X) \
   Packet4f p4f_##NAME = pset1<Packet4f>(X)
@@ -81,6 +85,7 @@ static _EIGEN_DECLARE_CONST_FAST_Packet4i(MINUS1,-1); //{ -1, -1, -1, -1}
 static _EIGEN_DECLARE_CONST_FAST_Packet4ui(SIGN, 0x80000000u);
 static _EIGEN_DECLARE_CONST_FAST_Packet4ui(PREV0DOT5, 0x3EFFFFFFu);
 static _EIGEN_DECLARE_CONST_FAST_Packet8us(ONE,1); //{ 1, 1, 1, 1, 1, 1, 1, 1}
+static _EIGEN_DECLARE_CONST_FAST_Packet16uc(ONE,1);
 static Packet4f p4f_MZERO = (Packet4f) vec_sl((Packet4ui)p4i_MINUS1, (Packet4ui)p4i_MINUS1); //{ 0x80000000, 0x80000000, 0x80000000, 0x80000000}
 #ifndef __VSX__
 static Packet4f p4f_ONE = vec_ctf(p4i_ONE, 0); //{ 1.0, 1.0, 1.0, 1.0}
@@ -90,11 +95,19 @@ static Packet4f  p4f_COUNTDOWN  = { 0.0, 1.0, 2.0, 3.0 };
 static Packet4i  p4i_COUNTDOWN  = { 0, 1, 2, 3 };
 static Packet8s  p8s_COUNTDOWN  = { 0, 1, 2, 3, 4, 5, 6, 7 };
 static Packet8us p8us_COUNTDOWN = { 0, 1, 2, 3, 4, 5, 6, 7 };
+static Packet16c  p16c_COUNTDOWN = { 0, 1, 2, 3, 4, 5, 6, 7,
+                                    8, 9, 10, 11, 12, 13, 14, 15};
+static Packet16uc p16uc_COUNTDOWN = { 0, 1, 2, 3, 4, 5, 6, 7, 
+                                    8, 9, 10, 11, 12, 13, 14, 15};
 
 static Packet16uc p16uc_REVERSE32 = { 12,13,14,15, 8,9,10,11, 4,5,6,7, 0,1,2,3 };
 static Packet16uc p16uc_REVERSE16 = { 14,15, 12,13, 10,11, 8,9, 6,7, 4,5, 2,3, 0,1 };
+static Packet16uc p16uc_REVERSE8 = { 15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0 };
+
 static Packet16uc p16uc_DUPLICATE32_HI = { 0,1,2,3, 0,1,2,3, 4,5,6,7, 4,5,6,7 };
 static Packet16uc p16uc_DUPLICATE16_HI = { 0,1,0,1, 2,3,2,3, 4,5,4,5, 6,7,6,7 };
+static Packet16uc p16uc_DUPLICATE8_HI = { 0,0, 1,1, 2,2, 3,3, 4,4, 5,5, 6,6, 7,7 };
+
 static Packet16uc p16uc_QUADRUPLICATE16_HI = { 0,1,0,1,0,1,0,1, 2,3,2,3,2,3,2,3 };
 
 // Handle endianness properly while loading constants
@@ -230,6 +243,42 @@ struct packet_traits<unsigned short int> : default_packet_traits {
   };
 };
 
+template <>
+struct packet_traits<int8_t> : default_packet_traits {
+  typedef Packet16c type;
+  typedef Packet16c half;
+  enum {
+    Vectorizable = 1,
+    AlignedOnScalar = 1,
+    size = 16,
+    HasHalfPacket = 0,
+
+    HasAdd  = 1,
+    HasSub  = 1,
+    HasMul  = 1,
+    HasDiv  = 0,
+    HasBlend = 1
+  };
+};
+
+template <>
+struct packet_traits<uint8_t> : default_packet_traits {
+  typedef Packet16uc type;
+  typedef Packet16uc half;
+  enum {
+    Vectorizable = 1,
+    AlignedOnScalar = 1,
+    size = 16,
+    HasHalfPacket = 0,
+
+    HasAdd  = 1,
+    HasSub  = 1,
+    HasMul  = 1,
+    HasDiv  = 0,
+    HasBlend = 1
+  };
+};
+
 template<> struct unpacket_traits<Packet4f>
 {
   typedef float     type;
@@ -255,15 +304,41 @@ template<> struct unpacket_traits<Packet8us>
   typedef Packet8us          half;
   enum {size=8, alignment=Aligned16, vectorizable=true, masked_load_available=false, masked_store_available=false};
 };
+
+template<> struct unpacket_traits<Packet16c>
+{
+  typedef int8_t type;
+  typedef Packet16c  half;
+  enum {size=16, alignment=Aligned16, vectorizable=true, masked_load_available=false, masked_store_available=false};
+};
+template<> struct unpacket_traits<Packet16uc>
+{
+  typedef uint8_t type;
+  typedef Packet16uc  half;
+  enum {size=16, alignment=Aligned16, vectorizable=true, masked_load_available=false, masked_store_available=false};
+};
+
+inline std::ostream & operator <<(std::ostream & s, const Packet16c & v)
+{
+  union {
+    Packet16c   v;
+    int8_t n[16];
+  } vt;
+  vt.v = v;
+  for (int i=0; i< 16; i++)
+    s << vt.n[i] << ", ";
+  return s;
+}
+
 inline std::ostream & operator <<(std::ostream & s, const Packet16uc & v)
 {
   union {
     Packet16uc   v;
-    unsigned char n[16];
+    uint8_t n[16];
   } vt;
   vt.v = v;
   for (int i=0; i< 16; i++)
-    s << (int)vt.n[i] << ", ";
+    s << vt.n[i] << ", ";
   return s;
 }
 
@@ -345,6 +420,24 @@ template<> EIGEN_STRONG_INLINE Packet8us pload<Packet8us>(const unsigned short i
   return vec_ld(0, from);
 }
 
+template<> EIGEN_STRONG_INLINE Packet16c pload<Packet16c>(const int8_t*     from)
+{
+  // some versions of GCC throw "unused-but-set-parameter".
+  // ignoring these warnings for now.
+  EIGEN_UNUSED_VARIABLE(from);
+  EIGEN_DEBUG_ALIGNED_LOAD
+  return vec_ld(0, from);
+}
+
+template<> EIGEN_STRONG_INLINE Packet16uc pload<Packet16uc>(const uint8_t*     from)
+{
+  // some versions of GCC throw "unused-but-set-parameter".
+  // ignoring these warnings for now.
+  EIGEN_UNUSED_VARIABLE(from);
+  EIGEN_DEBUG_ALIGNED_LOAD
+  return vec_ld(0, from);
+}
+
 template<> EIGEN_STRONG_INLINE void pstore<float>(float*   to, const Packet4f& from)
 {
   // some versions of GCC throw "unused-but-set-parameter" (float *to).
@@ -388,6 +481,23 @@ template<> EIGEN_STRONG_INLINE void pstore<unsigned short int>(unsigned short in
   EIGEN_DEBUG_ALIGNED_STORE
   vec_st(from, 0, to);
 }
+template<> EIGEN_STRONG_INLINE void pstore<int8_t>(int8_t*       to, const Packet16c& from)
+{
+  // some versions of GCC throw "unused-but-set-parameter" (float *to).
+  // ignoring these warnings for now.
+  EIGEN_UNUSED_VARIABLE(to);
+  EIGEN_DEBUG_ALIGNED_STORE
+  vec_st(from, 0, to);
+}
+
+template<> EIGEN_STRONG_INLINE void pstore<uint8_t>(uint8_t*       to, const Packet16uc& from)
+{
+  // some versions of GCC throw "unused-but-set-parameter" (float *to).
+  // ignoring these warnings for now.
+  EIGEN_UNUSED_VARIABLE(to);
+  EIGEN_DEBUG_ALIGNED_STORE
+  vec_st(from, 0, to);
+}
 
 template<> EIGEN_STRONG_INLINE Packet4f pset1<Packet4f>(const float&  from) {
   Packet4f v = {from, from, from, from};
@@ -406,6 +516,16 @@ template<> EIGEN_STRONG_INLINE Packet8s pset1<Packet8s>(const short int&    from
 
 template<> EIGEN_STRONG_INLINE Packet8us pset1<Packet8us>(const unsigned short int&    from)   {
   Packet8us v = {from, from, from, from, from, from, from, from};
+  return v;
+}
+
+template<> EIGEN_STRONG_INLINE Packet16c pset1<Packet16c>(const int8_t&    from)   {
+  Packet16c v = {from, from, from, from, from, from, from, from, from, from, from, from, from, from, from, from};
+  return v;
+}
+
+template<> EIGEN_STRONG_INLINE Packet16uc pset1<Packet16uc>(const uint8_t&    from)   {
+  Packet16uc v = {from, from, from, from, from, from, from, from, from, from, from, from, from, from, from, from};
   return v;
 }
 
@@ -479,6 +599,51 @@ template<> EIGEN_DEVICE_FUNC inline Packet8us pgather<unsigned short int, Packet
   ai[7] = from[7*stride];
   return pload<Packet8us>(ai);
 }
+
+template<> EIGEN_DEVICE_FUNC inline Packet16c pgather<int8_t, Packet16c>(const int8_t* from, Index stride)
+{
+  EIGEN_ALIGN16 int8_t ai[16];
+  ai[0] = from[0*stride];
+  ai[1] = from[1*stride];
+  ai[2] = from[2*stride];
+  ai[3] = from[3*stride];
+  ai[4] = from[4*stride];
+  ai[5] = from[5*stride];
+  ai[6] = from[6*stride];
+  ai[7] = from[7*stride];
+  ai[8] = from[8*stride];
+  ai[9] = from[9*stride];
+  ai[10] = from[10*stride];
+  ai[11] = from[11*stride];
+  ai[12] = from[12*stride];
+  ai[13] = from[13*stride];
+  ai[14] = from[14*stride];
+  ai[15] = from[15*stride];
+  return pload<Packet16c>(ai);
+}
+
+template<> EIGEN_DEVICE_FUNC inline Packet16uc pgather<uint8_t, Packet16uc>(const uint8_t* from, Index stride)
+{
+  EIGEN_ALIGN16 uint8_t ai[16];
+  ai[0] = from[0*stride];
+  ai[1] = from[1*stride];
+  ai[2] = from[2*stride];
+  ai[3] = from[3*stride];
+  ai[4] = from[4*stride];
+  ai[5] = from[5*stride];
+  ai[6] = from[6*stride];
+  ai[7] = from[7*stride];
+  ai[8] = from[8*stride];
+  ai[9] = from[9*stride];
+  ai[10] = from[10*stride];
+  ai[11] = from[11*stride];
+  ai[12] = from[12*stride];
+  ai[13] = from[13*stride];
+  ai[14] = from[14*stride];
+  ai[15] = from[15*stride];
+  return pload<Packet16uc>(ai);
+}
+
 template<> EIGEN_DEVICE_FUNC inline void pscatter<float, Packet4f>(float* to, const Packet4f& from, Index stride)
 {
   EIGEN_ALIGN16 float af[4];
@@ -526,18 +691,24 @@ template<> EIGEN_DEVICE_FUNC inline void pscatter<unsigned short int, Packet8us>
   to[7*stride] = ai[7];
 }
 
-template<> EIGEN_STRONG_INLINE Packet4f plset<Packet4f>(const float&     a) { return pset1<Packet4f>(a) + p4f_COUNTDOWN;  }
-template<> EIGEN_STRONG_INLINE Packet4i plset<Packet4i>(const int&       a) { return pset1<Packet4i>(a) + p4i_COUNTDOWN;  }
-template<> EIGEN_STRONG_INLINE Packet8s plset<Packet8s>(const short int& a) { return pset1<Packet8s>(a) + p8s_COUNTDOWN; }
-template<> EIGEN_STRONG_INLINE Packet8us plset<Packet8us>(const unsigned short int& a) { return pset1<Packet8us>(a) + p8us_COUNTDOWN; }
+template<> EIGEN_STRONG_INLINE Packet4f   plset<Packet4f>(const float&     a) { return pset1<Packet4f>(a) + p4f_COUNTDOWN;  }
+template<> EIGEN_STRONG_INLINE Packet4i   plset<Packet4i>(const int&       a) { return pset1<Packet4i>(a) + p4i_COUNTDOWN;  }
+template<> EIGEN_STRONG_INLINE Packet8s   plset<Packet8s>(const short int& a) { return pset1<Packet8s>(a) + p8s_COUNTDOWN; }
+template<> EIGEN_STRONG_INLINE Packet8us  plset<Packet8us>(const unsigned short int& a) { return pset1<Packet8us>(a) + p8us_COUNTDOWN; }
+template<> EIGEN_STRONG_INLINE Packet16c  plset<Packet16c>(const int8_t& a)   { return pset1<Packet16c>(a) + p16c_COUNTDOWN; }
+template<> EIGEN_STRONG_INLINE Packet16uc plset<Packet16uc>(const uint8_t& a)   { return pset1<Packet16uc>(a) + p16uc_COUNTDOWN; }
 
-template<> EIGEN_STRONG_INLINE Packet4f  padd<Packet4f> (const Packet4f&  a, const Packet4f&  b) { return a + b; }
-template<> EIGEN_STRONG_INLINE Packet4i  padd<Packet4i> (const Packet4i&  a, const Packet4i&  b) { return a + b; }
-template<> EIGEN_STRONG_INLINE Packet8s  padd<Packet8s> (const Packet8s&  a, const Packet8s&  b) { return a + b; }
-template<> EIGEN_STRONG_INLINE Packet8us padd<Packet8us>(const Packet8us& a, const Packet8us& b) { return a + b; }
+template<> EIGEN_STRONG_INLINE Packet4f   padd<Packet4f>  (const Packet4f&   a, const Packet4f&   b) { return a + b; }
+template<> EIGEN_STRONG_INLINE Packet4i   padd<Packet4i>  (const Packet4i&   a, const Packet4i&   b) { return a + b; }
+template<> EIGEN_STRONG_INLINE Packet8s   padd<Packet8s>  (const Packet8s&   a, const Packet8s&   b) { return a + b; }
+template<> EIGEN_STRONG_INLINE Packet8us  padd<Packet8us> (const Packet8us&  a, const Packet8us&  b) { return a + b; }
+template<> EIGEN_STRONG_INLINE Packet16c  padd<Packet16c> (const Packet16c&  a, const Packet16c&  b) { return a + b; }
+template<> EIGEN_STRONG_INLINE Packet16uc padd<Packet16uc>(const Packet16uc& a, const Packet16uc& b) { return a + b; }
 
-template<> EIGEN_STRONG_INLINE Packet4f psub<Packet4f>(const Packet4f& a, const Packet4f& b) { return a - b; }
-template<> EIGEN_STRONG_INLINE Packet4i psub<Packet4i>(const Packet4i& a, const Packet4i& b) { return a - b; }
+template<> EIGEN_STRONG_INLINE Packet4f   psub<Packet4f>  (const Packet4f&   a, const Packet4f&   b) { return a - b; }
+template<> EIGEN_STRONG_INLINE Packet4i   psub<Packet4i>  (const Packet4i&   a, const Packet4i&   b) { return a - b; }
+template<> EIGEN_STRONG_INLINE Packet16c  psub<Packet16c> (const Packet16c&  a, const Packet16c&  b) { return a - b; }
+template<> EIGEN_STRONG_INLINE Packet16uc psub<Packet16uc>(const Packet16uc& a, const Packet16uc& b) { return a - b; }
 
 template<> EIGEN_STRONG_INLINE Packet4f pnegate(const Packet4f& a) { return p4f_ZERO - a; }
 template<> EIGEN_STRONG_INLINE Packet4i pnegate(const Packet4i& a) { return p4i_ZERO - a; }
@@ -545,8 +716,10 @@ template<> EIGEN_STRONG_INLINE Packet4i pnegate(const Packet4i& a) { return p4i_
 template<> EIGEN_STRONG_INLINE Packet4f pconj(const Packet4f& a) { return a; }
 template<> EIGEN_STRONG_INLINE Packet4i pconj(const Packet4i& a) { return a; }
 
-template<> EIGEN_STRONG_INLINE Packet4f pmul<Packet4f>(const Packet4f& a, const Packet4f& b) { return vec_madd(a,b, p4f_MZERO); }
-template<> EIGEN_STRONG_INLINE Packet4i pmul<Packet4i>(const Packet4i& a, const Packet4i& b) { return a * b; }
+template<> EIGEN_STRONG_INLINE Packet4f   pmul<Packet4f>  (const Packet4f&   a, const Packet4f&   b) { return vec_madd(a,b, p4f_MZERO); }
+template<> EIGEN_STRONG_INLINE Packet4i   pmul<Packet4i>  (const Packet4i&   a, const Packet4i&   b) { return a * b; }
+template<> EIGEN_STRONG_INLINE Packet16c  pmul<Packet16c> (const Packet16c&  a, const Packet16c&  b) { return vec_mul(a,b); }
+template<> EIGEN_STRONG_INLINE Packet16uc pmul<Packet16uc>(const Packet16uc& a, const Packet16uc& b) { return vec_mul(a,b); }
 
 template<> EIGEN_STRONG_INLINE Packet4f pdiv<Packet4f>(const Packet4f& a, const Packet4f& b)
 {
@@ -589,6 +762,8 @@ template<> EIGEN_STRONG_INLINE Packet4f pmin<Packet4f>(const Packet4f& a, const 
 template<> EIGEN_STRONG_INLINE Packet4i pmin<Packet4i>(const Packet4i& a, const Packet4i& b) { return vec_min(a, b); }
 template<> EIGEN_STRONG_INLINE Packet8s pmin<Packet8s>(const Packet8s& a, const Packet8s& b) { return vec_min(a, b); }
 template<> EIGEN_STRONG_INLINE Packet8us pmin<Packet8us>(const Packet8us& a, const Packet8us& b) { return vec_min(a, b); }
+template<> EIGEN_STRONG_INLINE Packet16c pmin<Packet16c>(const Packet16c& a, const Packet16c& b) { return vec_min(a, b); }
+template<> EIGEN_STRONG_INLINE Packet16uc pmin<Packet16uc>(const Packet16uc& a, const Packet16uc& b) { return vec_min(a, b); }
 
 template<> EIGEN_STRONG_INLINE Packet4f pmax<Packet4f>(const Packet4f& a, const Packet4f& b)
 {
@@ -604,6 +779,8 @@ template<> EIGEN_STRONG_INLINE Packet4f pmax<Packet4f>(const Packet4f& a, const 
 template<> EIGEN_STRONG_INLINE Packet4i pmax<Packet4i>(const Packet4i& a, const Packet4i& b) { return vec_max(a, b); }
 template<> EIGEN_STRONG_INLINE Packet8s pmax<Packet8s>(const Packet8s& a, const Packet8s& b) { return vec_max(a, b); }
 template<> EIGEN_STRONG_INLINE Packet8us pmax<Packet8us>(const Packet8us& a, const Packet8us& b) { return vec_max(a, b); }
+template<> EIGEN_STRONG_INLINE Packet16c pmax<Packet16c>(const Packet16c& a, const Packet16c& b) { return vec_max(a, b); }
+template<> EIGEN_STRONG_INLINE Packet16uc pmax<Packet16uc>(const Packet16uc& a, const Packet16uc& b) { return vec_max(a, b); }
 
 template<> EIGEN_STRONG_INLINE Packet4f pcmp_le(const Packet4f& a, const Packet4f& b) { return reinterpret_cast<Packet4f>(vec_cmple(a,b)); }
 template<> EIGEN_STRONG_INLINE Packet4f pcmp_lt(const Packet4f& a, const Packet4f& b) { return reinterpret_cast<Packet4f>(vec_cmplt(a,b)); }
@@ -687,6 +864,29 @@ template<> EIGEN_STRONG_INLINE Packet8us ploadu<Packet8us>(const unsigned short 
   mask = vec_lvsl(0, from);                        // create the permute mask
   return static_cast<Packet8us>(vec_perm(MSQ, LSQ, mask));    // align the data
 }
+template<> EIGEN_STRONG_INLINE Packet16c ploadu<Packet16c>(const char* from)
+{
+  EIGEN_DEBUG_ALIGNED_LOAD
+  // Taken from http://developer.apple.com/hardwaredrivers/ve/alignment.html
+  Packet16uc MSQ, LSQ;
+  Packet16uc mask;
+  MSQ = vec_ld(0, from);          // most significant quadword
+  LSQ = vec_ld(15, from);         // least significant quadword
+  mask = vec_lvsl(0, from);                        // create the permute mask
+  return static_cast<Packet16c>(vec_perm(MSQ, LSQ, mask));    // align the data
+}
+
+template<> EIGEN_STRONG_INLINE Packet16uc ploadu<Packet16uc>(const unsigned char* from)
+{
+  EIGEN_DEBUG_ALIGNED_LOAD
+  // Taken from http://developer.apple.com/hardwaredrivers/ve/alignment.html
+  Packet16uc MSQ, LSQ;
+  Packet16uc mask;
+  MSQ = vec_ld(0, from);          // most significant quadword
+  LSQ = vec_ld(15, from);         // least significant quadword
+  mask = vec_lvsl(0, from);                        // create the permute mask
+  return static_cast<Packet16uc>(vec_perm(MSQ, LSQ, mask));    // align the data
+}
 #else
 // We also need to redefine little endian loading of Packet4i/Packet4f using VSX
 template<> EIGEN_STRONG_INLINE Packet4i ploadu<Packet4i>(const int* from)
@@ -705,6 +905,16 @@ template<> EIGEN_STRONG_INLINE Packet8s ploadu<Packet8s>(const short int* from)
   return vec_vsx_ld(0, from);
 }
 template<> EIGEN_STRONG_INLINE Packet8us ploadu<Packet8us>(const unsigned short int* from)
+{
+  EIGEN_DEBUG_UNALIGNED_LOAD
+  return vec_vsx_ld(0, from);
+}
+template<> EIGEN_STRONG_INLINE Packet16c ploadu<Packet16c>(const int8_t* from)
+{
+  EIGEN_DEBUG_UNALIGNED_LOAD
+  return vec_vsx_ld(0, from);
+}
+template<> EIGEN_STRONG_INLINE Packet16uc ploadu<Packet16uc>(const uint8_t* from)
 {
   EIGEN_DEBUG_UNALIGNED_LOAD
   return vec_vsx_ld(0, from);
@@ -757,6 +967,22 @@ template<> EIGEN_STRONG_INLINE Packet8us ploadquad<Packet8us>(const unsigned sho
   if((std::ptrdiff_t(from) % 16) == 0)  p = pload<Packet8us>(from);
   else                                  p = ploadu<Packet8us>(from);
   return vec_perm(p, p, p16uc_QUADRUPLICATE16_HI);
+}
+
+template<> EIGEN_STRONG_INLINE Packet16c ploaddup<Packet16c>(const int8_t*     from)
+{
+  Packet16c p;
+  if((std::ptrdiff_t(from) % 16) == 0)  p = pload<Packet16c>(from);
+  else                                  p = ploadu<Packet16c>(from);
+  return vec_perm(p, p, p16uc_DUPLICATE8_HI);
+}
+
+template<> EIGEN_STRONG_INLINE Packet16uc ploaddup<Packet16uc>(const uint8_t*     from)
+{
+  Packet16uc p;
+  if((std::ptrdiff_t(from) % 16) == 0)  p = pload<Packet16uc>(from);
+  else                                  p = ploadu<Packet16uc>(from);
+  return vec_perm(p, p, p16uc_DUPLICATE8_HI);
 }
 
 #ifdef _BIG_ENDIAN
@@ -832,9 +1058,51 @@ template<> EIGEN_STRONG_INLINE void pstoreu<unsigned short int>(unsigned short i
   vec_st( LSQ, 15, (unsigned char *)to );                   // Store the LSQ part first
   vec_st( MSQ, 0, (unsigned char *)to );                    // Store the MSQ part
 }
+
+template<> EIGEN_STRONG_INLINE void pstoreu<char>(char*      to, const Packet16c& from)
+{
+  EIGEN_DEBUG_UNALIGNED_STORE
+  // Taken from http://developer.apple.com/hardwaredrivers/ve/alignment.html
+  // Warning: not thread safe!
+  Packet16uc MSQ, LSQ, edges;
+  Packet16uc edgeAlign, align;
+
+  MSQ = vec_ld(0, to);                     // most significant quadword
+  LSQ = vec_ld(15,to);                    // least significant quadword
+  edgeAlign = vec_lvsl(0, to);                              // permute map to extract edges
+  edges=vec_perm(LSQ, MSQ, edgeAlign);                      // extract the edges
+  align = vec_lvsr( 0, to );                                // permute map to misalign data
+  MSQ = vec_perm(edges, (Packet16uc) from, align);          // misalign the data (MSQ)
+  LSQ = vec_perm((Packet16uc) from, edges, align);          // misalign the data (LSQ)
+  vec_st( LSQ, 15, to );                   // Store the LSQ part first
+  vec_st( MSQ, 0, to );                    // Store the MSQ part
+}
+template<> EIGEN_STRONG_INLINE void pstoreu<unsigned char>(unsigned char*      to, const Packet16uc& from)
+{
+  EIGEN_DEBUG_UNALIGNED_STORE
+  // Taken from http://developer.apple.com/hardwaredrivers/ve/alignment.html
+  // Warning: not thread safe!
+  Packet16uc MSQ, LSQ, edges;
+  Packet16uc edgeAlign, align;
+
+  MSQ = vec_ld(0, to);                     // most significant quadword
+  LSQ = vec_ld(15,to);                    // least significant quadword
+  edgeAlign = vec_lvsl(0, to);                              // permute map to extract edges
+  edges=vec_perm(LSQ, MSQ, edgeAlign);                      // extract the edges
+  align = vec_lvsr( 0, to );                                // permute map to misalign data
+  MSQ = vec_perm(edges, (Packet16uc) from, align);          // misalign the data (MSQ)
+  LSQ = vec_perm((Packet16uc) from, edges, align);          // misalign the data (LSQ)
+  vec_st( LSQ, 15, to );                   // Store the LSQ part first
+  vec_st( MSQ, 0, to );                    // Store the MSQ part
+}
 #else
 // We also need to redefine little endian loading of Packet4i/Packet4f using VSX
 template<> EIGEN_STRONG_INLINE void pstoreu<int>(int*       to, const Packet4i& from)
+{
+  EIGEN_DEBUG_UNALIGNED_STORE
+  vec_xst(from, 0, to);
+}
+template<> EIGEN_STRONG_INLINE void pstoreu<float>(float*   to, const Packet4f& from)
 {
   EIGEN_DEBUG_UNALIGNED_STORE
   vec_xst(from, 0, to);
@@ -857,10 +1125,15 @@ template<> EIGEN_STRONG_INLINE void pstoreu<unsigned short int>(unsigned short i
    *  vec_xst should be preferred. */
   vec_xst(from, 0, to);
 }
-template<> EIGEN_STRONG_INLINE void pstoreu<float>(float*   to, const Packet4f& from)
+template<> EIGEN_STRONG_INLINE void pstoreu<int8_t>(int8_t*   to, const Packet16c& from)
 {
   EIGEN_DEBUG_UNALIGNED_STORE
-  vec_xst(from, 0, to);
+  vec_vsx_st(from, 0, to);
+}
+template<> EIGEN_STRONG_INLINE void pstoreu<uint8_t>(uint8_t*   to, const Packet16uc& from)
+{
+  EIGEN_DEBUG_UNALIGNED_STORE
+  vec_vsx_st(from, 0, to);
 }
 #endif
 
@@ -871,15 +1144,28 @@ template<> EIGEN_STRONG_INLINE float  pfirst<Packet4f>(const Packet4f& a) { EIGE
 template<> EIGEN_STRONG_INLINE int    pfirst<Packet4i>(const Packet4i& a) { EIGEN_ALIGN16 int   x; vec_ste(a, 0, &x); return x; }
 
 template<> EIGEN_STRONG_INLINE short int pfirst<Packet8s>(const Packet8s& a) { 
-	EIGEN_ALIGN16 short int x;
-       	vec_ste(a, 0, &x);
-       	return x;
+  EIGEN_ALIGN16 short int x;
+  vec_ste(a, 0, &x);
+  return x;
 }
 
 template<> EIGEN_STRONG_INLINE unsigned short int pfirst<Packet8us>(const Packet8us& a) { 
-	EIGEN_ALIGN16 unsigned short int x;
-       	vec_ste(a, 0, &x);
-       	return x;
+  EIGEN_ALIGN16 unsigned short int x;
+  vec_ste(a, 0, &x);
+  return x;
+}
+
+template<> EIGEN_STRONG_INLINE int8_t pfirst<Packet16c>(const Packet16c& a)
+{
+  EIGEN_ALIGN16 int8_t x;
+  vec_ste(a, 0, &x);
+  return x;
+}
+template<> EIGEN_STRONG_INLINE uint8_t pfirst<Packet16uc>(const Packet16uc& a)
+{
+  EIGEN_ALIGN16 uint8_t x;
+  vec_ste(a, 0, &x);
+  return x;
 }
 
 template<> EIGEN_STRONG_INLINE Packet4f preverse(const Packet4f& a)
@@ -898,11 +1184,21 @@ template<> EIGEN_STRONG_INLINE Packet8us preverse(const Packet8us& a)
 {
   return reinterpret_cast<Packet8us>(vec_perm(reinterpret_cast<Packet16uc>(a), reinterpret_cast<Packet16uc>(a), p16uc_REVERSE16));
 }
+template<> EIGEN_STRONG_INLINE Packet16c preverse(const Packet16c& a)
+{
+  return vec_perm(a, a, p16uc_REVERSE8);
+}
+template<> EIGEN_STRONG_INLINE Packet16uc preverse(const Packet16uc& a)
+{
+  return vec_perm(a, a, p16uc_REVERSE8);
+}
 
 template<> EIGEN_STRONG_INLINE Packet4f pabs(const Packet4f& a) { return vec_abs(a); }
 template<> EIGEN_STRONG_INLINE Packet4i pabs(const Packet4i& a) { return vec_abs(a); }
 template<> EIGEN_STRONG_INLINE Packet8s pabs(const Packet8s& a) { return vec_abs(a); }
 template<> EIGEN_STRONG_INLINE Packet8us pabs(const Packet8us& a) { return a; }
+template<> EIGEN_STRONG_INLINE Packet16c pabs(const Packet16c& a) { return vec_abs(a); }
+template<> EIGEN_STRONG_INLINE Packet16uc pabs(const Packet16uc& a) { return a; }
 
 template<int N> EIGEN_STRONG_INLINE Packet4i parithmetic_shift_right(Packet4i a)
 { return vec_sra(a,reinterpret_cast<Packet4ui>(pset1<Packet4i>(N))); }
@@ -974,6 +1270,52 @@ template<> EIGEN_STRONG_INLINE unsigned short int predux<Packet8us>(const Packet
   return static_cast<unsigned short int>(predux(first_half) + predux(second_half));
 }
 
+template<> EIGEN_STRONG_INLINE int8_t predux<Packet16c>(const Packet16c& a)
+{
+  union{
+    Packet16c v;
+    int8_t n[16];
+  } vt;
+  vt.v = a;
+
+  EIGEN_ALIGN16 int first_loader[4] = { vt.n[0], vt.n[1], vt.n[2], vt.n[3] };
+  EIGEN_ALIGN16 int second_loader[4] = { vt.n[4], vt.n[5], vt.n[6], vt.n[7] };
+  EIGEN_ALIGN16 int third_loader[4] = { vt.n[8], vt.n[9], vt.n[10], vt.n[11] };
+  EIGEN_ALIGN16 int fourth_loader[4] = { vt.n[12], vt.n[13], vt.n[14], vt.n[15] };
+
+  Packet4i first_quarter = pload<Packet4i>(first_loader);
+  Packet4i second_quarter = pload<Packet4i>(second_loader);
+  Packet4i third_quarter = pload<Packet4i>(third_loader);
+  Packet4i fourth_quarter = pload<Packet4i>(fourth_loader);
+
+  return static_cast<int8_t>(predux(first_quarter) + predux(second_quarter)
+		                  + predux(third_quarter) + predux(fourth_quarter));
+}
+
+template<> EIGEN_STRONG_INLINE uint8_t predux<Packet16uc>(const Packet16uc& a)
+{
+  union{
+    Packet16uc v;
+    uint8_t n[16];
+  } vt;
+  vt.v = a;
+
+  EIGEN_ALIGN16 int first_loader[4] = { vt.n[0], vt.n[1], vt.n[2], vt.n[3] };
+  EIGEN_ALIGN16 int second_loader[4] = { vt.n[4], vt.n[5], vt.n[6], vt.n[7] };
+  EIGEN_ALIGN16 int third_loader[4] = { vt.n[8], vt.n[9], vt.n[10], vt.n[11] };
+  EIGEN_ALIGN16 int fourth_loader[4] = { vt.n[12], vt.n[13], vt.n[14], vt.n[15] };
+
+  Packet4i first_quarter = pload<Packet4i>(first_loader);
+  Packet4i second_quarter = pload<Packet4i>(second_loader);
+  Packet4i third_quarter = pload<Packet4i>(third_loader);
+  Packet4i fourth_quarter = pload<Packet4i>(fourth_loader);
+
+
+  return static_cast<uint8_t>(predux(first_quarter) + predux(second_quarter)
+		                  + predux(third_quarter) + predux(fourth_quarter));
+}
+
+
 // Other reduction functions:
 // mul
 template<> EIGEN_STRONG_INLINE float predux_mul<Packet4f>(const Packet4f& a)
@@ -981,6 +1323,13 @@ template<> EIGEN_STRONG_INLINE float predux_mul<Packet4f>(const Packet4f& a)
   Packet4f prod;
   prod = pmul(a, vec_sld(a, a, 8));
   return pfirst(pmul(prod, vec_sld(prod, prod, 4)));
+}
+
+template<> EIGEN_STRONG_INLINE int predux_mul<Packet4i>(const Packet4i& a)
+{
+  EIGEN_ALIGN16 int aux[4];
+  pstore(aux, a);
+  return aux[0] * aux[1] * aux[2] * aux[3];
 }
 
 template<> EIGEN_STRONG_INLINE short int predux_mul<Packet8s>(const Packet8s& a)
@@ -1005,12 +1354,28 @@ template<> EIGEN_STRONG_INLINE unsigned short int predux_mul<Packet8us>(const Pa
   return pfirst(octo);
 }
 
-
-template<> EIGEN_STRONG_INLINE int predux_mul<Packet4i>(const Packet4i& a)
+template<> EIGEN_STRONG_INLINE int8_t predux_mul<Packet16c>(const Packet16c& a)
 {
-  EIGEN_ALIGN16 int aux[4];
-  pstore(aux, a);
-  return aux[0] * aux[1] * aux[2] * aux[3];
+  Packet16c pair, quad, octo, result;
+
+  pair = vec_mul(a, vec_sld(a, a, 8));
+  quad = vec_mul(pair, vec_sld(pair, pair, 4));
+  octo = vec_mul(quad, vec_sld(quad, quad, 2));
+  result = vec_mul(octo, vec_sld(octo, octo, 1));
+
+  return pfirst(result);
+}
+
+template<> EIGEN_STRONG_INLINE uint8_t predux_mul<Packet16uc>(const Packet16uc& a)
+{
+  Packet16uc pair, quad, octo, result;
+
+  pair = vec_mul(a, vec_sld(a, a, 8));
+  quad = vec_mul(pair, vec_sld(pair, pair, 4));
+  octo = vec_mul(quad, vec_sld(quad, quad, 2));
+  result = vec_mul(octo, vec_sld(octo, octo, 1));
+
+  return pfirst(result);
 }
 
 // min
@@ -1059,6 +1424,30 @@ template<> EIGEN_STRONG_INLINE unsigned short int predux_min<Packet8us>(const Pa
   octo = vec_min(quad, vec_sld(quad, quad, 2));
   return pfirst(octo);
 }
+
+template<> EIGEN_STRONG_INLINE int8_t predux_min<Packet16c>(const Packet16c& a)
+{
+  Packet16c pair, quad, octo, result;
+
+  pair = vec_min(a, vec_sld(a, a, 8));
+  quad = vec_min(pair, vec_sld(pair, pair, 4));
+  octo = vec_min(quad, vec_sld(quad, quad, 2));
+  result = vec_min(octo, vec_sld(octo, octo, 1));
+
+  return pfirst(result);
+}
+
+template<> EIGEN_STRONG_INLINE uint8_t predux_min<Packet16uc>(const Packet16uc& a)
+{
+  Packet16uc pair, quad, octo, result;
+
+  pair = vec_min(a, vec_sld(a, a, 8));
+  quad = vec_min(pair, vec_sld(pair, pair, 4));
+  octo = vec_min(quad, vec_sld(quad, quad, 2));
+  result = vec_min(octo, vec_sld(octo, octo, 1));
+
+  return pfirst(result);
+}
 // max
 template<> EIGEN_STRONG_INLINE float predux_max<Packet4f>(const Packet4f& a)
 {
@@ -1104,6 +1493,30 @@ template<> EIGEN_STRONG_INLINE unsigned short int predux_max<Packet8us>(const Pa
   //octo = { Max(a0, a4, a2, a6, a1, a5, a3, a7) }
   octo = vec_max(quad, vec_sld(quad, quad, 2));
   return pfirst(octo);
+}
+
+template<> EIGEN_STRONG_INLINE int8_t predux_max<Packet16c>(const Packet16c& a)
+{
+  Packet16c pair, quad, octo, result;
+
+  pair = vec_max(a, vec_sld(a, a, 8));
+  quad = vec_max(pair, vec_sld(pair, pair, 4));
+  octo = vec_max(quad, vec_sld(quad, quad, 2));
+  result = vec_max(octo, vec_sld(octo, octo, 1));
+
+  return pfirst(result);
+}
+
+template<> EIGEN_STRONG_INLINE uint8_t predux_max<Packet16uc>(const Packet16uc& a)
+{
+  Packet16uc pair, quad, octo, result;
+
+  pair = vec_max(a, vec_sld(a, a, 8));
+  quad = vec_max(pair, vec_sld(pair, pair, 4));
+  octo = vec_max(quad, vec_sld(quad, quad, 2));
+  result = vec_max(octo, vec_sld(octo, octo, 1));
+
+  return pfirst(result);
 }
 
 template<> EIGEN_STRONG_INLINE bool predux_any(const Packet4f& x)
@@ -1251,6 +1664,36 @@ struct palign_impl<Offset,Packet8us>
   }
 };
 
+template<int Offset>
+struct palign_impl<Offset,Packet16c>
+{
+  static EIGEN_STRONG_INLINE void run(Packet16c& first, const Packet16c& second)
+  {
+    const int shift = Offset % 16;
+    if ( shift == 0 ) return;
+#ifdef _BIG_ENDIAN
+    first = vec_sld(first, second, shift);
+#else
+    first = vec_sld(first, second, shift);
+#endif
+  }
+};
+
+template<int Offset>
+struct palign_impl<Offset,Packet16uc>
+{
+  static EIGEN_STRONG_INLINE void run(Packet16uc& first, const Packet16uc& second)
+  {
+    const int shift = Offset % 16;
+    if ( shift == 0 ) return;
+#ifdef _BIG_ENDIAN
+    first = vec_sld(first, second, shift);
+#else
+    first = vec_sld(first, second, shift);
+#endif
+  }
+};
+
 EIGEN_DEVICE_FUNC inline void
 ptranspose(PacketBlock<Packet4f,4>& kernel) {
   Packet4f t0, t1, t2, t3;
@@ -1293,6 +1736,33 @@ ptranspose(PacketBlock<Packet8s,4>& kernel) {
 EIGEN_DEVICE_FUNC inline void
 ptranspose(PacketBlock<Packet8us,4>& kernel) {
   Packet8us t0, t1, t2, t3;
+  t0 = vec_mergeh(kernel.packet[0], kernel.packet[2]);
+  t1 = vec_mergel(kernel.packet[0], kernel.packet[2]);
+  t2 = vec_mergeh(kernel.packet[1], kernel.packet[3]);
+  t3 = vec_mergel(kernel.packet[1], kernel.packet[3]);
+  kernel.packet[0] = vec_mergeh(t0, t2);
+  kernel.packet[1] = vec_mergel(t0, t2);
+  kernel.packet[2] = vec_mergeh(t1, t3);
+  kernel.packet[3] = vec_mergel(t1, t3);
+}
+
+EIGEN_DEVICE_FUNC inline void
+ptranspose(PacketBlock<Packet16c,4>& kernel) {
+  Packet16c t0, t1, t2, t3;
+  t0 = vec_mergeh(kernel.packet[0], kernel.packet[2]);
+  t1 = vec_mergel(kernel.packet[0], kernel.packet[2]);
+  t2 = vec_mergeh(kernel.packet[1], kernel.packet[3]);
+  t3 = vec_mergel(kernel.packet[1], kernel.packet[3]);
+  kernel.packet[0] = vec_mergeh(t0, t2);
+  kernel.packet[1] = vec_mergel(t0, t2);
+  kernel.packet[2] = vec_mergeh(t1, t3);
+  kernel.packet[3] = vec_mergel(t1, t3);
+}
+
+
+EIGEN_DEVICE_FUNC inline void
+ptranspose(PacketBlock<Packet16uc,4>& kernel) {
+  Packet16uc t0, t1, t2, t3;
   t0 = vec_mergeh(kernel.packet[0], kernel.packet[2]);
   t1 = vec_mergel(kernel.packet[0], kernel.packet[2]);
   t2 = vec_mergeh(kernel.packet[1], kernel.packet[3]);
@@ -1365,6 +1835,152 @@ ptranspose(PacketBlock<Packet8us,8>& kernel) {
   kernel.packet[7] = vec_mergel(sum[3], sum[7]);
 }
 
+EIGEN_DEVICE_FUNC inline void
+ptranspose(PacketBlock<Packet16c,16>& kernel) {
+  Packet16c step1[16], step2[16], step3[16];
+
+  step1[0] = vec_mergeh(kernel.packet[0], kernel.packet[8]);
+  step1[1] = vec_mergel(kernel.packet[0], kernel.packet[8]);
+  step1[2] = vec_mergeh(kernel.packet[1], kernel.packet[9]);
+  step1[3] = vec_mergel(kernel.packet[1], kernel.packet[9]);
+  step1[4] = vec_mergeh(kernel.packet[2], kernel.packet[10]);
+  step1[5] = vec_mergel(kernel.packet[2], kernel.packet[10]);
+  step1[6] = vec_mergeh(kernel.packet[3], kernel.packet[11]);
+  step1[7] = vec_mergel(kernel.packet[3], kernel.packet[11]);
+  step1[8] = vec_mergeh(kernel.packet[4], kernel.packet[12]);
+  step1[9] = vec_mergel(kernel.packet[4], kernel.packet[12]);
+  step1[10] = vec_mergeh(kernel.packet[5], kernel.packet[13]);
+  step1[11] = vec_mergel(kernel.packet[5], kernel.packet[13]);
+  step1[12] = vec_mergeh(kernel.packet[6], kernel.packet[14]);
+  step1[13] = vec_mergel(kernel.packet[6], kernel.packet[14]);
+  step1[14] = vec_mergeh(kernel.packet[7], kernel.packet[15]);
+  step1[15] = vec_mergel(kernel.packet[7], kernel.packet[15]);
+
+  step2[0]  = vec_mergeh(step1[0], step1[8]);
+  step2[1]  = vec_mergel(step1[0], step1[8]);
+  step2[2]  = vec_mergeh(step1[1], step1[9]);
+  step2[3]  = vec_mergel(step1[1], step1[9]);
+  step2[4]  = vec_mergeh(step1[2], step1[10]);
+  step2[5]  = vec_mergel(step1[2], step1[10]);
+  step2[6]  = vec_mergeh(step1[3], step1[11]);
+  step2[7]  = vec_mergel(step1[3], step1[11]);
+  step2[8]  = vec_mergeh(step1[4], step1[12]);
+  step2[9]  = vec_mergel(step1[4], step1[12]);
+  step2[10] = vec_mergeh(step1[5], step1[13]);
+  step2[11] = vec_mergel(step1[5], step1[13]);
+  step2[12] = vec_mergeh(step1[6], step1[14]);
+  step2[13] = vec_mergel(step1[6], step1[14]);
+  step2[14] = vec_mergeh(step1[7], step1[15]);
+  step2[15] = vec_mergel(step1[7], step1[15]);
+
+  step3[0]  = vec_mergeh(step2[0], step2[8]);
+  step3[1]  = vec_mergel(step2[0], step2[8]);
+  step3[2]  = vec_mergeh(step2[1], step2[9]);
+  step3[3]  = vec_mergel(step2[1], step2[9]);
+  step3[4]  = vec_mergeh(step2[2], step2[10]);
+  step3[5]  = vec_mergel(step2[2], step2[10]);
+  step3[6]  = vec_mergeh(step2[3], step2[11]);
+  step3[7]  = vec_mergel(step2[3], step2[11]);
+  step3[8]  = vec_mergeh(step2[4], step2[12]);
+  step3[9]  = vec_mergel(step2[4], step2[12]);
+  step3[10] = vec_mergeh(step2[5], step2[13]);
+  step3[11] = vec_mergel(step2[5], step2[13]);
+  step3[12] = vec_mergeh(step2[6], step2[14]);
+  step3[13] = vec_mergel(step2[6], step2[14]);
+  step3[14] = vec_mergeh(step2[7], step2[15]);
+  step3[15] = vec_mergel(step2[7], step2[15]);
+
+  kernel.packet[0]  = vec_mergeh(step3[0], step3[8]);
+  kernel.packet[1]  = vec_mergel(step3[0], step3[8]);
+  kernel.packet[2]  = vec_mergeh(step3[1], step3[9]);
+  kernel.packet[3]  = vec_mergel(step3[1], step3[9]);
+  kernel.packet[4]  = vec_mergeh(step3[2], step3[10]);
+  kernel.packet[5]  = vec_mergel(step3[2], step3[10]);
+  kernel.packet[6]  = vec_mergeh(step3[3], step3[11]);
+  kernel.packet[7]  = vec_mergel(step3[3], step3[11]);
+  kernel.packet[8]  = vec_mergeh(step3[4], step3[12]);
+  kernel.packet[9]  = vec_mergel(step3[4], step3[12]);
+  kernel.packet[10] = vec_mergeh(step3[5], step3[13]);
+  kernel.packet[11] = vec_mergel(step3[5], step3[13]);
+  kernel.packet[12] = vec_mergeh(step3[6], step3[14]);
+  kernel.packet[13] = vec_mergel(step3[6], step3[14]);
+  kernel.packet[14] = vec_mergeh(step3[7], step3[15]);
+  kernel.packet[15] = vec_mergel(step3[7], step3[15]);
+}
+
+EIGEN_DEVICE_FUNC inline void
+ptranspose(PacketBlock<Packet16uc,16>& kernel) {
+  Packet16uc step1[16], step2[16], step3[16];
+
+  step1[0] = vec_mergeh(kernel.packet[0], kernel.packet[8]);
+  step1[1] = vec_mergel(kernel.packet[0], kernel.packet[8]);
+  step1[2] = vec_mergeh(kernel.packet[1], kernel.packet[9]);
+  step1[3] = vec_mergel(kernel.packet[1], kernel.packet[9]);
+  step1[4] = vec_mergeh(kernel.packet[2], kernel.packet[10]);
+  step1[5] = vec_mergel(kernel.packet[2], kernel.packet[10]);
+  step1[6] = vec_mergeh(kernel.packet[3], kernel.packet[11]);
+  step1[7] = vec_mergel(kernel.packet[3], kernel.packet[11]);
+  step1[8] = vec_mergeh(kernel.packet[4], kernel.packet[12]);
+  step1[9] = vec_mergel(kernel.packet[4], kernel.packet[12]);
+  step1[10] = vec_mergeh(kernel.packet[5], kernel.packet[13]);
+  step1[11] = vec_mergel(kernel.packet[5], kernel.packet[13]);
+  step1[12] = vec_mergeh(kernel.packet[6], kernel.packet[14]);
+  step1[13] = vec_mergel(kernel.packet[6], kernel.packet[14]);
+  step1[14] = vec_mergeh(kernel.packet[7], kernel.packet[15]);
+  step1[15] = vec_mergel(kernel.packet[7], kernel.packet[15]);
+
+  step2[0]  = vec_mergeh(step1[0], step1[8]);
+  step2[1]  = vec_mergel(step1[0], step1[8]);
+  step2[2]  = vec_mergeh(step1[1], step1[9]);
+  step2[3]  = vec_mergel(step1[1], step1[9]);
+  step2[4]  = vec_mergeh(step1[2], step1[10]);
+  step2[5]  = vec_mergel(step1[2], step1[10]);
+  step2[6]  = vec_mergeh(step1[3], step1[11]);
+  step2[7]  = vec_mergel(step1[3], step1[11]);
+  step2[8]  = vec_mergeh(step1[4], step1[12]);
+  step2[9]  = vec_mergel(step1[4], step1[12]);
+  step2[10] = vec_mergeh(step1[5], step1[13]);
+  step2[11] = vec_mergel(step1[5], step1[13]);
+  step2[12] = vec_mergeh(step1[6], step1[14]);
+  step2[13] = vec_mergel(step1[6], step1[14]);
+  step2[14] = vec_mergeh(step1[7], step1[15]);
+  step2[15] = vec_mergel(step1[7], step1[15]);
+
+  step3[0]  = vec_mergeh(step2[0], step2[8]);
+  step3[1]  = vec_mergel(step2[0], step2[8]);
+  step3[2]  = vec_mergeh(step2[1], step2[9]);
+  step3[3]  = vec_mergel(step2[1], step2[9]);
+  step3[4]  = vec_mergeh(step2[2], step2[10]);
+  step3[5]  = vec_mergel(step2[2], step2[10]);
+  step3[6]  = vec_mergeh(step2[3], step2[11]);
+  step3[7]  = vec_mergel(step2[3], step2[11]);
+  step3[8]  = vec_mergeh(step2[4], step2[12]);
+  step3[9]  = vec_mergel(step2[4], step2[12]);
+  step3[10] = vec_mergeh(step2[5], step2[13]);
+  step3[11] = vec_mergel(step2[5], step2[13]);
+  step3[12] = vec_mergeh(step2[6], step2[14]);
+  step3[13] = vec_mergel(step2[6], step2[14]);
+  step3[14] = vec_mergeh(step2[7], step2[15]);
+  step3[15] = vec_mergel(step2[7], step2[15]);
+
+  kernel.packet[0]  = vec_mergeh(step3[0], step3[8]);
+  kernel.packet[1]  = vec_mergel(step3[0], step3[8]);
+  kernel.packet[2]  = vec_mergeh(step3[1], step3[9]);
+  kernel.packet[3]  = vec_mergel(step3[1], step3[9]);
+  kernel.packet[4]  = vec_mergeh(step3[2], step3[10]);
+  kernel.packet[5]  = vec_mergel(step3[2], step3[10]);
+  kernel.packet[6]  = vec_mergeh(step3[3], step3[11]);
+  kernel.packet[7]  = vec_mergel(step3[3], step3[11]);
+  kernel.packet[8]  = vec_mergeh(step3[4], step3[12]);
+  kernel.packet[9]  = vec_mergel(step3[4], step3[12]);
+  kernel.packet[10] = vec_mergeh(step3[5], step3[13]);
+  kernel.packet[11] = vec_mergel(step3[5], step3[13]);
+  kernel.packet[12] = vec_mergeh(step3[6], step3[14]);
+  kernel.packet[13] = vec_mergel(step3[6], step3[14]);
+  kernel.packet[14] = vec_mergeh(step3[7], step3[15]);
+  kernel.packet[15] = vec_mergel(step3[7], step3[15]);
+}
+
 template<> EIGEN_STRONG_INLINE Packet4i pblend(const Selector<4>& ifPacket, const Packet4i& thenPacket, const Packet4i& elsePacket) {
   Packet4ui select = { ifPacket.select[0], ifPacket.select[1], ifPacket.select[2], ifPacket.select[3] };
   Packet4ui mask = reinterpret_cast<Packet4ui>(vec_cmpeq(reinterpret_cast<Packet4ui>(select), reinterpret_cast<Packet4ui>(p4i_ONE)));
@@ -1389,6 +2005,26 @@ template<> EIGEN_STRONG_INLINE Packet8us pblend(const Selector<8>& ifPacket, con
   Packet8us select = { ifPacket.select[0], ifPacket.select[1], ifPacket.select[2], ifPacket.select[3],
                        ifPacket.select[4], ifPacket.select[5], ifPacket.select[6], ifPacket.select[7] };
   Packet8us mask = reinterpret_cast<Packet8us>(vec_cmpeq(reinterpret_cast<Packet8us>(select), p8us_ONE));
+  return vec_sel(elsePacket, thenPacket, mask);
+}
+
+template<> EIGEN_STRONG_INLINE Packet16c pblend(const Selector<16>& ifPacket, const Packet16c& thenPacket, const Packet16c& elsePacket) {
+  Packet16uc select = { ifPacket.select[0], ifPacket.select[1], ifPacket.select[2], ifPacket.select[3],
+                       ifPacket.select[4], ifPacket.select[5], ifPacket.select[6], ifPacket.select[7],
+                       ifPacket.select[8], ifPacket.select[9], ifPacket.select[10], ifPacket.select[11],
+                       ifPacket.select[12], ifPacket.select[13], ifPacket.select[14], ifPacket.select[15] };
+
+  Packet16uc mask = reinterpret_cast<Packet16uc>(vec_cmpeq(reinterpret_cast<Packet16uc>(select), p16uc_ONE));
+  return vec_sel(elsePacket, thenPacket, mask);
+}
+
+template<> EIGEN_STRONG_INLINE Packet16uc pblend(const Selector<16>& ifPacket, const Packet16uc& thenPacket, const Packet16uc& elsePacket) {
+  Packet16uc select = { ifPacket.select[0], ifPacket.select[1], ifPacket.select[2], ifPacket.select[3],
+                       ifPacket.select[4], ifPacket.select[5], ifPacket.select[6], ifPacket.select[7],
+                       ifPacket.select[8], ifPacket.select[9], ifPacket.select[10], ifPacket.select[11],
+                       ifPacket.select[12], ifPacket.select[13], ifPacket.select[14], ifPacket.select[15] };
+
+  Packet16uc mask = reinterpret_cast<Packet16uc>(vec_cmpeq(reinterpret_cast<Packet16uc>(select), p16uc_ONE));
   return vec_sel(elsePacket, thenPacket, mask);
 }
 
