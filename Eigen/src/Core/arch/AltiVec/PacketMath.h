@@ -68,7 +68,6 @@ typedef __vector unsigned char  Packet16uc;
 #define DST_CHAN 1
 #define DST_CTRL(size, count, stride) (((size) << 24) | ((count) << 16) | (stride))
 
-
 // These constants are endian-agnostic
 static _EIGEN_DECLARE_CONST_FAST_Packet4f(ZERO, 0); //{ 0.0, 0.0, 0.0, 0.0}
 static _EIGEN_DECLARE_CONST_FAST_Packet4i(ZERO, 0); //{ 0, 0, 0, 0,}
@@ -251,7 +250,11 @@ template<> EIGEN_STRONG_INLINE Packet4f pload<Packet4f>(const float* from)
   // ignoring these warnings for now.
   EIGEN_UNUSED_VARIABLE(from);
   EIGEN_DEBUG_ALIGNED_LOAD
+#ifdef __VSX__
+  return vec_xl(0, from);
+#else
   return vec_ld(0, from);
+#endif
 }
 
 template<> EIGEN_STRONG_INLINE Packet4i pload<Packet4i>(const int*     from)
@@ -260,7 +263,11 @@ template<> EIGEN_STRONG_INLINE Packet4i pload<Packet4i>(const int*     from)
   // ignoring these warnings for now.
   EIGEN_UNUSED_VARIABLE(from);
   EIGEN_DEBUG_ALIGNED_LOAD
+#ifdef __VSX__
+  return vec_xl(0, from);
+#else
   return vec_ld(0, from);
+#endif
 }
 
 template<> EIGEN_STRONG_INLINE void pstore<float>(float*   to, const Packet4f& from)
@@ -269,7 +276,11 @@ template<> EIGEN_STRONG_INLINE void pstore<float>(float*   to, const Packet4f& f
   // ignoring these warnings for now.
   EIGEN_UNUSED_VARIABLE(to);
   EIGEN_DEBUG_ALIGNED_STORE
+#ifdef __VSX__
+  vec_xst(from, 0, to);
+#else
   vec_st(from, 0, to);
+#endif
 }
 
 template<> EIGEN_STRONG_INLINE void pstore<int>(int*       to, const Packet4i& from)
@@ -278,7 +289,11 @@ template<> EIGEN_STRONG_INLINE void pstore<int>(int*       to, const Packet4i& f
   // ignoring these warnings for now.
   EIGEN_UNUSED_VARIABLE(to);
   EIGEN_DEBUG_ALIGNED_STORE
+#ifdef __VSX__
+  vec_xst(from, 0, to);
+#else
   vec_st(from, 0, to);
+#endif
 }
 
 template<> EIGEN_STRONG_INLINE Packet4f pset1<Packet4f>(const float&  from) {
@@ -489,12 +504,12 @@ template<> EIGEN_STRONG_INLINE Packet4i ploadu<Packet4i>(const int* from)
 template<> EIGEN_STRONG_INLINE Packet4i ploadu<Packet4i>(const int* from)
 {
   EIGEN_DEBUG_UNALIGNED_LOAD
-  return vec_vsx_ld(0, from);
+  return vec_xl(0, from);
 }
 template<> EIGEN_STRONG_INLINE Packet4f ploadu<Packet4f>(const float* from)
 {
   EIGEN_DEBUG_UNALIGNED_LOAD
-  return vec_vsx_ld(0, from);
+  return vec_xl(0, from);
 }
 #endif
 
@@ -555,12 +570,12 @@ template<> EIGEN_STRONG_INLINE void pstoreu<int>(int*      to, const Packet4i& f
 template<> EIGEN_STRONG_INLINE void pstoreu<int>(int*       to, const Packet4i& from)
 {
   EIGEN_DEBUG_UNALIGNED_STORE
-  vec_vsx_st(from, 0, to);
+  vec_xst(from, 0, to);
 }
 template<> EIGEN_STRONG_INLINE void pstoreu<float>(float*   to, const Packet4f& from)
 {
   EIGEN_DEBUG_UNALIGNED_STORE
-  vec_vsx_st(from, 0, to);
+  vec_xst(from, 0, to);
 }
 #endif
 
@@ -1049,7 +1064,7 @@ template<> EIGEN_STRONG_INLINE Packet2d pfloor<Packet2d>(const Packet2d& a) { re
 template<> EIGEN_STRONG_INLINE Packet2d ploadu<Packet2d>(const double* from)
 {
   EIGEN_DEBUG_UNALIGNED_LOAD
-  return vec_vsx_ld(0, from);
+  return vec_xl(0, from);
 }
 
 template<> EIGEN_STRONG_INLINE Packet2d ploaddup<Packet2d>(const double*   from)
@@ -1063,7 +1078,7 @@ template<> EIGEN_STRONG_INLINE Packet2d ploaddup<Packet2d>(const double*   from)
 template<> EIGEN_STRONG_INLINE void pstoreu<double>(double*  to, const Packet2d& from)
 {
   EIGEN_DEBUG_UNALIGNED_STORE
-  vec_vsx_st(from, 0, to);
+  vec_xst(from, 0, to);
 }
 
 template<> EIGEN_STRONG_INLINE void prefetch<double>(const double* addr) { EIGEN_PPC_PREFETCH(addr); }
