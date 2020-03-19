@@ -719,6 +719,10 @@ template<typename ExpressionType, int Direction> class VectorwiseOp
     EIGEN_DEVICE_FUNC
     const HNormalizedReturnType hnormalized() const;
 
+#   ifdef EIGEN_VECTORWISEOP_PLUGIN
+#     include EIGEN_VECTORWISEOP_PLUGIN
+#   endif
+
   protected:
     Index redux_length() const
     {
