@@ -439,7 +439,7 @@ struct scalar_absolute_difference_op : binary_op_base<LhsScalar,RhsScalar>
   }
 #endif
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const result_type operator() (const LhsScalar& a, const RhsScalar& b) const
-  { return numext::absdiff(); }
+  { return numext::absdiff(a,b); }
   template<typename Packet>
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Packet packetOp(const Packet& a, const Packet& b) const
   { return internal::pabsdiff(a,b); }
