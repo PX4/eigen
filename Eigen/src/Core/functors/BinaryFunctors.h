@@ -422,6 +422,36 @@ template<> struct functor_traits<scalar_boolean_xor_op> {
   };
 };
 
+/** \internal
+  * \brief Template functor to compute the absolute difference of two scalars
+  *
+  * \sa class CwiseBinaryOp, MatrixBase::absolute_difference
+  */
+template<typename LhsScalar,typename RhsScalar>
+struct scalar_absolute_difference_op : binary_op_base<LhsScalar,RhsScalar>
+{
+  typedef typename ScalarBinaryOpTraits<LhsScalar,RhsScalar,scalar_absolute_difference_op>::ReturnType result_type;
+#ifndef EIGEN_SCALAR_BINARY_OP_PLUGIN
+  EIGEN_EMPTY_STRUCT_CTOR(scalar_absolute_difference_op)
+#else
+  scalar_absolute_difference_op() {
+    EIGEN_SCALAR_BINARY_OP_PLUGIN
+  }
+#endif
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const result_type operator() (const LhsScalar& a, const RhsScalar& b) const
+  { return numext::absdiff(); }
+  template<typename Packet>
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Packet packetOp(const Packet& a, const Packet& b) const
+  { return internal::pabsdiff(a,b); }
+};
+template<typename LhsScalar,typename RhsScalar>
+struct functor_traits<scalar_absolute_difference_op<LhsScalar,RhsScalar> > {
+  enum {
+    Cost = (NumTraits<LhsScalar>::AddCost+NumTraits<RhsScalar>::AddCost)/2,
+    PacketAccess = is_same<LhsScalar,RhsScalar>::value && packet_traits<LhsScalar>::HasAbsDiff
+  };
+};
+
 
 
 //---------- binary functors bound to a constant, thus appearing as a unary functor ----------

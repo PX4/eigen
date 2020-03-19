@@ -145,6 +145,7 @@ struct packet_traits<float> : default_packet_traits
     HasAbs       = 1,
     HasArg       = 0,
     HasAbs2      = 1,
+    HasAbsDiff   = 1,
     HasMin       = 1,
     HasMax       = 1,
     HasConj      = 1,
@@ -183,6 +184,7 @@ struct packet_traits<int8_t> : default_packet_traits
     HasMul       = 1,
     HasNegate    = 1,
     HasAbs       = 1,
+    HasAbsDiff   = 1,
     HasArg       = 0,
     HasAbs2      = 1,
     HasMin       = 1,
@@ -212,6 +214,7 @@ struct packet_traits<uint8_t> : default_packet_traits
     HasMul       = 1,
     HasNegate    = 0,
     HasAbs       = 1,
+    HasAbsDiff   = 1,
     HasArg       = 0,
     HasAbs2      = 1,
     HasMin       = 1,
@@ -243,6 +246,7 @@ struct packet_traits<int16_t> : default_packet_traits
     HasMul       = 1,
     HasNegate    = 1,
     HasAbs       = 1,
+    HasAbsDiff   = 1,
     HasArg       = 0,
     HasAbs2      = 1,
     HasMin       = 1,
@@ -272,6 +276,7 @@ struct packet_traits<uint16_t> : default_packet_traits
     HasMul       = 1,
     HasNegate    = 0,
     HasAbs       = 0,
+    HasAbsDiff   = 1,
     HasArg       = 0,
     HasAbs2      = 1,
     HasMin       = 1,
@@ -305,6 +310,7 @@ struct packet_traits<int32_t> : default_packet_traits
     HasAbs       = 1,
     HasArg       = 0,
     HasAbs2      = 1,
+    HasAbsDiff   = 1,
     HasMin       = 1,
     HasMax       = 1,
     HasConj      = 1,
@@ -334,6 +340,7 @@ struct packet_traits<uint32_t> : default_packet_traits
     HasAbs       = 0,
     HasArg       = 0,
     HasAbs2      = 1,
+    HasAbsDiff   = 1,
     HasMin       = 1,
     HasMax       = 1,
     HasConj      = 1,
@@ -1100,6 +1107,47 @@ template<> EIGEN_STRONG_INLINE Packet2ui pmadd(const Packet2ui& a, const Packet2
 { return vmla_u32(c,a,b); }
 template<> EIGEN_STRONG_INLINE Packet4ui pmadd(const Packet4ui& a, const Packet4ui& b, const Packet4ui& c)
 { return vmlaq_u32(c,a,b); }
+
+template<> EIGEN_STRONG_INLINE Packet2f pabsdiff<Packet2f>(const Packet2f& a, const Packet2f& b)
+{ return vabd_f32(a,b); }
+template<> EIGEN_STRONG_INLINE Packet4f pabsdiff<Packet4f>(const Packet4f& a, const Packet4f& b)
+{ return vabdq_f32(a,b); }
+template<> EIGEN_STRONG_INLINE Packet4c pabsdiff<Packet4c>(const Packet4c& a, const Packet4c& b)
+{
+  return vget_lane_s32(vreinterpret_s32_s8(vabd_s8(
+      vreinterpret_s8_s32(vdup_n_s32(a)),
+      vreinterpret_s8_s32(vdup_n_s32(b)))), 0);
+}
+template<> EIGEN_STRONG_INLINE Packet8c pabsdiff<Packet8c>(const Packet8c& a, const Packet8c& b)
+{ return vabd_s8(a,b); }
+template<> EIGEN_STRONG_INLINE Packet16c pabsdiff<Packet16c>(const Packet16c& a, const Packet16c& b)
+{ return vabdq_s8(a,b); }
+template<> EIGEN_STRONG_INLINE Packet4uc pabsdiff<Packet4uc>(const Packet4uc& a, const Packet4uc& b)
+{
+  return vget_lane_u32(vreinterpret_u32_u8(vabd_u8(
+      vreinterpret_u8_u32(vdup_n_u32(a)),
+      vreinterpret_u8_u32(vdup_n_u32(b)))), 0);
+}
+template<> EIGEN_STRONG_INLINE Packet8uc pabsdiff<Packet8uc>(const Packet8uc& a, const Packet8uc& b)
+{ return vabd_u8(a,b); }
+template<> EIGEN_STRONG_INLINE Packet16uc pabsdiff<Packet16uc>(const Packet16uc& a, const Packet16uc& b)
+{ return vabdq_u8(a,b); }
+template<> EIGEN_STRONG_INLINE Packet4s pabsdiff<Packet4s>(const Packet4s& a, const Packet4s& b)
+{ return vabd_s16(a,b); }
+template<> EIGEN_STRONG_INLINE Packet8s pabsdiff<Packet8s>(const Packet8s& a, const Packet8s& b)
+{ return vabdq_s16(a,b); }
+template<> EIGEN_STRONG_INLINE Packet4us pabsdiff<Packet4us>(const Packet4us& a, const Packet4us& b)
+{ return vabd_u16(a,b); }
+template<> EIGEN_STRONG_INLINE Packet8us pabsdiff<Packet8us>(const Packet8us& a, const Packet8us& b)
+{ return vabdq_u16(a,b); }
+template<> EIGEN_STRONG_INLINE Packet2i pabsdiff<Packet2i>(const Packet2i& a, const Packet2i& b)
+{ return vabd_s32(a,b); }
+template<> EIGEN_STRONG_INLINE Packet4i pabsdiff<Packet4i>(const Packet4i& a, const Packet4i& b)
+{ return vabdq_s32(a,b); }
+template<> EIGEN_STRONG_INLINE Packet2ui pabsdiff<Packet2ui>(const Packet2ui& a, const Packet2ui& b)
+{ return vabd_u32(a,b); }
+template<> EIGEN_STRONG_INLINE Packet4ui pabsdiff<Packet4ui>(const Packet4ui& a, const Packet4ui& b)
+{ return vabdq_u32(a,b); }
 
 template<> EIGEN_STRONG_INLINE Packet2f pmin<Packet2f>(const Packet2f& a, const Packet2f& b) { return vmin_f32(a,b); }
 template<> EIGEN_STRONG_INLINE Packet4f pmin<Packet4f>(const Packet4f& a, const Packet4f& b) { return vminq_f32(a,b); }

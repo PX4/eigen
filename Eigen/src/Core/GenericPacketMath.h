@@ -52,6 +52,7 @@ struct default_packet_traits
     HasAbs       = 1,
     HasArg       = 0,
     HasAbs2      = 1,
+    HasAbsDiff   = 0,
     HasMin       = 1,
     HasMax       = 1,
     HasConj      = 1,
@@ -321,6 +322,10 @@ pcmp_eq(const Packet& a, const Packet& b) { return a==b ? ptrue(a) : pzero(a); }
 /** \internal \returns a < b or a==NaN or b==NaN as a bit mask */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
 pcmp_lt_or_nan(const Packet& a, const Packet& b) { return pnot(pcmp_le(b,a)); } 
+
+/** \internal \returns the min of \a a and \a b  (coeff-wise) */
+template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
+pabsdiff(const Packet& a, const Packet& b) { return pselect(pcmp_lt(a, b), psub(b, a), psub(a, b)); }
 
 /** \internal \returns a packet version of \a *from, from must be 16 bytes aligned */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet

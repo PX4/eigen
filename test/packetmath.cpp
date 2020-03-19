@@ -14,6 +14,7 @@
 #define REF_SUB(a,b) ((a)-(b))
 #define REF_MUL(a,b) ((a)*(b))
 #define REF_DIV(a,b) ((a)/(b))
+#define REF_ABS_DIFF(a,b) ((a)>(b)?(a)-(b):(b)-(a))
 
 template<typename Scalar,typename Packet> void packetmath()
 {
@@ -557,6 +558,7 @@ template<typename Scalar,typename Packet> void packetmath_notcomplex()
   CHECK_CWISE2_IF(PacketTraits::HasMin, (std::min), internal::pmin);
   CHECK_CWISE2_IF(PacketTraits::HasMax, (std::max), internal::pmax);
   CHECK_CWISE1(numext::abs, internal::pabs);
+  CHECK_CWISE2_IF(PacketTraits::HasAbsDiff, REF_ABS_DIFF, internal::pabsdiff);
 
   ref[0] = data1[0];
   for (int i=0; i<PacketSize; ++i)

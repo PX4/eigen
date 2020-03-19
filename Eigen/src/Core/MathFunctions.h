@@ -1181,6 +1181,36 @@ inline EIGEN_MATHFUNC_RETVAL(abs2, Scalar) abs2(const Scalar& x)
 EIGEN_DEVICE_FUNC
 inline bool abs2(bool x) { return x; }
 
+template<typename T>
+EIGEN_DEVICE_FUNC
+EIGEN_ALWAYS_INLINE T absdiff(const T& x, const T& y)
+{
+  return x > y ? x - y : y - x;
+}
+template<>
+EIGEN_DEVICE_FUNC
+EIGEN_ALWAYS_INLINE float absdiff(const float& x, const float& y)
+{
+  return fabsf(x - y);
+}
+template<>
+EIGEN_DEVICE_FUNC
+EIGEN_ALWAYS_INLINE double absdiff(const double& x, const double& y)
+{
+  return fabs(x - y);
+}
+template<>
+EIGEN_DEVICE_FUNC
+EIGEN_ALWAYS_INLINE long double absdiff(const long double& x, const long double& y)
+{
+#if defined(EIGEN_HIPCC)
+  // no "fabsl" on HIP yet
+  return (x > y) ? x : y;
+#else
+  return fabsl(x - y);
+#endif
+}
+
 template<typename Scalar>
 EIGEN_DEVICE_FUNC
 inline EIGEN_MATHFUNC_RETVAL(norm1, Scalar) norm1(const Scalar& x)

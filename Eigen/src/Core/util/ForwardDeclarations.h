@@ -187,6 +187,7 @@ template<typename Scalar> struct scalar_real_op;
 template<typename Scalar> struct scalar_imag_op;
 template<typename Scalar> struct scalar_abs_op;
 template<typename Scalar> struct scalar_abs2_op;
+template<typename LhsScalar,typename RhsScalar=LhsScalar> struct scalar_absolute_difference_op;
 template<typename Scalar> struct scalar_sqrt_op;
 template<typename Scalar> struct scalar_rsqrt_op;
 template<typename Scalar> struct scalar_exp_op;

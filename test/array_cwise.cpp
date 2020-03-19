@@ -343,6 +343,7 @@ template<typename ArrayType> void array_real(const ArrayType& m)
   VERIFY_IS_APPROX(inverse(inverse(m1)),m1);
   VERIFY((abs(m1) == m1 || abs(m1) == -m1).all());
   VERIFY_IS_APPROX(m3, sqrt(abs2(m1)));
+  VERIFY_IS_APPROX(m1.absolute_difference(m2), (m1 > m2).select(m1 - m2, m2 - m1));
   VERIFY_IS_APPROX( m1.sign(), -(-m1).sign() );
   VERIFY_IS_APPROX( m1*m1.sign(),m1.abs());
   VERIFY_IS_APPROX(m1.sign() * m1.abs(), m1);
