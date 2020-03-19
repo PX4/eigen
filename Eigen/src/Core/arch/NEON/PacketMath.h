@@ -60,12 +60,12 @@ struct eigen_packet_wrapper
 // (See also bug 1428)
 typedef eigen_packet_wrapper<float32x2_t,0>  Packet2f;
 typedef eigen_packet_wrapper<float32x4_t,1>  Packet4f;
-typedef eigen_packet_wrapper<int32_t    ,2>  Packet8c;
+typedef eigen_packet_wrapper<int32_t    ,2>  Packet4c;
 typedef eigen_packet_wrapper<int8x8_t   ,3>  Packet8c;
 typedef eigen_packet_wrapper<int8x16_t  ,4>  Packet16c;
-typedef eigen_packet_wrapper<uint32_t   ,5>  Packet8us;
-typedef eigen_packet_wrapper<uint8x8_t  ,6>  Packet8us;
-typedef eigen_packet_wrapper<uint8x16_t ,7>  Packet16us;
+typedef eigen_packet_wrapper<uint32_t   ,5>  Packet4uc;
+typedef eigen_packet_wrapper<uint8x8_t  ,6>  Packet8uc;
+typedef eigen_packet_wrapper<uint8x16_t ,7>  Packet16uc;
 typedef eigen_packet_wrapper<int16x4_t  ,8>  Packet4s;
 typedef eigen_packet_wrapper<int16x8_t  ,9>  Packet8s;
 typedef eigen_packet_wrapper<uint16x4_t ,10> Packet4us;
