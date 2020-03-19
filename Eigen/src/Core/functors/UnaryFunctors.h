@@ -172,7 +172,7 @@ struct functor_traits<scalar_cast_op<Scalar,NewType> >
   * \sa class CwiseUnaryOp, MatrixBase::shift_right()
   */
 template<typename Scalar, int N>
-struct scalar_shift_right_op : unary_op_base<Scalar> {
+struct scalar_shift_right_op {
   EIGEN_EMPTY_STRUCT_CTOR(scalar_shift_right_op)
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Scalar operator() (const Scalar& a) const
@@ -191,7 +191,7 @@ struct functor_traits<scalar_shift_right_op<Scalar,N> >
   * \sa class CwiseUnaryOp, MatrixBase::shift_left()
   */
 template<typename Scalar, int N>
-struct scalar_shift_left_op : unary_op_base<Scalar> {
+struct scalar_shift_left_op {
   EIGEN_EMPTY_STRUCT_CTOR(scalar_shift_left_op)
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Scalar operator() (const Scalar& a) const
