@@ -320,6 +320,8 @@ template<typename Scalar,typename Packet> void packetmath()
     }
     CHECK_CWISE2_IF(true, internal::pcmp_eq, internal::pcmp_eq);
   }
+
+  CHECK_CWISE1_IF(PacketTraits::HasSqrt, numext::sqrt, internal::psqrt);
 }
 
 template<typename Scalar,typename Packet> void packetmath_real()
@@ -341,7 +343,6 @@ template<typename Scalar,typename Packet> void packetmath_real()
   if(internal::random<float>(0,1)<0.1f)
      data1[internal::random<int>(0, PacketSize)] = 0;
 
-  CHECK_CWISE1_IF(PacketTraits::HasSqrt, std::sqrt, internal::psqrt);
   CHECK_CWISE1_IF(PacketTraits::HasLog, std::log, internal::plog);
   CHECK_CWISE1_IF(PacketTraits::HasRsqrt, Scalar(1)/std::sqrt, internal::prsqrt);
 
