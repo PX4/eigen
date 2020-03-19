@@ -167,6 +167,44 @@ struct functor_traits<scalar_cast_op<Scalar,NewType> >
 { enum { Cost = is_same<Scalar, NewType>::value ? 0 : NumTraits<NewType>::AddCost, PacketAccess = false }; };
 
 /** \internal
+  * \brief Template functor to arithmetically shift a scalar right by a number of bits
+  *
+  * \sa class CwiseUnaryOp, MatrixBase::shift_right()
+  */
+template<typename Scalar, int N>
+struct scalar_shift_right_op : unary_op_base<Scalar> {
+  EIGEN_EMPTY_STRUCT_CTOR(scalar_shift_right_op)
+
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Scalar operator() (const Scalar& a) const
+  { return a >> N; }
+  template<typename Packet>
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Packet packetOp(const Packet& a) const
+  { return internal::parithmetic_shift_right<N>(a); }
+};
+template<typename Scalar, int N>
+struct functor_traits<scalar_shift_right_op<Scalar,N> >
+{ enum { Cost = NumTraits<Scalar>::AddCost, PacketAccess = packet_traits<Scalar>::HasShift }; };
+
+/** \internal
+  * \brief Template functor to logically shift a scalar left by a number of bits
+  *
+  * \sa class CwiseUnaryOp, MatrixBase::shift_left()
+  */
+template<typename Scalar, int N>
+struct scalar_shift_left_op : unary_op_base<Scalar> {
+  EIGEN_EMPTY_STRUCT_CTOR(scalar_shift_left_op)
+
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Scalar operator() (const Scalar& a) const
+  { return a << N; }
+  template<typename Packet>
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Packet packetOp(const Packet& a) const
+  { return internal::plogical_shift_left<N>(a); }
+};
+template<typename Scalar, int N>
+struct functor_traits<scalar_shift_left_op<Scalar,N> >
+{ enum { Cost = NumTraits<Scalar>::AddCost, PacketAccess = packet_traits<Scalar>::HasShift }; };
+
+/** \internal
   * \brief Template functor to extract the real part of a complex
   *
   * \sa class CwiseUnaryOp, MatrixBase::real()

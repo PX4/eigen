@@ -538,7 +538,15 @@ EIGEN_STRONG_INLINE Packet8d pandnot<Packet8d>(const Packet8d& a,const Packet8d&
 #endif
 }
 
-template<int N> EIGEN_STRONG_INLINE Packet16i pshiftleft(Packet16i a) {
+template<int N> EIGEN_STRONG_INLINE Packet16i parithmetic_shift_right(Packet16i a) {
+  return _mm512_srai_epi32(a, N);
+}
+
+template<int N> EIGEN_STRONG_INLINE Packet16i plogical_shift_right(Packet16i a) {
+  return _mm512_srli_epi32(a, N);
+}
+
+template<int N> EIGEN_STRONG_INLINE Packet16i plogical_shift_left(Packet16i a) {
   return _mm512_slli_epi32(a, N);
 }
 

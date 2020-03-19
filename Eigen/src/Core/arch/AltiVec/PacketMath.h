@@ -171,10 +171,11 @@ struct packet_traits<int> : default_packet_traits {
     size = 4,
     HasHalfPacket = 0,
 
-    HasAdd  = 1,
-    HasSub  = 1,
-    HasMul  = 1,
-    HasDiv  = 0,
+    HasAdd   = 1,
+    HasSub   = 1,
+    HasShift = 1,
+    HasMul   = 1,
+    HasDiv   = 0,
     HasBlend = 1
   };
 };
@@ -567,9 +568,11 @@ template<> EIGEN_STRONG_INLINE Packet4i preverse(const Packet4i& a)
 template<> EIGEN_STRONG_INLINE Packet4f pabs(const Packet4f& a) { return vec_abs(a); }
 template<> EIGEN_STRONG_INLINE Packet4i pabs(const Packet4i& a) { return vec_abs(a); }
 
-template<int N> EIGEN_STRONG_INLINE Packet4i pshiftright(Packet4i a)
+template<int N> EIGEN_STRONG_INLINE Packet4i parithmetic_shift_right(Packet4i a)
+{ return vec_sra(a,reinterpret_cast<Packet4ui>(pset1<Packet4i>(N))); }
+template<int N> EIGEN_STRONG_INLINE Packet4i plogical_shift_right(Packet4i a)
 { return vec_sr(a,reinterpret_cast<Packet4ui>(pset1<Packet4i>(N))); }
-template<int N> EIGEN_STRONG_INLINE Packet4i pshiftleft(Packet4i a)
+template<int N> EIGEN_STRONG_INLINE Packet4i plogical_shift_left(Packet4i a)
 { return vec_sl(a,reinterpret_cast<Packet4ui>(pset1<Packet4i>(N))); }
 
 template<> EIGEN_STRONG_INLINE Packet4f pfrexp<Packet4f>(const Packet4f& a, Packet4f& exponent) {

@@ -139,6 +139,7 @@ struct packet_traits<float> : default_packet_traits
 
     HasAdd       = 1,
     HasSub       = 1,
+    HasShift     = 1,
     HasMul       = 1,
     HasNegate    = 1,
     HasAbs       = 1,
@@ -178,6 +179,7 @@ struct packet_traits<int8_t> : default_packet_traits
 
     HasAdd       = 1,
     HasSub       = 1,
+    HasShift     = 1,
     HasMul       = 1,
     HasNegate    = 1,
     HasAbs       = 1,
@@ -206,6 +208,7 @@ struct packet_traits<uint8_t> : default_packet_traits
 
     HasAdd       = 1,
     HasSub       = 1,
+    HasShift     = 1,
     HasMul       = 1,
     HasNegate    = 0,
     HasAbs       = 1,
@@ -236,6 +239,7 @@ struct packet_traits<int16_t> : default_packet_traits
 
     HasAdd       = 1,
     HasSub       = 1,
+    HasShift     = 1,
     HasMul       = 1,
     HasNegate    = 1,
     HasAbs       = 1,
@@ -264,6 +268,7 @@ struct packet_traits<uint16_t> : default_packet_traits
 
     HasAdd       = 1,
     HasSub       = 1,
+    HasShift     = 1,
     HasMul       = 1,
     HasNegate    = 0,
     HasAbs       = 0,
@@ -294,6 +299,7 @@ struct packet_traits<int32_t> : default_packet_traits
 
     HasAdd       = 1,
     HasSub       = 1,
+    HasShift     = 1,
     HasMul       = 1,
     HasNegate    = 1,
     HasAbs       = 1,
@@ -322,6 +328,7 @@ struct packet_traits<uint32_t> : default_packet_traits
 
     HasAdd       = 1,
     HasSub       = 1,
+    HasShift     = 1,
     HasMul       = 1,
     HasNegate    = 0,
     HasAbs       = 0,
@@ -1454,43 +1461,69 @@ template<> EIGEN_STRONG_INLINE Packet2l pandnot<Packet2l>(const Packet2l& a, con
 template<> EIGEN_STRONG_INLINE Packet2ul pandnot<Packet2ul>(const Packet2ul& a, const Packet2ul& b)
 { return vbicq_u64(a,b); }
 
-template<int N> EIGEN_STRONG_INLINE Packet4c pshiftright(Packet4c& a)
+template<int N> EIGEN_STRONG_INLINE Packet4c parithmetic_shift_right(Packet4c& a)
 { return vget_lane_s32(vreinterpret_s32_s8(vshr_n_s8(vreinterpret_s8_s32(vdup_n_s32(a)), N)), 0); }
-template<int N> EIGEN_STRONG_INLINE Packet8c pshiftright(Packet8c a) { return vshr_n_s8(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet16c pshiftright(Packet16c a) { return vshrq_n_s8(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet4uc pshiftright(Packet4uc& a)
+template<int N> EIGEN_STRONG_INLINE Packet8c parithmetic_shift_right(Packet8c a) { return vshr_n_s8(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet16c parithmetic_shift_right(Packet16c a) { return vshrq_n_s8(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet4uc parithmetic_shift_right(Packet4uc& a)
 { return vget_lane_u32(vreinterpret_u32_u8(vshr_n_u8(vreinterpret_u8_u32(vdup_n_u32(a)), N)), 0); }
-template<int N> EIGEN_STRONG_INLINE Packet8uc pshiftright(Packet8uc a) { return vshr_n_u8(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet16uc pshiftright(Packet16uc a) { return vshrq_n_u8(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet4s pshiftright(Packet4s a) { return vshr_n_s16(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet8s pshiftright(Packet8s a) { return vshrq_n_s16(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet4us pshiftright(Packet4us a) { return vshr_n_u16(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet8us pshiftright(Packet8us a) { return vshrq_n_u16(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet2i pshiftright(Packet2i a) { return vshr_n_s32(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet4i pshiftright(Packet4i a) { return vshrq_n_s32(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet2ui pshiftright(Packet2ui a) { return vshr_n_u32(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet4ui pshiftright(Packet4ui a) { return vshrq_n_u32(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet2l pshiftright(Packet2l a) { return vshrq_n_s64(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet2ul pshiftright(Packet2ul a) { return vshrq_n_u64(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet8uc parithmetic_shift_right(Packet8uc a) { return vshr_n_u8(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet16uc parithmetic_shift_right(Packet16uc a) { return vshrq_n_u8(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet4s parithmetic_shift_right(Packet4s a) { return vshr_n_s16(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet8s parithmetic_shift_right(Packet8s a) { return vshrq_n_s16(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet4us parithmetic_shift_right(Packet4us a) { return vshr_n_u16(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet8us parithmetic_shift_right(Packet8us a) { return vshrq_n_u16(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet2i parithmetic_shift_right(Packet2i a) { return vshr_n_s32(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet4i parithmetic_shift_right(Packet4i a) { return vshrq_n_s32(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet2ui parithmetic_shift_right(Packet2ui a) { return vshr_n_u32(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet4ui parithmetic_shift_right(Packet4ui a) { return vshrq_n_u32(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet2l parithmetic_shift_right(Packet2l a) { return vshrq_n_s64(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet2ul parithmetic_shift_right(Packet2ul a) { return vshrq_n_u64(a,N); }
 
-template<int N> EIGEN_STRONG_INLINE Packet4c pshiftleft(Packet4c& a)
+template<int N> EIGEN_STRONG_INLINE Packet4c plogical_shift_right(Packet4c& a)
+{ return vget_lane_s32(vreinterpret_s32_u8(vshr_n_u8(vreinterpret_u8_s32(vdup_n_s32(a)), N)), 0); }
+template<int N> EIGEN_STRONG_INLINE Packet8c plogical_shift_right(Packet8c a)
+{ return vreinterpret_s8_u8(vshr_n_u8(vreinterpret_u8_s8(a),N)); }
+template<int N> EIGEN_STRONG_INLINE Packet16c plogical_shift_right(Packet16c a)
+{ return vreinterpretq_s8_u8(vshrq_n_u8(vreinterpretq_u8_s8(a),N)); }
+template<int N> EIGEN_STRONG_INLINE Packet4uc plogical_shift_right(Packet4uc& a)
+{ return vget_lane_u32(vreinterpret_u32_s8(vshr_n_s8(vreinterpret_s8_u32(vdup_n_u32(a)), N)), 0); }
+template<int N> EIGEN_STRONG_INLINE Packet8uc plogical_shift_right(Packet8uc a) { return vshr_n_u8(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet16uc plogical_shift_right(Packet16uc a) { return vshrq_n_u8(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet4s plogical_shift_right(Packet4s a)
+{ return vreinterpret_s16_u16(vshr_n_u16(vreinterpret_u16_s16(a),N)); }
+template<int N> EIGEN_STRONG_INLINE Packet8s plogical_shift_right(Packet8s a)
+{ return vreinterpretq_s16_u16(vshrq_n_u16(vreinterpretq_u16_s16(a),N)); }
+template<int N> EIGEN_STRONG_INLINE Packet4us plogical_shift_right(Packet4us a) { return vshr_n_u16(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet8us plogical_shift_right(Packet8us a) { return vshrq_n_u16(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet2i plogical_shift_right(Packet2i a)
+{ return vreinterpret_s32_u32(vshr_n_u32(vreinterpret_u32_s32(a),N)); }
+template<int N> EIGEN_STRONG_INLINE Packet4i plogical_shift_right(Packet4i a)
+{ return vreinterpretq_s32_u32(vshrq_n_u32(vreinterpretq_u32_s32(a),N)); }
+template<int N> EIGEN_STRONG_INLINE Packet2ui plogical_shift_right(Packet2ui a) { return vshr_n_u32(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet4ui plogical_shift_right(Packet4ui a) { return vshrq_n_u32(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet2l plogical_shift_right(Packet2l a)
+{ return vreinterpretq_s64_u64(vshrq_n_u64(vreinterpretq_u64_s64(a),N)); }
+template<int N> EIGEN_STRONG_INLINE Packet2ul plogical_shift_right(Packet2ul a) { return vshrq_n_u64(a,N); }
+
+template<int N> EIGEN_STRONG_INLINE Packet4c plogical_shift_left(Packet4c& a)
 { return vget_lane_s32(vreinterpret_s32_s8(vshl_n_s8(vreinterpret_s8_s32(vdup_n_s32(a)), N)), 0); }
-template<int N> EIGEN_STRONG_INLINE Packet8c pshiftleft(Packet8c a) { return vshl_n_s8(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet16c pshiftleft(Packet16c a) { return vshlq_n_s8(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet4uc pshiftleft(Packet4uc& a)
+template<int N> EIGEN_STRONG_INLINE Packet8c plogical_shift_left(Packet8c a) { return vshl_n_s8(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet16c plogical_shift_left(Packet16c a) { return vshlq_n_s8(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet4uc plogical_shift_left(Packet4uc& a)
 { return vget_lane_u32(vreinterpret_u32_u8(vshl_n_u8(vreinterpret_u8_u32(vdup_n_u32(a)), N)), 0); }
-template<int N> EIGEN_STRONG_INLINE Packet8uc pshiftleft(Packet8uc a) { return vshl_n_u8(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet16uc pshiftleft(Packet16uc a) { return vshlq_n_u8(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet4s pshiftleft(Packet4s a) { return vshl_n_s16(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet8s pshiftleft(Packet8s a) { return vshlq_n_s16(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet4us pshiftleft(Packet4us a) { return vshl_n_u16(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet8us pshiftleft(Packet8us a) { return vshlq_n_u16(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet2i pshiftleft(Packet2i a) { return vshl_n_s32(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet4i pshiftleft(Packet4i a) { return vshlq_n_s32(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet2ui pshiftleft(Packet2ui a) { return vshl_n_u32(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet4ui pshiftleft(Packet4ui a) { return vshlq_n_u32(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet2l pshiftleft(Packet2l a) { return vshlq_n_s64(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet2ul pshiftleft(Packet2ul a) { return vshlq_n_u64(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet8uc plogical_shift_left(Packet8uc a) { return vshl_n_u8(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet16uc plogical_shift_left(Packet16uc a) { return vshlq_n_u8(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet4s plogical_shift_left(Packet4s a) { return vshl_n_s16(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet8s plogical_shift_left(Packet8s a) { return vshlq_n_s16(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet4us plogical_shift_left(Packet4us a) { return vshl_n_u16(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet8us plogical_shift_left(Packet8us a) { return vshlq_n_u16(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet2i plogical_shift_left(Packet2i a) { return vshl_n_s32(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet4i plogical_shift_left(Packet4i a) { return vshlq_n_s32(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet2ui plogical_shift_left(Packet2ui a) { return vshl_n_u32(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet4ui plogical_shift_left(Packet4ui a) { return vshlq_n_u32(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet2l plogical_shift_left(Packet2l a) { return vshlq_n_s64(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet2ul plogical_shift_left(Packet2ul a) { return vshlq_n_u64(a,N); }
 
 template<> EIGEN_STRONG_INLINE Packet2f pload<Packet2f>(const float* from)
 { EIGEN_DEBUG_ALIGNED_LOAD return vld1_f32(from); }
