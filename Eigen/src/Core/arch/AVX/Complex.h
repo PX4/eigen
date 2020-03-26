@@ -42,7 +42,8 @@ template<> struct packet_traits<std::complex<float> >  : default_packet_traits
     HasAbs2   = 0,
     HasMin    = 0,
     HasMax    = 0,
-    HasSetLinear = 0
+    HasSetLinear = 0,
+    HasInsert = 1
   };
 };
 #endif

@@ -120,6 +120,7 @@ struct packet_traits<float> : default_packet_traits {
     HasTanh = EIGEN_FAST_MATH,
     HasErf = EIGEN_FAST_MATH,
     HasBlend = 1,
+    HasInsert = 1,
     HasFloor = 1
 
 #ifdef EIGEN_VECTORIZE_SSE4_1
@@ -144,7 +145,8 @@ struct packet_traits<double> : default_packet_traits {
     HasExp  = 1,
     HasSqrt = 1,
     HasRsqrt = 1,
-    HasBlend = 1
+    HasBlend = 1,
+    HasInsert = 1
 
 #ifdef EIGEN_VECTORIZE_SSE4_1
     ,

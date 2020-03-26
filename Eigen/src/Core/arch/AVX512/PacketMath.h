@@ -76,7 +76,8 @@ struct packet_traits<half> : default_packet_traits {
     HasRsqrt = 0,
     HasExp = 0,
     HasLog = 0,
-    HasBlend = 0
+    HasBlend = 0,
+    HasInsert = 1
   };
 };
 
@@ -90,6 +91,7 @@ template<> struct packet_traits<float>  : default_packet_traits
     size = 16,
     HasHalfPacket = 1,
     HasBlend = 0,
+    HasInsert = 1,
     HasSin = EIGEN_FAST_MATH,
     HasCos = EIGEN_FAST_MATH,
 #if EIGEN_GNUC_AT_LEAST(5, 3) || (!EIGEN_COMP_GNUC_STRICT)
@@ -118,6 +120,7 @@ template<> struct packet_traits<double> : default_packet_traits
     AlignedOnScalar = 1,
     size = 8,
     HasHalfPacket = 1,
+    HasInsert = 1,
 #if EIGEN_GNUC_AT_LEAST(5, 3) || (!EIGEN_COMP_GNUC_STRICT)
     HasSqrt = EIGEN_FAST_MATH,
     HasRsqrt = EIGEN_FAST_MATH,

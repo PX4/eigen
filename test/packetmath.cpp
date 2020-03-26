@@ -16,6 +16,58 @@
 #define REF_DIV(a,b) ((a)/(b))
 #define REF_ABS_DIFF(a,b) ((a)>(b)?(a)-(b):(b)-(a))
 
+template<typename FromScalar, typename FromPacket, typename ToScalar, typename ToPacket, bool CanCast = false>
+struct test_cast_helper;
+
+template<typename FromScalar, typename FromPacket, typename ToScalar, typename ToPacket>
+struct test_cast_helper<FromScalar, FromPacket, ToScalar, ToPacket, false> {
+  static void run() {}
+};
+
+template<typename FromScalar, typename FromPacket, typename ToScalar, typename ToPacket>
+struct test_cast_helper<FromScalar, FromPacket, ToScalar, ToPacket, true> {
+  static void run() {
+    static const int PacketSize = internal::unpacket_traits<FromPacket>::size;
+    EIGEN_ALIGN_MAX FromScalar data1[PacketSize];
+    EIGEN_ALIGN_MAX ToScalar data2[PacketSize];
+    EIGEN_ALIGN_MAX ToScalar ref[PacketSize];
+
+    // Construct a packet of scalars that will not overflow when casting
+    for (int i=0; i<PacketSize; ++i) {
+      const FromScalar from_scalar = Array<FromScalar,1,1>::Random().value();
+      const ToScalar to_scalar = Array<ToScalar,1,1>::Random().value();
+      const FromScalar c = sizeof(ToScalar) > sizeof(FromScalar) ? static_cast<FromScalar>(to_scalar) : from_scalar;
+      data1[i] = (NumTraits<FromScalar>::IsSigned && !NumTraits<ToScalar>::IsSigned) ? numext::abs(c) : c;
+    }
+
+    for (int i=0; i<PacketSize; ++i)
+      ref[i] = static_cast<const ToScalar>(data1[i]);
+    internal::pstore(data2, internal::pcast<FromPacket, ToPacket>(internal::pload<FromPacket>(data1)));
+
+    VERIFY(areApprox(ref, data2, PacketSize) && "internal::pcast<>");
+  }
+};
+
+template<typename FromPacket, typename ToScalar>
+void test_cast() {
+  typedef typename internal::packet_traits<ToScalar>::type Full;
+  typedef typename internal::unpacket_traits<Full>::half Half;
+  typedef typename internal::unpacket_traits<typename internal::unpacket_traits<Full>::half>::half Quarter;
+
+  static const int PacketSize = internal::unpacket_traits<FromPacket>::size;
+  static const bool CanCast =
+      PacketSize == internal::unpacket_traits<Full>::size ||
+      PacketSize == internal::unpacket_traits<Half>::size ||
+      PacketSize == internal::unpacket_traits<Quarter>::size;
+
+  typedef typename internal::unpacket_traits<FromPacket>::type FromScalar;
+  typedef typename internal::conditional<internal::unpacket_traits<Quarter>::size == PacketSize, Quarter,
+      typename internal::conditional<internal::unpacket_traits<Half>::size == PacketSize, Half, Full>::type>::type
+      ToPacket;
+
+  test_cast_helper<FromScalar, FromPacket, ToScalar, ToPacket, CanCast>::run();
+}
+
 template<typename Scalar,typename Packet> void packetmath()
 {
   typedef internal::packet_traits<Scalar> PacketTraits;
@@ -263,7 +315,7 @@ template<typename Scalar,typename Packet> void packetmath()
     }
   }
 
-  if (PacketTraits::HasBlend || g_vectorize_sse) {
+  if (PacketTraits::HasInsert || g_vectorize_sse) {
     // pinsertfirst
     for (int i=0; i<PacketSize; ++i)
       ref[i] = data1[i];
@@ -273,7 +325,7 @@ template<typename Scalar,typename Packet> void packetmath()
     VERIFY(test::areApprox(ref, data2, PacketSize) && "internal::pinsertfirst");
   }
 
-  if (PacketTraits::HasBlend || g_vectorize_sse) {
+  if (PacketTraits::HasInsert || g_vectorize_sse) {
     // pinsertlast
     for (int i=0; i<PacketSize; ++i)
       ref[i] = data1[i];
@@ -546,6 +598,19 @@ template<typename Scalar,typename Packet> void packetmath_notcomplex()
   EIGEN_ALIGN_MAX Scalar ref[PacketSize*4];
 
   Array<Scalar,Dynamic,1>::Map(data1, PacketSize*4).setRandom();
+
+  if (PacketTraits::HasCast) {
+    test_cast<Packet, float>();
+    test_cast<Packet, double>();
+    test_cast<Packet, int8_t>();
+    test_cast<Packet, uint8_t>();
+    test_cast<Packet, int16_t>();
+    test_cast<Packet, uint16_t>();
+    test_cast<Packet, int32_t>();
+    test_cast<Packet, uint32_t>();
+    test_cast<Packet, int64_t>();
+    test_cast<Packet, uint64_t>();
+  }
 
   ref[0] = data1[0];
   for (int i=0; i<PacketSize; ++i)

@@ -99,6 +99,11 @@ template<> struct unpacket_traits<Packet2cf>
   };
 };
 
+template<> EIGEN_STRONG_INLINE Packet1cf pcast<float,Packet1cf>(const float& a)
+{ return Packet1cf(vset_lane_f32(a, vdup_n_f32(0.f), 0)); }
+template<> EIGEN_STRONG_INLINE Packet2cf pcast<Packet2f,Packet2cf>(const Packet2f& a)
+{ return Packet2cf(vreinterpretq_f32_u64(vmovl_u32(vreinterpret_u32_f32(a)))); }
+
 template<> EIGEN_STRONG_INLINE Packet1cf pset1<Packet1cf>(const std::complex<float>& from)
 { return Packet1cf(vld1_f32(reinterpret_cast<const float*>(&from))); }
 template<> EIGEN_STRONG_INLINE Packet2cf pset1<Packet2cf>(const std::complex<float>& from)
