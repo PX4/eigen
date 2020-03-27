@@ -98,7 +98,7 @@ struct default_packet_traits
     HasRint   = 0,
     HasFloor  = 0,
     HasCeil   = 0,
-
+    HasCast   = 0, 
     HasSign   = 0
   };
 };
