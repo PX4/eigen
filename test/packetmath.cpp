@@ -44,7 +44,7 @@ struct test_cast_helper<FromScalar, FromPacket, ToScalar, ToPacket, true> {
       ref[i] = static_cast<const ToScalar>(data1[i]);
     internal::pstore(data2, internal::pcast<FromPacket, ToPacket>(internal::pload<FromPacket>(data1)));
 
-    VERIFY(areApprox(ref, data2, PacketSize) && "internal::pcast<>");
+    VERIFY(test::areApprox(ref, data2, PacketSize) && "internal::pcast<>");
   }
 };
 
