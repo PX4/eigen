@@ -50,17 +50,19 @@ struct test_cast_helper<FromScalar, FromPacket, ToScalar, ToPacket, true> {
 
 template<typename FromPacket, typename ToScalar>
 void test_cast() {
+  typedef typename internal::unpacket_traits<FromPacket>::type FromScalar;
+  typedef typename internal::packet_traits<FromScalar> FromPacketTraits;
   typedef typename internal::packet_traits<ToScalar>::type Full;
   typedef typename internal::unpacket_traits<Full>::half Half;
   typedef typename internal::unpacket_traits<typename internal::unpacket_traits<Full>::half>::half Quarter;
 
   static const int PacketSize = internal::unpacket_traits<FromPacket>::size;
   static const bool CanCast =
-      PacketSize == internal::unpacket_traits<Full>::size ||
+      FromPacketTraits::HasCast &&
+      (PacketSize == internal::unpacket_traits<Full>::size ||
       PacketSize == internal::unpacket_traits<Half>::size ||
-      PacketSize == internal::unpacket_traits<Quarter>::size;
+      PacketSize == internal::unpacket_traits<Quarter>::size);
 
-  typedef typename internal::unpacket_traits<FromPacket>::type FromScalar;
   typedef typename internal::conditional<internal::unpacket_traits<Quarter>::size == PacketSize, Quarter,
       typename internal::conditional<internal::unpacket_traits<Half>::size == PacketSize, Half, Full>::type>::type
       ToPacket;
