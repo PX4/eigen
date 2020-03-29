@@ -51,7 +51,7 @@ void conjugate_gradient(const MatrixType& mat, const Rhs& rhs, Dest& x,
     return;
   }
   const RealScalar considerAsZero = (std::numeric_limits<RealScalar>::min)();
-  RealScalar threshold = numext::maxi(tol*tol*rhsNorm2,considerAsZero);
+  RealScalar threshold = numext::maxi(RealScalar(tol*tol*rhsNorm2),considerAsZero);
   RealScalar residualNorm2 = residual.squaredNorm();
   if (residualNorm2 < threshold)
   {
