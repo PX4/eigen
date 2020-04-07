@@ -431,22 +431,22 @@ void test_stl_iterators(int rows=Rows, int cols=Cols)
   {
     RowVectorType row = RowVectorType::Random(cols);
     A.rowwise() = row;
-    VERIFY( std::all_of(A.rowwise().begin(), A.rowwise().end(), [&row](typename ColMatrixType::RowXpr x) { return internal::isApprox(x.norm(),row.norm()); }) );
+    VERIFY( std::all_of(A.rowwise().begin(), A.rowwise().end(), [&row](typename ColMatrixType::RowXpr x) { return internal::isApprox(x.squaredNorm(),row.squaredNorm()); }) );
 
     VectorType col = VectorType::Random(rows);
     A.colwise() = col;
-    VERIFY( std::all_of(A.colwise().begin(),  A.colwise().end(),  [&col](typename ColMatrixType::ColXpr x) { return internal::isApprox(x.norm(),col.norm()); }) );
-    VERIFY( std::all_of(A.colwise().cbegin(), A.colwise().cend(), [&col](typename ColMatrixType::ConstColXpr x) { return internal::isApprox(x.norm(),col.norm()); }) );
+    VERIFY( std::all_of(A.colwise().begin(),  A.colwise().end(),  [&col](typename ColMatrixType::ColXpr x) { return internal::isApprox(x.squaredNorm(),col.squaredNorm()); }) );
+    VERIFY( std::all_of(A.colwise().cbegin(), A.colwise().cend(), [&col](typename ColMatrixType::ConstColXpr x) { return internal::isApprox(x.squaredNorm(),col.squaredNorm()); }) );
 
     i = internal::random<Index>(0,A.rows()-1);
     A.setRandom();
     A.row(i).setZero();
-    VERIFY_IS_EQUAL( std::find_if(A.rowwise().begin(), A.rowwise().end(), [](typename ColMatrixType::RowXpr x) { return x.norm() == Scalar(0); })-A.rowwise().begin(), i );
+    VERIFY_IS_EQUAL( std::find_if(A.rowwise().begin(), A.rowwise().end(), [](typename ColMatrixType::RowXpr x) { return x.squaredNorm() == Scalar(0); })-A.rowwise().begin(), i );
 
     j = internal::random<Index>(0,A.cols()-1);
     A.setRandom();
     A.col(j).setZero();
-    VERIFY_IS_EQUAL( std::find_if(A.colwise().begin(), A.colwise().end(), [](typename ColMatrixType::ColXpr x) { return x.norm() == Scalar(0); })-A.colwise().begin(), j );
+    VERIFY_IS_EQUAL( std::find_if(A.colwise().begin(), A.colwise().end(), [](typename ColMatrixType::ColXpr x) { return x.squaredNorm() == Scalar(0); })-A.colwise().begin(), j );
   }
 
   {
