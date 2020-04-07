@@ -284,7 +284,7 @@ private:
 // Empty specialization for void to allow template specialization based on NumTraits<T>::Real with T==void and SFINAE.
 template<> struct NumTraits<void> {};
 
-template<> NumTraits<bool> : GenericNumTraits<bool> {};
+template<> struct NumTraits<bool> : GenericNumTraits<bool> {};
 
 } // end namespace Eigen
 
