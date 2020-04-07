@@ -2653,8 +2653,14 @@ template<typename Scalar, typename Index, typename DataMapper, int nr, bool Conj
 struct gemm_pack_rhs<Scalar, Index, DataMapper, nr, RowMajor, Conjugate, PanelMode>
 {
   typedef typename packet_traits<Scalar>::type Packet;
+  typedef typename unpacket_traits<Packet>::half HalfPacket;
+  typedef typename unpacket_traits<typename unpacket_traits<Packet>::half>::half QuarterPacket;
   typedef typename DataMapper::LinearMapper LinearMapper;
-  enum { PacketSize = packet_traits<Scalar>::size };
+  enum { PacketSize = packet_traits<Scalar>::size,
+         HalfPacketSize = unpacket_traits<HalfPacket>::size,
+         QuarterPacketSize = unpacket_traits<QuarterPacket>::size,
+         HasHalf = (int)HalfPacketSize < (int)PacketSize,
+         HasQuarter = (int)QuarterPacketSize < (int)HalfPacketSize };
   EIGEN_DONT_INLINE void operator()(Scalar* blockB, const DataMapper& rhs, Index depth, Index cols, Index stride=0, Index offset=0);
 };
 
@@ -2716,6 +2722,14 @@ EIGEN_DONT_INLINE void gemm_pack_rhs<Scalar, Index, DataMapper, nr, RowMajor, Co
           Packet A = rhs.template loadPacket<Packet>(k, j2);
           pstoreu(blockB+count, cj.pconj(A));
           count += PacketSize;
+        } else if (HasHalf && HalfPacketSize==4) {
+          HalfPacket A = rhs.template loadPacket<HalfPacket>(k, j2);
+          pstoreu(blockB+count, cj.pconj(A));
+          count += HalfPacketSize;
+        } else if (HasQuarter && QuarterPacketSize==4) {
+          QuarterPacket A = rhs.template loadPacket<QuarterPacket>(k, j2);
+          pstoreu(blockB+count, cj.pconj(A));
+          count += QuarterPacketSize;
         } else {
           const LinearMapper dm0 = rhs.getLinearMapper(k, j2);
           blockB[count+0] = cj(dm0(0));
