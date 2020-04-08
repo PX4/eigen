@@ -1025,7 +1025,7 @@ class StridedLinearBufferCopy {
     const Scalar* data;
   };
 
-  template <StridedLinearBufferCopy::Kind kind>
+  template <typename StridedLinearBufferCopy::Kind kind>
   static EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void Run(const Dst& dst,
                                                         const Src& src,
                                                         const size_t count) {
@@ -1034,7 +1034,7 @@ class StridedLinearBufferCopy {
   }
 
  private:
-  template <StridedLinearBufferCopy::Kind kind>
+  template <typename StridedLinearBufferCopy::Kind kind>
   static EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void Run(
       const IndexType count, const IndexType dst_offset,
       const IndexType dst_stride, Scalar* EIGEN_RESTRICT dst_data,
