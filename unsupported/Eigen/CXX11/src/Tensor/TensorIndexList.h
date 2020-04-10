@@ -279,7 +279,7 @@ struct tuple_coeff<0, ValueT> {
   }
   template <typename... T>
   EIGEN_DEVICE_FUNC static constexpr bool value_known_statically(const Index i, const IndexTuple<T...>&) {
-    return is_compile_time_constant<typename IndexTupleExtractor<0, T...>::ValType>::value & (i == 0);
+    return is_compile_time_constant<typename IndexTupleExtractor<0, T...>::ValType>::value && (i == 0);
   }
 
   template <typename... T>
