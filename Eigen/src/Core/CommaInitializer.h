@@ -107,6 +107,7 @@ struct CommaInitializer
   EIGEN_EXCEPTION_SPEC(Eigen::eigen_assert_exception)
 #endif
   {
+    finished();
   }
 
   /** \returns the built matrix once all its coefficients have been set.
