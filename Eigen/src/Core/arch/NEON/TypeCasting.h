@@ -46,7 +46,7 @@ template<> struct type_casting_traits<numext::uint8_t,float>
 { enum { VectorizedCast = 0, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
 template<> struct type_casting_traits<numext::uint8_t,numext::int8_t>
 { enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_cas0ing_traits<numext::uint8_t,numext::int16_t>
+template<> struct type_casting_traits<numext::uint8_t,numext::int16_t>
 { enum { VectorizedCast = 0, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
 template<> struct type_casting_traits<numext::uint8_t,numext::uint16_t>
 { enum { VectorizedCast = 0, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
