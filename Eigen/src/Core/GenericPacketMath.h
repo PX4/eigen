@@ -137,6 +137,22 @@ template <typename Src, typename Tgt> struct type_casting_traits {
   };
 };
 
+/** \internal Wrapper to ensure that multiple packet types can map to the same
+    same underlying vector type. */
+template<typename T, int unique_id = 0>
+struct eigen_packet_wrapper
+{
+  EIGEN_ALWAYS_INLINE operator T&() { return m_val; }
+  EIGEN_ALWAYS_INLINE operator const T&() const { return m_val; }
+  EIGEN_ALWAYS_INLINE eigen_packet_wrapper() {}
+  EIGEN_ALWAYS_INLINE eigen_packet_wrapper(const T &v) : m_val(v) {}
+  EIGEN_ALWAYS_INLINE eigen_packet_wrapper& operator=(const T &v) {
+    m_val = v;
+    return *this;
+  }
+
+  T m_val;
+};
 
 /** \internal \returns static_cast<TgtType>(a) (coeff-wise) */
 template <typename SrcPacket, typename TgtPacket>

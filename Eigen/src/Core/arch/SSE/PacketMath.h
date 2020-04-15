@@ -36,28 +36,14 @@ namespace internal {
 // One solution is to increase ABI version using -fabi-version=4 (or greater).
 // Otherwise, we workaround this inconvenience by wrapping 128bit types into the following helper
 // structure:
-template<typename T>
-struct eigen_packet_wrapper
-{
-  EIGEN_ALWAYS_INLINE operator T&() { return m_val; }
-  EIGEN_ALWAYS_INLINE operator const T&() const { return m_val; }
-  EIGEN_ALWAYS_INLINE eigen_packet_wrapper() {}
-  EIGEN_ALWAYS_INLINE eigen_packet_wrapper(const T &v) : m_val(v) {}
-  EIGEN_ALWAYS_INLINE eigen_packet_wrapper& operator=(const T &v) {
-    m_val = v;
-    return *this;
-  }
-
-  T m_val;
-};
 typedef eigen_packet_wrapper<__m128>  Packet4f;
-typedef eigen_packet_wrapper<__m128i> Packet4i;
 typedef eigen_packet_wrapper<__m128d> Packet2d;
 #else
 typedef __m128  Packet4f;
-typedef __m128i Packet4i;
 typedef __m128d Packet2d;
 #endif
+
+typedef eigen_packet_wrapper<__m128i, 0> Packet4i;
 
 template<> struct is_arithmetic<__m128>  { enum { value = true }; };
 template<> struct is_arithmetic<__m128i> { enum { value = true }; };
@@ -400,7 +386,6 @@ template<> EIGEN_STRONG_INLINE Packet2d pcmp_eq(const Packet2d& a, const Packet2
 template<> EIGEN_STRONG_INLINE Packet4i pcmp_lt(const Packet4i& a, const Packet4i& b) { return _mm_cmplt_epi32(a,b); }
 template<> EIGEN_STRONG_INLINE Packet4i pcmp_eq(const Packet4i& a, const Packet4i& b) { return _mm_cmpeq_epi32(a,b); }
 
-
 template<> EIGEN_STRONG_INLINE Packet4i ptrue<Packet4i>(const Packet4i& a) { return _mm_cmpeq_epi32(a, a); }
 template<> EIGEN_STRONG_INLINE Packet4f
 ptrue<Packet4f>(const Packet4f& a) {
@@ -520,7 +505,6 @@ template<> EIGEN_STRONG_INLINE Packet4i ploadu<Packet4i>(const int* from)
   EIGEN_DEBUG_UNALIGNED_LOAD
   return _mm_loadu_si128(reinterpret_cast<const __m128i*>(from));
 }
-
 
 template<> EIGEN_STRONG_INLINE Packet4f ploaddup<Packet4f>(const float*   from)
 {

@@ -36,22 +36,6 @@ namespace internal {
 #endif
 #endif
 
-template<typename T,int unique_id>
-struct eigen_packet_wrapper
-{
-  operator T&() { return m_val; }
-  operator const T&() const { return m_val; }
-  eigen_packet_wrapper() {}
-  eigen_packet_wrapper(const T &v) : m_val(v) {}
-  eigen_packet_wrapper& operator=(const T &v)
-  {
-    m_val = v;
-    return *this;
-  }
-
-  T m_val;
-};
-
 #if EIGEN_COMP_MSVC
 
 // In MSVC's arm_neon.h header file, all NEON vector types
