@@ -421,7 +421,7 @@ template<> EIGEN_STRONG_INLINE Packet16b pcmp_eq(const Packet16b& a, const Packe
 
 
 template<> EIGEN_STRONG_INLINE Packet4i ptrue<Packet4i>(const Packet4i& a) { return _mm_cmpeq_epi32(a, a); }
-template<> EIGEN_STRONG_INLINE Packet16b ptrue<Packet16b>(const Packet16b& a) { return _mm_cmpeq_epi32(a, a); }
+template<> EIGEN_STRONG_INLINE Packet16b ptrue<Packet16b>(const Packet16b& a) { return _mm_cmpeq_epi8(a, a); }
 template<> EIGEN_STRONG_INLINE Packet4f
 ptrue<Packet4f>(const Packet4f& a) {
   Packet4i b = _mm_castps_si128(a);
