@@ -382,11 +382,14 @@ struct functor_traits<scalar_quotient_op<LhsScalar,RhsScalar> > {
 struct scalar_boolean_and_op {
   EIGEN_EMPTY_STRUCT_CTOR(scalar_boolean_and_op)
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE bool operator() (const bool& a, const bool& b) const { return a && b; }
+  template<typename Packet>
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Packet packetOp(const Packet& a, const Packet& b) const
+  { return internal::pand(a,b); }
 };
 template<> struct functor_traits<scalar_boolean_and_op> {
   enum {
     Cost = NumTraits<bool>::AddCost,
-    PacketAccess = false
+    PacketAccess = true
   };
 };
 
@@ -398,11 +401,14 @@ template<> struct functor_traits<scalar_boolean_and_op> {
 struct scalar_boolean_or_op {
   EIGEN_EMPTY_STRUCT_CTOR(scalar_boolean_or_op)
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE bool operator() (const bool& a, const bool& b) const { return a || b; }
+  template<typename Packet>
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Packet packetOp(const Packet& a, const Packet& b) const
+  { return internal::por(a,b); }
 };
 template<> struct functor_traits<scalar_boolean_or_op> {
   enum {
     Cost = NumTraits<bool>::AddCost,
-    PacketAccess = false
+    PacketAccess = true
   };
 };
 
@@ -414,11 +420,14 @@ template<> struct functor_traits<scalar_boolean_or_op> {
 struct scalar_boolean_xor_op {
   EIGEN_EMPTY_STRUCT_CTOR(scalar_boolean_xor_op)
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE bool operator() (const bool& a, const bool& b) const { return a ^ b; }
+  template<typename Packet>
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Packet packetOp(const Packet& a, const Packet& b) const
+  { return internal::pxor(a,b); }
 };
 template<> struct functor_traits<scalar_boolean_xor_op> {
   enum {
     Cost = NumTraits<bool>::AddCost,
-    PacketAccess = false
+    PacketAccess = true
   };
 };
 

@@ -224,36 +224,6 @@ pabs(const unsigned long long& a) { return a; }
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
 parg(const Packet& a) { using numext::arg; return arg(a); }
 
-/** \internal \returns the bitwise and of \a a and \a b */
-template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
-pand(const Packet& a, const Packet& b) { return a & b; }
-
-/** \internal \returns the bitwise or of \a a and \a b */
-template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
-por(const Packet& a, const Packet& b) { return a | b; }
-
-/** \internal \returns the bitwise xor of \a a and \a b */
-template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
-pxor(const Packet& a, const Packet& b) { return a ^ b; }
-
-/** \internal \returns the bitwise andnot of \a a and \a b */
-template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
-pandnot(const Packet& a, const Packet& b) { return a & (~b); }
-
-/** \internal \returns ones */
-template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
-ptrue(const Packet& /*a*/) { Packet b; memset((void*)&b, 0xff, sizeof(b)); return b;}
-
-template <typename RealScalar>
-EIGEN_DEVICE_FUNC inline std::complex<RealScalar> ptrue(const std::complex<RealScalar>& /*a*/) {
-  RealScalar b;
-  b = ptrue(b);
-  return std::complex<RealScalar>(b, b);
-}
-
-/** \internal \returns the bitwise not of \a a */
-template <typename Packet> EIGEN_DEVICE_FUNC inline Packet
-pnot(const Packet& a) { return pxor(ptrue(a), a);}
 
 /** \internal \returns \a a logically shifted by N bits to the right */
 template<int N> EIGEN_DEVICE_FUNC inline int
@@ -294,6 +264,35 @@ pldexp(const Packet &a, const Packet &exponent) {
   return ldexp(a, static_cast<int>(exponent));
 }
 
+// Notice: The following ops accept and operator on bitwise masks.
+// The value of each field in a masks is Scalar(0) or ~Scalar(0).
+// For boolean packet like Packet16b, this is different from the
+// representation of true and false, which are 1 and 0.
+// As an example
+//    ptrue<Packet16b>()     = 0xffffffffffffffffffffffffffffffff
+// while
+//    pset1<Packet16b>(true) = 0x01010101010101010101010101010101
+
+/** \internal \returns the bitwise and of \a a and \a b */
+template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
+pand(const Packet& a, const Packet& b) { return a & b; }
+
+/** \internal \returns the bitwise or of \a a and \a b */
+template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
+por(const Packet& a, const Packet& b) { return a | b; }
+
+/** \internal \returns the bitwise xor of \a a and \a b */
+template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
+pxor(const Packet& a, const Packet& b) { return a ^ b; }
+
+/** \internal \returns the bitwise and of \a a and not \a b */
+template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
+pandnot(const Packet& a, const Packet& b) { return a & (~b); }
+
+/** \internal \returns ones */
+template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
+ptrue(const Packet& /*a*/) { Packet b; memset((void*)&b, 0xff, sizeof(b)); return b;}
+
 /** \internal \returns zeros */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
 pzero(const Packet& a) { return pxor(a,a); }
@@ -308,21 +307,16 @@ template<> EIGEN_DEVICE_FUNC inline double pzero<double>(const double& a) {
   return 0.;
 }
 
-/** \internal \returns bits of \a or \b according to the input bit mask \a mask */
-template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
-pselect(const Packet& mask, const Packet& a, const Packet& b) {
-  return por(pand(a,mask),pandnot(b,mask));
+template <typename RealScalar>
+EIGEN_DEVICE_FUNC inline std::complex<RealScalar> ptrue(const std::complex<RealScalar>& /*a*/) {
+  RealScalar b;
+  b = ptrue(b);
+  return std::complex<RealScalar>(b, b);
 }
 
-template<> EIGEN_DEVICE_FUNC inline float pselect<float>(
-    const float& mask, const float& a, const float&b) {
-  return numext::equal_strict(mask,0.f) ? b : a;
-}
-
-template<> EIGEN_DEVICE_FUNC inline double pselect<double>(
-    const double& mask, const double& a, const double& b) {
-  return numext::equal_strict(mask,0.) ? b : a;
-}
+/** \internal \returns the bitwise not of \a a */
+template <typename Packet> EIGEN_DEVICE_FUNC inline Packet
+pnot(const Packet& a) { return pxor(ptrue(a), a);}
 
 /** \internal \returns a <= b as a bit mask */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
@@ -339,6 +333,24 @@ pcmp_eq(const Packet& a, const Packet& b) { return a==b ? ptrue(a) : pzero(a); }
 /** \internal \returns a < b or a==NaN or b==NaN as a bit mask */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
 pcmp_lt_or_nan(const Packet& a, const Packet& b) { return pnot(pcmp_le(b,a)); } 
+
+/** \internal \returns \a or \b for each field in packet according to \mask */
+template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
+pselect(const Packet& mask, const Packet& a, const Packet& b) {
+  return por(pand(a,mask),pandnot(b,mask));
+}
+
+template<> EIGEN_DEVICE_FUNC inline float pselect<float>(
+    const float& cond, const float& a, const float&b) {
+  return numext::equal_strict(cond,0.f) ? b : a;
+}
+
+template<> EIGEN_DEVICE_FUNC inline double pselect<double>(
+    const double& cond, const double& a, const double& b) {
+  return numext::equal_strict(cond,0.) ? b : a;
+}
+
+
 
 /** \internal \returns the min of \a a and \a b  (coeff-wise) */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet

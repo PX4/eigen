@@ -7,6 +7,8 @@
 // Public License v. 2.0. If a copy of the MPL was not distributed
 // with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <numeric>
+
 #include "main.h"
 
 #include <Eigen/CXX11/Tensor>
@@ -193,8 +195,8 @@ static void test_constants()
 
 static void test_boolean()
 {
-  Tensor<int, 1> vec(6);
-  std::copy_n(std::begin({0, 1, 2, 3, 4, 5}), 6, vec.data());
+  Tensor<int, 1> vec(31);
+  std::iota(vec.data(), vec.data() + 31, 0);
 
   // Test ||.
   Tensor<bool, 1> bool1 = vec < vec.constant(1) || vec > vec.constant(4);

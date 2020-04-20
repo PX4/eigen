@@ -70,6 +70,23 @@ void test_cast() {
   test_cast_helper<FromScalar, FromPacket, ToScalar, ToPacket, CanCast>::run();
 }
 
+template<typename Scalar,typename Packet> void packetmath_boolean()
+{
+  const int PacketSize = internal::unpacket_traits<Packet>::size;
+  const int size = 2*PacketSize;
+  EIGEN_ALIGN_MAX Scalar data1[size];
+  EIGEN_ALIGN_MAX Scalar data2[size];
+  EIGEN_ALIGN_MAX Scalar ref[size];
+
+  for (int i=0; i<size; ++i)
+  {
+    data1[i] = internal::random<Scalar>();
+  }
+  CHECK_CWISE2_IF(true, internal::por, internal::por);
+  CHECK_CWISE2_IF(true, internal::pxor, internal::pxor);
+  CHECK_CWISE2_IF(true, internal::pand, internal::pand);
+}
+
 template<typename Scalar,typename Packet> void packetmath()
 {
   typedef internal::packet_traits<Scalar> PacketTraits;
@@ -338,21 +355,6 @@ template<typename Scalar,typename Packet> void packetmath()
   }
 
   {
-    for (int i=0; i<PacketSize; ++i)
-    {
-      data1[i] = internal::random<Scalar>();
-      unsigned char v = internal::random<bool>() ? 0xff : 0;
-      char* bytes = (char*)(data1+PacketSize+i);
-      for(int k=0; k<int(sizeof(Scalar)); ++k) {
-        bytes[k] = v;
-      }
-    }
-    CHECK_CWISE2_IF(true, internal::por, internal::por);
-    CHECK_CWISE2_IF(true, internal::pxor, internal::pxor);
-    CHECK_CWISE2_IF(true, internal::pand, internal::pand);
-    CHECK_CWISE2_IF(true, internal::pandnot, internal::pandnot);
-  }
-  {
     for (int i = 0; i < PacketSize; ++i) {
       // "if" mask
       unsigned char v = internal::random<bool>() ? 0xff : 0;
@@ -377,7 +379,16 @@ template<typename Scalar,typename Packet> void packetmath()
   }
 
   CHECK_CWISE1_IF(PacketTraits::HasSqrt, numext::sqrt, internal::psqrt);
+
+  for (int i=0; i<size; ++i)
+  {
+    data1[i] = internal::random<Scalar>();
+  }
+  CHECK_CWISE2_IF(true, internal::pandnot, internal::pandnot);
+
+  packetmath_boolean<Scalar, Packet>();
 }
+
 
 template<typename Scalar,typename Packet> void packetmath_real()
 {
@@ -807,6 +818,9 @@ EIGEN_DECLARE_TEST(packetmath)
     CALL_SUBTEST_11( test::runner<std::complex<float> >::run() );
     CALL_SUBTEST_12( test::runner<std::complex<double> >::run() );
     CALL_SUBTEST_13(( packetmath<half,internal::packet_traits<half>::type>() ));
+#ifdef EIGEN_PACKET_MATH_SSE_H
+    CALL_SUBTEST_14(( packetmath_boolean<bool,internal::packet_traits<bool>::type>() ));
+#endif
     g_first_pass = false;
   }
 }
