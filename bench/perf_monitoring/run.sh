@@ -107,7 +107,7 @@ function test_current
   
   prev=""
   if [ -e "$name.backup" ]; then
-    prev=`grep $rev "$name.backup" | cut -c 14-`
+    prev=`grep $rev "$name.backup" | cut -d ' ' -f 2-`
   fi
   res=$prev
   count_rev=`echo $prev |  wc -w`
