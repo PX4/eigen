@@ -575,45 +575,6 @@ EIGEN_STRONG_INLINE float predux<Packet4f>(const Packet4f& a) {
   return s[0];
 }
 
-template <>
-EIGEN_STRONG_INLINE Packet4f preduxp<Packet4f>(const Packet4f* vecs) {
-  EIGEN_MSA_DEBUG;
-
-  v4i32 tmp1, tmp2, tmp3, tmp4;
-  Packet4f sum;
-
-  tmp1 = __builtin_msa_ilvr_w((v4i32)vecs[1], (v4i32)vecs[0]);
-  tmp2 = __builtin_msa_ilvr_w((v4i32)vecs[3], (v4i32)vecs[2]);
-  tmp3 = __builtin_msa_ilvl_w((v4i32)vecs[1], (v4i32)vecs[0]);
-  tmp4 = __builtin_msa_ilvl_w((v4i32)vecs[3], (v4i32)vecs[2]);
-
-  sum = (Packet4f)__builtin_msa_ilvr_d((v2i64)tmp2, (v2i64)tmp1);
-  sum = padd(sum, (Packet4f)__builtin_msa_ilvod_d((v2i64)tmp2, (v2i64)tmp1));
-  sum = padd(sum, (Packet4f)__builtin_msa_ilvr_d((v2i64)tmp4, (v2i64)tmp3));
-  sum = padd(sum, (Packet4f)__builtin_msa_ilvod_d((v2i64)tmp4, (v2i64)tmp3));
-
-  return sum;
-}
-
-template <>
-EIGEN_STRONG_INLINE Packet4i preduxp<Packet4i>(const Packet4i* vecs) {
-  EIGEN_MSA_DEBUG;
-
-  v4i32 tmp1, tmp2, tmp3, tmp4;
-  Packet4i sum;
-
-  tmp1 = __builtin_msa_ilvr_w((v4i32)vecs[1], (v4i32)vecs[0]);
-  tmp2 = __builtin_msa_ilvr_w((v4i32)vecs[3], (v4i32)vecs[2]);
-  tmp3 = __builtin_msa_ilvl_w((v4i32)vecs[1], (v4i32)vecs[0]);
-  tmp4 = __builtin_msa_ilvl_w((v4i32)vecs[3], (v4i32)vecs[2]);
-
-  sum = (Packet4i)__builtin_msa_ilvr_d((v2i64)tmp2, (v2i64)tmp1);
-  sum = padd(sum, (Packet4i)__builtin_msa_ilvod_d((v2i64)tmp2, (v2i64)tmp1));
-  sum = padd(sum, (Packet4i)__builtin_msa_ilvr_d((v2i64)tmp4, (v2i64)tmp3));
-  sum = padd(sum, (Packet4i)__builtin_msa_ilvod_d((v2i64)tmp4, (v2i64)tmp3));
-
-  return sum;
-}
 
 template <>
 EIGEN_STRONG_INLINE int32_t predux<Packet4i>(const Packet4i& a) {
@@ -1146,16 +1107,6 @@ EIGEN_STRONG_INLINE double predux<Packet2d>(const Packet2d& a) {
 
   Packet2d s = padd(a, preverse(a));
   return s[0];
-}
-
-template <>
-EIGEN_STRONG_INLINE Packet2d preduxp<Packet2d>(const Packet2d* vecs) {
-  EIGEN_MSA_DEBUG;
-
-  Packet2d v0 = (Packet2d)__builtin_msa_ilvev_d((v2i64)vecs[1], (v2i64)vecs[0]);
-  Packet2d v1 = (Packet2d)__builtin_msa_ilvod_d((v2i64)vecs[1], (v2i64)vecs[0]);
-
-  return padd(v0, v1);
 }
 
 // Other reduction functions:

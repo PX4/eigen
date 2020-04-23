@@ -156,10 +156,6 @@ template<> EIGEN_STRONG_INLINE std::complex<double> predux<Packet1cd>(const Pack
 {
   return pfirst(a);
 }
-template<> EIGEN_STRONG_INLINE Packet1cd preduxp<Packet1cd>(const Packet1cd* vecs)
-{
-  return vecs[0];
-}
 template<> EIGEN_STRONG_INLINE std::complex<double> predux_mul<Packet1cd>(const Packet1cd& a)
 {
   return pfirst(a);
@@ -327,16 +323,6 @@ template<> EIGEN_STRONG_INLINE std::complex<float> predux<Packet2cf>(const Packe
   return res;
 }
 
-template<> EIGEN_STRONG_INLINE Packet2cf preduxp<Packet2cf>(const Packet2cf* vecs)
-{
-  PacketBlock<Packet2cf,2> transpose;
-  transpose.packet[0] = vecs[0];
-  transpose.packet[1] = vecs[1];
-  ptranspose(transpose);
-
-  return padd<Packet2cf>(transpose.packet[0], transpose.packet[1]);
-} 
-
 template<> EIGEN_STRONG_INLINE std::complex<float> predux_mul<Packet2cf>(const Packet2cf& a)
 {
   std::complex<float> res;
@@ -459,17 +445,6 @@ template<> EIGEN_STRONG_INLINE std::complex<float> predux<Packet2cf>(const Packe
   b = vec_sld(a.v, a.v, 8);
   b = padd<Packet4f>(a.v, b);
   return pfirst<Packet2cf>(Packet2cf(b));
-}
-
-template<> EIGEN_STRONG_INLINE Packet2cf preduxp<Packet2cf>(const Packet2cf* vecs)
-{
-  Packet4f b1, b2;
-  b1 = vec_sld(vecs[0].v, vecs[1].v, 8);
-  b2 = vec_sld(vecs[1].v, vecs[0].v, 8);
-  b2 = vec_sld(b2, b2, 8);
-  b2 = padd<Packet4f>(b1, b2);
-
-  return Packet2cf(b2);
 }
 
 template<> EIGEN_STRONG_INLINE std::complex<float> predux_mul<Packet2cf>(const Packet2cf& a)

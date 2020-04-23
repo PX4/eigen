@@ -627,49 +627,6 @@ template<> EIGEN_STRONG_INLINE Packet4d pldexp<Packet4d>(const Packet4d& a, cons
   return pmul(a,_mm256_castsi256_pd(e));
 }
 
-// preduxp should be ok
-// FIXME: why is this ok? why isn't the simply implementation working as expected?
-template<> EIGEN_STRONG_INLINE Packet8f preduxp<Packet8f>(const Packet8f* vecs)
-{
-    __m256 hsum1 = _mm256_hadd_ps(vecs[0], vecs[1]);
-    __m256 hsum2 = _mm256_hadd_ps(vecs[2], vecs[3]);
-    __m256 hsum3 = _mm256_hadd_ps(vecs[4], vecs[5]);
-    __m256 hsum4 = _mm256_hadd_ps(vecs[6], vecs[7]);
-
-    __m256 hsum5 = _mm256_hadd_ps(hsum1, hsum1);
-    __m256 hsum6 = _mm256_hadd_ps(hsum2, hsum2);
-    __m256 hsum7 = _mm256_hadd_ps(hsum3, hsum3);
-    __m256 hsum8 = _mm256_hadd_ps(hsum4, hsum4);
-
-    __m256 perm1 =  _mm256_permute2f128_ps(hsum5, hsum5, 0x23);
-    __m256 perm2 =  _mm256_permute2f128_ps(hsum6, hsum6, 0x23);
-    __m256 perm3 =  _mm256_permute2f128_ps(hsum7, hsum7, 0x23);
-    __m256 perm4 =  _mm256_permute2f128_ps(hsum8, hsum8, 0x23);
-
-    __m256 sum1 = _mm256_add_ps(perm1, hsum5);
-    __m256 sum2 = _mm256_add_ps(perm2, hsum6);
-    __m256 sum3 = _mm256_add_ps(perm3, hsum7);
-    __m256 sum4 = _mm256_add_ps(perm4, hsum8);
-
-    __m256 blend1 = _mm256_blend_ps(sum1, sum2, 0xcc);
-    __m256 blend2 = _mm256_blend_ps(sum3, sum4, 0xcc);
-
-    __m256 final = _mm256_blend_ps(blend1, blend2, 0xf0);
-    return final;
-}
-template<> EIGEN_STRONG_INLINE Packet4d preduxp<Packet4d>(const Packet4d* vecs)
-{
- Packet4d tmp0, tmp1;
-
-  tmp0 = _mm256_hadd_pd(vecs[0], vecs[1]);
-  tmp0 = _mm256_add_pd(tmp0, _mm256_permute2f128_pd(tmp0, tmp0, 1));
-
-  tmp1 = _mm256_hadd_pd(vecs[2], vecs[3]);
-  tmp1 = _mm256_add_pd(tmp1, _mm256_permute2f128_pd(tmp1, tmp1, 1));
-
-  return _mm256_blend_pd(tmp0, tmp1, 0xC);
-}
-
 template<> EIGEN_STRONG_INLINE float predux<Packet8f>(const Packet8f& a)
 {
   return predux(Packet4f(_mm_add_ps(_mm256_castps256_ps128(a),_mm256_extractf128_ps(a,1))));
@@ -1103,20 +1060,6 @@ template<> EIGEN_STRONG_INLINE Eigen::half predux_mul<Packet8h>(const Packet8h& 
   Packet8f af = half2float(a);
   float reduced = predux_mul<Packet8f>(af);
   return Eigen::half(reduced);
-}
-
-template<> EIGEN_STRONG_INLINE Packet8h preduxp<Packet8h>(const Packet8h* p) {
-  Packet8f pf[8];
-  pf[0] = half2float(p[0]);
-  pf[1] = half2float(p[1]);
-  pf[2] = half2float(p[2]);
-  pf[3] = half2float(p[3]);
-  pf[4] = half2float(p[4]);
-  pf[5] = half2float(p[5]);
-  pf[6] = half2float(p[6]);
-  pf[7] = half2float(p[7]);
-  Packet8f reduced = preduxp<Packet8f>(pf);
-  return float2half(reduced);
 }
 
 template<> EIGEN_STRONG_INLINE Packet8h preverse(const Packet8h& a)

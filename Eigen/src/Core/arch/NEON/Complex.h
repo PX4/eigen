@@ -307,14 +307,6 @@ template<> EIGEN_STRONG_INLINE std::complex<float> predux<Packet2cf>(const Packe
   return s;
 }
 
-template<> EIGEN_STRONG_INLINE Packet1cf preduxp<Packet1cf>(const Packet1cf* vecs) { return vecs[0]; }
-template<> EIGEN_STRONG_INLINE Packet2cf preduxp<Packet2cf>(const Packet2cf* vecs)
-{
-  const Packet4f sum1 = vcombine_f32(vget_low_f32(vecs[0].v), vget_low_f32(vecs[1].v));
-  const Packet4f sum2 = vcombine_f32(vget_high_f32(vecs[0].v), vget_high_f32(vecs[1].v));
-  return Packet2cf(vaddq_f32(sum1, sum2));
-}
-
 template<> EIGEN_STRONG_INLINE std::complex<float> predux_mul<Packet1cf>(const Packet1cf& a)
 {
   std::complex<float> s;
@@ -607,8 +599,6 @@ template<> EIGEN_STRONG_INLINE std::complex<double> pfirst<Packet1cd>(const Pack
 template<> EIGEN_STRONG_INLINE Packet1cd preverse(const Packet1cd& a) { return a; }
 
 template<> EIGEN_STRONG_INLINE std::complex<double> predux<Packet1cd>(const Packet1cd& a) { return pfirst(a); }
-
-template<> EIGEN_STRONG_INLINE Packet1cd preduxp<Packet1cd>(const Packet1cd* vecs) { return vecs[0]; }
 
 template<> EIGEN_STRONG_INLINE std::complex<double> predux_mul<Packet1cd>(const Packet1cd& a) { return pfirst(a); }
 

@@ -59,7 +59,6 @@ struct default_packet_traits
     HasSetLinear = 1,
     HasBlend     = 0,
     HasInsert    = 0,
-    HasReduxp    = 1,
 
     HasDiv    = 0,
     HasSqrt   = 0,
@@ -484,10 +483,6 @@ template<typename Scalar> EIGEN_DEVICE_FUNC inline void prefetch(const Scalar* a
 /** \internal \returns the first element of a packet */
 template<typename Packet> EIGEN_DEVICE_FUNC inline typename unpacket_traits<Packet>::type pfirst(const Packet& a)
 { return a; }
-
-/** \internal \returns a packet where the element i contains the sum of the packet of \a vec[i] */
-template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
-preduxp(const Packet* vecs) { return vecs[0]; }
 
 /** \internal \returns the sum of the elements of \a a*/
 template<typename Packet> EIGEN_DEVICE_FUNC inline typename unpacket_traits<Packet>::type predux(const Packet& a)

@@ -151,21 +151,6 @@ template<> EIGEN_STRONG_INLINE std::complex<float> predux<Packet4cf>(const Packe
                      Packet2cf(_mm256_extractf128_ps(a.v,1))));
 }
 
-template<> EIGEN_STRONG_INLINE Packet4cf preduxp<Packet4cf>(const Packet4cf* vecs)
-{
-  Packet8f t0 = _mm256_shuffle_ps(vecs[0].v, vecs[0].v, _MM_SHUFFLE(3, 1, 2 ,0));
-  Packet8f t1 = _mm256_shuffle_ps(vecs[1].v, vecs[1].v, _MM_SHUFFLE(3, 1, 2 ,0));
-  t0 = _mm256_hadd_ps(t0,t1);
-  Packet8f t2 = _mm256_shuffle_ps(vecs[2].v, vecs[2].v, _MM_SHUFFLE(3, 1, 2 ,0));
-  Packet8f t3 = _mm256_shuffle_ps(vecs[3].v, vecs[3].v, _MM_SHUFFLE(3, 1, 2 ,0));
-  t2 = _mm256_hadd_ps(t2,t3);
-  
-  t1 = _mm256_permute2f128_ps(t0,t2, 0 + (2<<4));
-  t3 = _mm256_permute2f128_ps(t0,t2, 1 + (3<<4));
-
-  return Packet4cf(_mm256_add_ps(t1,t3));
-}
-
 template<> EIGEN_STRONG_INLINE std::complex<float> predux_mul<Packet4cf>(const Packet4cf& a)
 {
   return predux_mul(pmul(Packet2cf(_mm256_extractf128_ps(a.v, 0)),
@@ -346,14 +331,6 @@ template<> EIGEN_STRONG_INLINE std::complex<double> predux<Packet2cd>(const Pack
 {
   return predux(padd(Packet1cd(_mm256_extractf128_pd(a.v,0)),
                      Packet1cd(_mm256_extractf128_pd(a.v,1))));
-}
-
-template<> EIGEN_STRONG_INLINE Packet2cd preduxp<Packet2cd>(const Packet2cd* vecs)
-{
-  Packet4d t0 = _mm256_permute2f128_pd(vecs[0].v,vecs[1].v, 0 + (2<<4));
-  Packet4d t1 = _mm256_permute2f128_pd(vecs[0].v,vecs[1].v, 1 + (3<<4));
-
-  return Packet2cd(_mm256_add_pd(t0,t1));
 }
 
 template<> EIGEN_STRONG_INLINE std::complex<double> predux_mul<Packet2cd>(const Packet2cd& a)

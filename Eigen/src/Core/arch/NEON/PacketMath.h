@@ -137,7 +137,6 @@ struct packet_traits<float> : default_packet_traits
     HasSetLinear = 0,
     HasBlend     = 0,
     HasInsert    = 1,
-    HasReduxp    = 1,
 
     HasDiv   = 1,
     HasFloor = 1,
@@ -180,7 +179,6 @@ struct packet_traits<int8_t> : default_packet_traits
     HasSetLinear = 0,
     HasBlend     = 0,
     HasInsert    = 1,
-    HasReduxp    = 1
   };
 };
 
@@ -212,7 +210,6 @@ struct packet_traits<uint8_t> : default_packet_traits
     HasSetLinear = 0,
     HasBlend     = 0,
     HasInsert    = 1,
-    HasReduxp    = 1,
 
     HasSqrt = 1
   };
@@ -246,7 +243,6 @@ struct packet_traits<int16_t> : default_packet_traits
     HasSetLinear = 0,
     HasBlend     = 0,
     HasInsert    = 1,
-    HasReduxp    = 1
   };
 };
 
@@ -278,7 +274,6 @@ struct packet_traits<uint16_t> : default_packet_traits
     HasSetLinear = 0,
     HasBlend     = 0,
     HasInsert    = 1,
-    HasReduxp    = 1,
 
     HasSqrt = 1
   };
@@ -312,7 +307,6 @@ struct packet_traits<int32_t> : default_packet_traits
     HasSetLinear = 0,
     HasBlend     = 0,
     HasInsert    = 1,
-    HasReduxp    = 1
   };
 };
 
@@ -344,7 +338,6 @@ struct packet_traits<uint32_t> : default_packet_traits
     HasSetLinear = 0,
     HasBlend     = 0,
     HasInsert    = 1,
-    HasReduxp    = 1,
 
     HasSqrt = 1
   };
@@ -379,7 +372,6 @@ struct packet_traits<int64_t> : default_packet_traits
     HasSetLinear = 0,
     HasBlend     = 0,
     HasInsert    = 1,
-    HasReduxp    = 1
   };
 };
 
@@ -412,7 +404,6 @@ struct packet_traits<uint64_t> : default_packet_traits
     HasSetLinear = 0,
     HasBlend     = 0,
     HasInsert    = 1,
-    HasReduxp    = 1
   };
 };
 
@@ -2422,281 +2413,6 @@ template<> EIGEN_STRONG_INLINE int64_t predux<Packet2l>(const Packet2l& a)
 template<> EIGEN_STRONG_INLINE uint64_t predux<Packet2ul>(const Packet2ul& a)
 { return vgetq_lane_u64(a, 0) + vgetq_lane_u64(a, 1); }
 
-template<> EIGEN_STRONG_INLINE Packet2f preduxp<Packet2f>(const Packet2f* vecs)
-{
-  const float32x2x2_t vtrn = vzip_f32(vecs[0], vecs[1]);
-  return vadd_f32(vtrn.val[0], vtrn.val[1]);
-}
-template<> EIGEN_STRONG_INLINE Packet4f preduxp<Packet4f>(const Packet4f* vecs)
-{
-  const float32x4x2_t vtrn1 = vzipq_f32(vecs[0], vecs[2]);
-  const float32x4x2_t vtrn2 = vzipq_f32(vecs[1], vecs[3]);
-  const float32x4x2_t res1 = vzipq_f32(vtrn1.val[0], vtrn2.val[0]);
-  const float32x4x2_t res2 = vzipq_f32(vtrn1.val[1], vtrn2.val[1]);
-  return vaddq_f32(vaddq_f32(res1.val[0], res1.val[1]), vaddq_f32(res2.val[0], res2.val[1]));
-}
-template<> EIGEN_STRONG_INLINE Packet4c preduxp<Packet4c>(const Packet4c* vecs)
-{
-  const int8x8x2_t zip8 = vzip_s8(
-      vreinterpret_s8_s32(vset_lane_s32(vecs[2], vdup_n_s32(vecs[0]), 1)),
-      vreinterpret_s8_s32(vset_lane_s32(vecs[3], vdup_n_s32(vecs[1]), 1)));
-  const uint16x4x2_t zip16 = vzip_u16(
-      vreinterpret_u16_s8(zip8.val[0]),
-      vreinterpret_u16_s8(zip8.val[1]));
-  const int8x8_t sum = vadd_s8(
-      vreinterpret_s8_u16(zip16.val[0]),
-      vreinterpret_s8_u16(zip16.val[1]));
-  return vget_lane_s32(vreinterpret_s32_s8(vadd_s8(sum,
-      vreinterpret_s8_s32(vrev64_s32(vreinterpret_s32_s8(sum))))), 0);
-}
-template<> EIGEN_STRONG_INLINE Packet8c preduxp<Packet8c>(const Packet8c* vecs)
-{
-  int8x8_t sum[4];
-
-  EIGEN_UNROLL_LOOP
-  for (int i = 0; i != 4; i++)
-  {
-    const int8x8x2_t z = vzip_s8(vecs[i*2], vecs[i*2+1]);
-    sum[i] = vadd_s8(z.val[0], z.val[1]);
-  }
-
-  EIGEN_UNROLL_LOOP
-  for (int i = 0; i != 2; i++)
-  {
-    const uint16x4x2_t z = vzip_u16(vreinterpret_u16_s8(sum[i*2]), vreinterpret_u16_s8(sum[i*2+1]));
-    sum[i] = vadd_s8(vreinterpret_s8_u16(z.val[0]), vreinterpret_s8_u16(z.val[1]));
-  }
-
-  const uint32x2x2_t z = vzip_u32(vreinterpret_u32_s8(sum[0]), vreinterpret_u32_s8(sum[1]));
-  return vadd_s8(vreinterpret_s8_u32(z.val[0]), vreinterpret_s8_u32(z.val[1]));
-}
-template<> EIGEN_STRONG_INLINE Packet16c preduxp<Packet16c>(const Packet16c* vecs)
-{
-  int8x16_t sum[8];
-
-  EIGEN_UNROLL_LOOP
-  for (int i = 0; i != 8; i++)
-  {
-    const int8x16x2_t z = vzipq_s8(vecs[i*2], vecs[i*2+1]);
-    sum[i] = vaddq_s8(z.val[0], z.val[1]);
-  }
-
-  EIGEN_UNROLL_LOOP
-  for (int i = 0; i != 4; i++)
-  {
-    const uint16x8x2_t z = vzipq_u16(vreinterpretq_u16_s8(sum[i*2]), vreinterpretq_u16_s8(sum[i*2+1]));
-    sum[i] = vaddq_s8(vreinterpretq_s8_u16(z.val[0]), vreinterpretq_s8_u16(z.val[1]));
-  }
-
-  EIGEN_UNROLL_LOOP
-  for (int i = 0; i != 2; i++)
-  {
-    const uint32x4x2_t z = vzipq_u32(vreinterpretq_u32_s8(sum[i*2]), vreinterpretq_u32_s8(sum[i*2+1]));
-    sum[i] = vaddq_s8(vreinterpretq_s8_u32(z.val[0]), vreinterpretq_s8_u32(z.val[1]));
-  }
-
-  return vcombine_s8(
-      vadd_s8(vget_low_s8(sum[0]), vget_high_s8(sum[0])),
-      vadd_s8(vget_low_s8(sum[1]), vget_high_s8(sum[1])));
-}
-template<> EIGEN_STRONG_INLINE Packet4uc preduxp<Packet4uc>(const Packet4uc* vecs)
-{
-  const uint8x8x2_t zip8 = vzip_u8(
-      vreinterpret_u8_u32(vset_lane_u32(vecs[2], vdup_n_u32(vecs[0]), 1)),
-      vreinterpret_u8_u32(vset_lane_u32(vecs[3], vdup_n_u32(vecs[1]), 1)));
-  const uint16x4x2_t zip16 = vzip_u16(
-      vreinterpret_u16_u8(zip8.val[0]),
-      vreinterpret_u16_u8(zip8.val[1]));
-  const uint8x8_t sum = vadd_u8(
-      vreinterpret_u8_u16(zip16.val[0]),
-      vreinterpret_u8_u16(zip16.val[1]));
-  return vget_lane_u32(vreinterpret_u32_u8(vadd_u8(sum,
-      vreinterpret_u8_u32(vrev64_u32(vreinterpret_u32_u8(sum))))), 0);
-}
-template<> EIGEN_STRONG_INLINE Packet8uc preduxp<Packet8uc>(const Packet8uc* vecs)
-{
-  uint8x8_t sum[4];
-
-  EIGEN_UNROLL_LOOP
-  for (int i = 0; i != 4; i++)
-  {
-    const uint8x8x2_t z = vzip_u8(vecs[i*2], vecs[i*2+1]);
-    sum[i] = vadd_u8(z.val[0], z.val[1]);
-  }
-
-  EIGEN_UNROLL_LOOP
-  for (int i = 0; i != 2; i++)
-  {
-    const uint16x4x2_t z = vzip_u16(vreinterpret_u16_u8(sum[i*2]), vreinterpret_u16_u8(sum[i*2+1]));
-    sum[i] = vadd_u8(vreinterpret_u8_u16(z.val[0]), vreinterpret_u8_u16(z.val[1]));
-  }
-
-  const uint32x2x2_t z = vzip_u32(vreinterpret_u32_u8(sum[0]), vreinterpret_u32_u8(sum[1]));
-  return vadd_u8(vreinterpret_u8_u32(z.val[0]), vreinterpret_u8_u32(z.val[1]));
-}
-template<> EIGEN_STRONG_INLINE Packet16uc preduxp<Packet16uc>(const Packet16uc* vecs)
-{
-  uint8x16_t sum[8];
-
-  EIGEN_UNROLL_LOOP
-  for (int i = 0; i != 8; i++)
-  {
-    const uint8x16x2_t z = vzipq_u8(vecs[i*2], vecs[i*2+1]);
-    sum[i] = vaddq_u8(z.val[0], z.val[1]);
-  }
-
-  EIGEN_UNROLL_LOOP
-  for (int i = 0; i != 4; i++)
-  {
-    const uint16x8x2_t z = vzipq_u16(vreinterpretq_u16_u8(sum[i*2]), vreinterpretq_u16_u8(sum[i*2+1]));
-    sum[i] = vaddq_u8(vreinterpretq_u8_u16(z.val[0]), vreinterpretq_u8_u16(z.val[1]));
-  }
-
-  EIGEN_UNROLL_LOOP
-  for (int i = 0; i != 2; i++)
-  {
-    const uint32x4x2_t z = vzipq_u32(vreinterpretq_u32_u8(sum[i*2]), vreinterpretq_u32_u8(sum[i*2+1]));
-    sum[i] = vaddq_u8(vreinterpretq_u8_u32(z.val[0]), vreinterpretq_u8_u32(z.val[1]));
-  }
-
-  return vcombine_u8(
-      vadd_u8(vget_low_u8(sum[0]), vget_high_u8(sum[0])),
-      vadd_u8(vget_low_u8(sum[1]), vget_high_u8(sum[1])));
-}
-template<> EIGEN_STRONG_INLINE Packet4s preduxp<Packet4s>(const Packet4s* vecs)
-{
-  int16x4x2_t zip16;
-  int32x2x2_t zip32;
-  int16x4_t sum1, sum2;
-
-  zip16 = vzip_s16(vecs[0], vecs[1]);
-  sum1 = vadd_s16(zip16.val[0], zip16.val[1]);
-  zip16 = vzip_s16(vecs[2], vecs[3]);
-  sum2 = vadd_s16(zip16.val[0], zip16.val[1]);
-
-  zip32 = vzip_s32(vreinterpret_s32_s16(sum1), vreinterpret_s32_s16(sum2));
-  return vadd_s16(vreinterpret_s16_s32(zip32.val[0]), vreinterpret_s16_s32(zip32.val[1]));
-}
-template<> EIGEN_STRONG_INLINE Packet8s preduxp<Packet8s>(const Packet8s* vecs)
-{
-  int16x8x2_t zip16;
-  int32x4x2_t zip32;
-  int16x8_t sum1, sum2, sum3, sum4;
-
-  zip16 = vzipq_s16(vecs[0], vecs[1]);
-  sum1 = vaddq_s16(zip16.val[0], zip16.val[1]);
-  zip16 = vzipq_s16(vecs[2], vecs[3]);
-  sum2 = vaddq_s16(zip16.val[0], zip16.val[1]);
-  zip16 = vzipq_s16(vecs[4], vecs[5]);
-  sum3 = vaddq_s16(zip16.val[0], zip16.val[1]);
-  zip16 = vzipq_s16(vecs[6], vecs[7]);
-  sum4 = vaddq_s16(zip16.val[0], zip16.val[1]);
-
-  zip32 = vzipq_s32(vreinterpretq_s32_s16(sum1), vreinterpretq_s32_s16(sum2));
-  sum1 = vaddq_s16(vreinterpretq_s16_s32(zip32.val[0]), vreinterpretq_s16_s32(zip32.val[1]));
-  zip32 = vzipq_s32(vreinterpretq_s32_s16(sum3), vreinterpretq_s32_s16(sum4));
-  sum2 = vaddq_s16(vreinterpretq_s16_s32(zip32.val[0]), vreinterpretq_s16_s32(zip32.val[1]));
-
-  return vcombine_s16(
-      vadd_s16(vget_low_s16(sum1), vget_high_s16(sum1)),
-      vadd_s16(vget_low_s16(sum2), vget_high_s16(sum2)));
-}
-template<> EIGEN_STRONG_INLINE Packet4us preduxp<Packet4us>(const Packet4us* vecs)
-{
-  uint16x4x2_t zip16;
-  uint32x2x2_t zip32;
-  uint16x4_t sum1, sum2;
-
-  zip16 = vzip_u16(vecs[0], vecs[1]);
-  sum1 = vadd_u16(zip16.val[0], zip16.val[1]);
-  zip16 = vzip_u16(vecs[2], vecs[3]);
-  sum2 = vadd_u16(zip16.val[0], zip16.val[1]);
-
-  zip32 = vzip_u32(vreinterpret_u32_u16(sum1), vreinterpret_u32_u16(sum2));
-  return vadd_u16(vreinterpret_u16_u32(zip32.val[0]), vreinterpret_u16_u32(zip32.val[1]));
-}
-template<> EIGEN_STRONG_INLINE Packet8us preduxp<Packet8us>(const Packet8us* vecs)
-{
-  uint16x8x2_t zip16;
-  uint32x4x2_t zip32;
-  uint16x8_t sum1, sum2, sum3, sum4;
-
-  zip16 = vzipq_u16(vecs[0], vecs[1]);
-  sum1 = vaddq_u16(zip16.val[0], zip16.val[1]);
-  zip16 = vzipq_u16(vecs[2], vecs[3]);
-  sum2 = vaddq_u16(zip16.val[0], zip16.val[1]);
-  zip16 = vzipq_u16(vecs[4], vecs[5]);
-  sum3 = vaddq_u16(zip16.val[0], zip16.val[1]);
-  zip16 = vzipq_u16(vecs[6], vecs[7]);
-  sum4 = vaddq_u16(zip16.val[0], zip16.val[1]);
-
-  zip32 = vzipq_u32(vreinterpretq_u32_u16(sum1), vreinterpretq_u32_u16(sum2));
-  sum1 = vaddq_u16(vreinterpretq_u16_u32(zip32.val[0]), vreinterpretq_u16_u32(zip32.val[1]));
-  zip32 = vzipq_u32(vreinterpretq_u32_u16(sum3), vreinterpretq_u32_u16(sum4));
-  sum2 = vaddq_u16(vreinterpretq_u16_u32(zip32.val[0]), vreinterpretq_u16_u32(zip32.val[1]));
-
-  return vcombine_u16(
-      vadd_u16(vget_low_u16(sum1), vget_high_u16(sum1)),
-      vadd_u16(vget_low_u16(sum2), vget_high_u16(sum2)));
-}
-template<> EIGEN_STRONG_INLINE Packet2i preduxp<Packet2i>(const Packet2i* vecs)
-{
-  const int32x2x2_t vtrn = vzip_s32(vecs[0], vecs[1]);
-  return vadd_s32(vtrn.val[0], vtrn.val[1]);
-}
-template<> EIGEN_STRONG_INLINE Packet4i preduxp<Packet4i>(const Packet4i* vecs)
-{
-  const int32x4x2_t vtrn1 = vzipq_s32(vecs[0], vecs[2]);
-  const int32x4x2_t vtrn2 = vzipq_s32(vecs[1], vecs[3]);
-  const int32x4x2_t res1 = vzipq_s32(vtrn1.val[0], vtrn2.val[0]);
-  const int32x4x2_t res2 = vzipq_s32(vtrn1.val[1], vtrn2.val[1]);
-  return vaddq_s32(vaddq_s32(res1.val[0], res1.val[1]), vaddq_s32(res2.val[0], res2.val[1]));
-}
-template<> EIGEN_STRONG_INLINE Packet2ui preduxp<Packet2ui>(const Packet2ui* vecs)
-{
-  const uint32x2x2_t vtrn = vzip_u32(vecs[0], vecs[1]);
-  return vadd_u32(vtrn.val[0], vtrn.val[1]);
-}
-template<> EIGEN_STRONG_INLINE Packet4ui preduxp<Packet4ui>(const Packet4ui* vecs)
-{
-  uint32x4x2_t vtrn1, vtrn2, res1, res2;
-  Packet4ui sum1, sum2, sum;
-
-  // NEON zip performs interleaving of the supplied vectors.
-  // We perform two interleaves in a row to acquire the transposed vector
-  vtrn1 = vzipq_u32(vecs[0], vecs[2]);
-  vtrn2 = vzipq_u32(vecs[1], vecs[3]);
-  res1 = vzipq_u32(vtrn1.val[0], vtrn2.val[0]);
-  res2 = vzipq_u32(vtrn1.val[1], vtrn2.val[1]);
-
-  // Do the addition of the resulting vectors
-  sum1 = vaddq_u32(res1.val[0], res1.val[1]);
-  sum2 = vaddq_u32(res2.val[0], res2.val[1]);
-  sum = vaddq_u32(sum1, sum2);
-
-  return sum;
-}
-template<> EIGEN_STRONG_INLINE Packet2l preduxp<Packet2l>(const Packet2l* vecs)
-{
-  return vsetq_lane_s64(
-      vget_lane_s64(vget_low_s64(vecs[0]), 0) +
-        vget_lane_s64(vget_high_s64(vecs[0]), 0),
-      vdupq_n_s64(
-        vget_lane_s64(vget_low_s64(vecs[1]), 0) +
-          vget_lane_s64(vget_high_s64(vecs[1]), 0)),
-      0);
-}
-template<> EIGEN_STRONG_INLINE Packet2ul preduxp<Packet2ul>(const Packet2ul* vecs)
-{
-  return vsetq_lane_u64(
-      vget_lane_u64(vget_low_u64(vecs[0]), 0) +
-        vget_lane_u64(vget_high_u64(vecs[0]), 0),
-      vdupq_n_u64(
-        vget_lane_u64(vget_low_u64(vecs[1]), 0) +
-          vget_lane_u64(vget_high_u64(vecs[1]), 0)),
-      0);
-}
-
 template<> EIGEN_DEVICE_FUNC inline Packet4c predux_half_dowto4(const Packet8c& a)
 {
   return vget_lane_s32(vreinterpret_s32_s8(vadd_s8(a,
@@ -3687,7 +3403,6 @@ template<> struct packet_traits<double>  : default_packet_traits
     HasSetLinear = 0,
     HasBlend     = 0,
     HasInsert    = 1,
-    HasReduxp    = 1,
 
     HasDiv   = 1,
     HasFloor = 1,
@@ -3830,10 +3545,6 @@ template<> EIGEN_STRONG_INLINE double predux<Packet2d>(const Packet2d& a)
 { return vget_lane_f64(vget_low_f64(a) + vget_high_f64(a), 0); }
 #endif
 
-template<> EIGEN_STRONG_INLINE Packet2d preduxp<Packet2d>(const Packet2d* vecs)
-{
-  return vaddq_f64(vzip1q_f64(vecs[0], vecs[1]), vzip2q_f64(vecs[0], vecs[1]));
-}
 // Other reduction functions:
 // mul
 #if EIGEN_COMP_CLANG && defined(__apple_build_version__)

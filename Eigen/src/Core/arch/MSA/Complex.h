@@ -298,20 +298,6 @@ EIGEN_STRONG_INLINE std::complex<float> predux<Packet2cf>(const Packet2cf& a) {
 }
 
 template <>
-EIGEN_STRONG_INLINE Packet2cf preduxp<Packet2cf>(const Packet2cf* vecs) {
-  EIGEN_MSA_DEBUG;
-
-  Packet4f sum1, sum2, sum;
-
-  // Add the first two 64-bit float32x2_t of vecs[0]
-  sum1 = (Packet4f)__builtin_msa_ilvr_d((v2i64)vecs[1].v, (v2i64)vecs[0].v);
-  sum2 = (Packet4f)__builtin_msa_ilvl_d((v2i64)vecs[1].v, (v2i64)vecs[0].v);
-  sum = padd(sum1, sum2);
-
-  return Packet2cf(sum);
-}
-
-template <>
 EIGEN_STRONG_INLINE std::complex<float> predux_mul<Packet2cf>(const Packet2cf& a) {
   EIGEN_MSA_DEBUG;
 
@@ -658,13 +644,6 @@ EIGEN_STRONG_INLINE std::complex<double> predux<Packet1cd>(const Packet1cd& a) {
   EIGEN_MSA_DEBUG;
 
   return pfirst(a);
-}
-
-template <>
-EIGEN_STRONG_INLINE Packet1cd preduxp<Packet1cd>(const Packet1cd* vecs) {
-  EIGEN_MSA_DEBUG;
-
-  return vecs[0];
 }
 
 template <>

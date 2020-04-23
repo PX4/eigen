@@ -929,106 +929,6 @@ template<> EIGEN_STRONG_INLINE float predux<Packet4f>(const Packet4f& a)
   return pfirst(sum);
 }
 
-template<> EIGEN_STRONG_INLINE Packet4f preduxp<Packet4f>(const Packet4f* vecs)
-{
-  Packet4f v[4], sum[4];
-
-  // It's easier and faster to transpose then add as columns
-  // Check: http://www.freevec.org/function/matrix_4x4_transpose_floats for explanation
-  // Do the transpose, first set of moves
-  v[0] = vec_mergeh(vecs[0], vecs[2]);
-  v[1] = vec_mergel(vecs[0], vecs[2]);
-  v[2] = vec_mergeh(vecs[1], vecs[3]);
-  v[3] = vec_mergel(vecs[1], vecs[3]);
-  // Get the resulting vectors
-  sum[0] = vec_mergeh(v[0], v[2]);
-  sum[1] = vec_mergel(v[0], v[2]);
-  sum[2] = vec_mergeh(v[1], v[3]);
-  sum[3] = vec_mergel(v[1], v[3]);
-
-  // Now do the summation:
-  // Lines 0+1
-  sum[0] = sum[0] + sum[1];
-  // Lines 2+3
-  sum[1] = sum[2] + sum[3];
-  // Add the results
-  sum[0] = sum[0] + sum[1];
-
-  return sum[0];
-}
-
-template<> EIGEN_STRONG_INLINE Packet8s preduxp<Packet8s>(const Packet8s* vecs)
-{
-  Packet8s step1[8], step2[8], step3[8];
-
-  step1[0] = vec_mergeh(vecs[0], vecs[4]);
-  step1[1] = vec_mergel(vecs[0], vecs[4]);
-  step1[2] = vec_mergeh(vecs[1], vecs[5]);
-  step1[3] = vec_mergel(vecs[1], vecs[5]);
-  step1[4] = vec_mergeh(vecs[2], vecs[6]);
-  step1[5] = vec_mergel(vecs[2], vecs[6]);
-  step1[6] = vec_mergeh(vecs[3], vecs[7]);
-  step1[7] = vec_mergel(vecs[3], vecs[7]);
-
-  step2[0] = vec_mergeh(step1[0], step1[4]);
-  step2[1] = vec_mergel(step1[0], step1[4]);
-  step2[2] = vec_mergeh(step1[1], step1[5]);
-  step2[3] = vec_mergel(step1[1], step1[5]);
-  step2[4] = vec_mergeh(step1[2], step1[6]);
-  step2[5] = vec_mergel(step1[2], step1[6]);
-  step2[6] = vec_mergeh(step1[3], step1[7]);
-  step2[7] = vec_mergel(step1[3], step1[7]);
-
-  step3[0] = vec_mergeh(step2[0], step2[4]);
-  step3[1] = vec_mergel(step2[0], step2[4]);
-  step3[2] = vec_mergeh(step2[1], step2[5]);
-  step3[3] = vec_mergel(step2[1], step2[5]);
-  step3[4] = vec_mergeh(step2[2], step2[6]);
-  step3[5] = vec_mergel(step2[2], step2[6]);
-  step3[6] = vec_mergeh(step2[3], step2[7]);
-  step3[7] = vec_mergel(step2[3], step2[7]);
-
-  step3[0] += step3[1] + step3[2] + step3[3] + step3[4] + step3[5] + step3[6] + step3[7];
-  
-  return step3[0];
-}
-
-template<> EIGEN_STRONG_INLINE Packet8us preduxp<Packet8us>(const Packet8us* vecs)
-{
-  Packet8us step1[8], step2[8], step3[8];
-
-  step1[0] = vec_mergeh(vecs[0], vecs[4]);
-  step1[1] = vec_mergel(vecs[0], vecs[4]);
-  step1[2] = vec_mergeh(vecs[1], vecs[5]);
-  step1[3] = vec_mergel(vecs[1], vecs[5]);
-  step1[4] = vec_mergeh(vecs[2], vecs[6]);
-  step1[5] = vec_mergel(vecs[2], vecs[6]);
-  step1[6] = vec_mergeh(vecs[3], vecs[7]);
-  step1[7] = vec_mergel(vecs[3], vecs[7]);
-
-  step2[0] = vec_mergeh(step1[0], step1[4]);
-  step2[1] = vec_mergel(step1[0], step1[4]);
-  step2[2] = vec_mergeh(step1[1], step1[5]);
-  step2[3] = vec_mergel(step1[1], step1[5]);
-  step2[4] = vec_mergeh(step1[2], step1[6]);
-  step2[5] = vec_mergel(step1[2], step1[6]);
-  step2[6] = vec_mergeh(step1[3], step1[7]);
-  step2[7] = vec_mergel(step1[3], step1[7]);
-
-  step3[0] = vec_mergeh(step2[0], step2[4]);
-  step3[1] = vec_mergel(step2[0], step2[4]);
-  step3[2] = vec_mergeh(step2[1], step2[5]);
-  step3[3] = vec_mergel(step2[1], step2[5]);
-  step3[4] = vec_mergeh(step2[2], step2[6]);
-  step3[5] = vec_mergel(step2[2], step2[6]);
-  step3[6] = vec_mergeh(step2[3], step2[7]);
-  step3[7] = vec_mergel(step2[3], step2[7]);
-
-  step3[0] += step3[1] + step3[2] + step3[3] + step3[4] + step3[5] + step3[6] + step3[7];
-  
-  return step3[0];
-}
-
 template<> EIGEN_STRONG_INLINE int predux<Packet4i>(const Packet4i& a)
 {
   Packet4i sum;
@@ -1072,34 +972,6 @@ template<> EIGEN_STRONG_INLINE unsigned short int predux<Packet8us>(const Packet
   Packet4i second_half = pload<Packet4i>(second_loader);
 
   return static_cast<unsigned short int>(predux(first_half) + predux(second_half));
-}
-
-template<> EIGEN_STRONG_INLINE Packet4i preduxp<Packet4i>(const Packet4i* vecs)
-{
-  Packet4i v[4], sum[4];
-
-  // It's easier and faster to transpose then add as columns
-  // Check: http://www.freevec.org/function/matrix_4x4_transpose_floats for explanation
-  // Do the transpose, first set of moves
-  v[0] = vec_mergeh(vecs[0], vecs[2]);
-  v[1] = vec_mergel(vecs[0], vecs[2]);
-  v[2] = vec_mergeh(vecs[1], vecs[3]);
-  v[3] = vec_mergel(vecs[1], vecs[3]);
-  // Get the resulting vectors
-  sum[0] = vec_mergeh(v[0], v[2]);
-  sum[1] = vec_mergel(v[0], v[2]);
-  sum[2] = vec_mergeh(v[1], v[3]);
-  sum[3] = vec_mergel(v[1], v[3]);
-
-  // Now do the summation:
-  // Lines 0+1
-  sum[0] = sum[0] + sum[1];
-  // Lines 2+3
-  sum[1] = sum[2] + sum[3];
-  // Add the results
-  sum[0] = sum[0] + sum[1];
-
-  return sum[0];
 }
 
 // Other reduction functions:
@@ -1835,20 +1707,6 @@ template<> EIGEN_STRONG_INLINE double predux<Packet2d>(const Packet2d& a)
   return pfirst<Packet2d>(sum);
 }
 
-template<> EIGEN_STRONG_INLINE Packet2d preduxp<Packet2d>(const Packet2d* vecs)
-{
-  Packet2d v[2], sum;
-  v[0] = vecs[0] + reinterpret_cast<Packet2d>(vec_sld(reinterpret_cast<Packet4f>(vecs[0]), reinterpret_cast<Packet4f>(vecs[0]), 8));
-  v[1] = vecs[1] + reinterpret_cast<Packet2d>(vec_sld(reinterpret_cast<Packet4f>(vecs[1]), reinterpret_cast<Packet4f>(vecs[1]), 8));
-
-#ifdef _BIG_ENDIAN
-  sum = reinterpret_cast<Packet2d>(vec_sld(reinterpret_cast<Packet4f>(v[0]), reinterpret_cast<Packet4f>(v[1]), 8));
-#else
-  sum = reinterpret_cast<Packet2d>(vec_sld(reinterpret_cast<Packet4f>(v[1]), reinterpret_cast<Packet4f>(v[0]), 8));
-#endif
-
-  return sum;
-}
 // Other reduction functions:
 // mul
 template<> EIGEN_STRONG_INLINE double predux_mul<Packet2d>(const Packet2d& a)

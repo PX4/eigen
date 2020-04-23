@@ -179,8 +179,7 @@ template<> struct packet_traits<bool> : default_packet_traits
     HasAbs2      = 0,
     HasMin       = 0,
     HasMax       = 0,
-    HasConj      = 0,
-    HasReduxp    = 0
+    HasConj      = 0
   };
 };
 
@@ -733,38 +732,6 @@ EIGEN_STRONG_INLINE void punpackp(Packet4f* vecs)
   vecs[0] = _mm_castsi128_ps(_mm_shuffle_epi32(_mm_castps_si128(vecs[0]), 0x00));
 }
 
-#ifdef EIGEN_VECTORIZE_SSE3
-template<> EIGEN_STRONG_INLINE Packet4f preduxp<Packet4f>(const Packet4f* vecs)
-{
-  return _mm_hadd_ps(_mm_hadd_ps(vecs[0], vecs[1]),_mm_hadd_ps(vecs[2], vecs[3]));
-}
-
-template<> EIGEN_STRONG_INLINE Packet2d preduxp<Packet2d>(const Packet2d* vecs)
-{
-  return _mm_hadd_pd(vecs[0], vecs[1]);
-}
-
-#else
-template<> EIGEN_STRONG_INLINE Packet4f preduxp<Packet4f>(const Packet4f* vecs)
-{
-  Packet4f tmp0, tmp1, tmp2;
-  tmp0 = _mm_unpacklo_ps(vecs[0], vecs[1]);
-  tmp1 = _mm_unpackhi_ps(vecs[0], vecs[1]);
-  tmp2 = _mm_unpackhi_ps(vecs[2], vecs[3]);
-  tmp0 = _mm_add_ps(tmp0, tmp1);
-  tmp1 = _mm_unpacklo_ps(vecs[2], vecs[3]);
-  tmp1 = _mm_add_ps(tmp1, tmp2);
-  tmp2 = _mm_movehl_ps(tmp1, tmp0);
-  tmp0 = _mm_movelh_ps(tmp0, tmp1);
-  return _mm_add_ps(tmp0, tmp2);
-}
-
-template<> EIGEN_STRONG_INLINE Packet2d preduxp<Packet2d>(const Packet2d* vecs)
-{
-  return _mm_add_pd(_mm_unpacklo_pd(vecs[0], vecs[1]), _mm_unpackhi_pd(vecs[0], vecs[1]));
-}
-#endif  // SSE3
-
 template<> EIGEN_STRONG_INLINE float predux<Packet4f>(const Packet4f& a)
 {
   // Disable SSE3 _mm_hadd_pd that is extremely slow on all existing Intel's architectures
@@ -790,10 +757,6 @@ template<> EIGEN_STRONG_INLINE double predux<Packet2d>(const Packet2d& a)
 }
 
 #ifdef EIGEN_VECTORIZE_SSSE3
-template<> EIGEN_STRONG_INLINE Packet4i preduxp<Packet4i>(const Packet4i* vecs)
-{
-  return _mm_hadd_epi32(_mm_hadd_epi32(vecs[0], vecs[1]),_mm_hadd_epi32(vecs[2], vecs[3]));
-}
 template<> EIGEN_STRONG_INLINE int predux<Packet4i>(const Packet4i& a)
 {
   Packet4i tmp0 = _mm_hadd_epi32(a,a);
@@ -804,20 +767,6 @@ template<> EIGEN_STRONG_INLINE int predux<Packet4i>(const Packet4i& a)
 {
   Packet4i tmp = _mm_add_epi32(a, _mm_unpackhi_epi64(a,a));
   return pfirst(tmp) + pfirst<Packet4i>(_mm_shuffle_epi32(tmp, 1));
-}
-
-template<> EIGEN_STRONG_INLINE Packet4i preduxp<Packet4i>(const Packet4i* vecs)
-{
-  Packet4i tmp0, tmp1, tmp2;
-  tmp0 = _mm_unpacklo_epi32(vecs[0], vecs[1]);
-  tmp1 = _mm_unpackhi_epi32(vecs[0], vecs[1]);
-  tmp2 = _mm_unpackhi_epi32(vecs[2], vecs[3]);
-  tmp0 = _mm_add_epi32(tmp0, tmp1);
-  tmp1 = _mm_unpacklo_epi32(vecs[2], vecs[3]);
-  tmp1 = _mm_add_epi32(tmp1, tmp2);
-  tmp2 = _mm_unpacklo_epi64(tmp0, tmp1);
-  tmp0 = _mm_unpackhi_epi64(tmp0, tmp1);
-  return _mm_add_epi32(tmp0, tmp2);
 }
 #endif
 // Other reduction functions:
