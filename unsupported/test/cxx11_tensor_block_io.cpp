@@ -415,7 +415,15 @@ static void test_block_io_squeeze_ones() {
   CALL_SUBTEST((NAME<float, 1, ColMajor>())); \
   CALL_SUBTEST((NAME<float, 2, ColMajor>())); \
   CALL_SUBTEST((NAME<float, 4, ColMajor>())); \
-  CALL_SUBTEST((NAME<float, 5, ColMajor>()))
+  CALL_SUBTEST((NAME<float, 5, ColMajor>())); \
+  CALL_SUBTEST((NAME<bool, 1, RowMajor>())); \
+  CALL_SUBTEST((NAME<bool, 2, RowMajor>())); \
+  CALL_SUBTEST((NAME<bool, 4, RowMajor>())); \
+  CALL_SUBTEST((NAME<bool, 5, RowMajor>())); \
+  CALL_SUBTEST((NAME<bool, 1, ColMajor>())); \
+  CALL_SUBTEST((NAME<bool, 2, ColMajor>())); \
+  CALL_SUBTEST((NAME<bool, 4, ColMajor>())); \
+  CALL_SUBTEST((NAME<bool, 5, ColMajor>()))
 
 EIGEN_DECLARE_TEST(cxx11_tensor_block_io) {
   // clang-format off

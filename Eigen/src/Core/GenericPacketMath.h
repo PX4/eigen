@@ -179,6 +179,9 @@ preinterpret(const Packet& a); /* { return reinterpret_cast<const Target&>(a); }
 /** \internal \returns a + b (coeff-wise) */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
 padd(const Packet& a, const Packet& b) { return a+b; }
+// Avoid compiler warning for boolean algebra.
+template<> EIGEN_DEVICE_FUNC inline bool
+padd(const bool& a, const bool& b) { return a || b; }
 
 /** \internal \returns a - b (coeff-wise) */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
@@ -196,6 +199,9 @@ pconj(const Packet& a) { return numext::conj(a); }
 /** \internal \returns a * b (coeff-wise) */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
 pmul(const Packet& a, const Packet& b) { return a*b; }
+// Avoid compiler warning for boolean algebra.
+template<> EIGEN_DEVICE_FUNC inline bool
+pmul(const bool& a, const bool& b) { return a && b; }
 
 /** \internal \returns a / b (coeff-wise) */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet

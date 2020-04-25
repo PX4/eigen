@@ -233,7 +233,7 @@ static void test_eval_tensor_binary_expr_block() {
   rhs.setRandom();
 
   VerifyBlockEvaluator<T, NumDims, Layout>(
-      lhs + rhs, [&dims]() { return RandomBlock<Layout>(dims, 1, 10); });
+      lhs * rhs, [&dims]() { return RandomBlock<Layout>(dims, 1, 10); });
 }
 
 template <typename T, int NumDims, int Layout>
@@ -274,7 +274,7 @@ static void test_eval_tensor_broadcast() {
   // Check that desc.destination() memory is not shared between two broadcast
   // materializations.
   VerifyBlockEvaluator<T, NumDims, Layout>(
-      input.broadcast(bcast) + input.square().broadcast(bcast),
+      input.broadcast(bcast) * input.square().broadcast(bcast),
       [&bcasted_dims]() { return SkewedInnerBlock<Layout>(bcasted_dims); });
 }
 
@@ -509,7 +509,7 @@ static void test_eval_tensor_reshape_with_bcast() {
   DSizes<Index, 2> dims(dim, dim);
 
   VerifyBlockEvaluator<T, 2, Layout>(
-      lhs.reshape(reshapeLhs).broadcast(bcastLhs) +
+      lhs.reshape(reshapeLhs).broadcast(bcastLhs) *
           rhs.reshape(reshapeRhs).broadcast(bcastRhs),
       [dims]() { return SkewedInnerBlock<Layout, 2>(dims); });
 }
@@ -529,11 +529,11 @@ static void test_eval_tensor_forced_eval() {
   DSizes<Index, 2> dims(dim, dim);
 
   VerifyBlockEvaluator<T, 2, Layout>(
-      (lhs.broadcast(bcastLhs) + rhs.broadcast(bcastRhs)).eval().reshape(dims),
+      (lhs.broadcast(bcastLhs) * rhs.broadcast(bcastRhs)).eval().reshape(dims),
       [dims]() { return SkewedInnerBlock<Layout, 2>(dims); });
 
   VerifyBlockEvaluator<T, 2, Layout>(
-      (lhs.broadcast(bcastLhs) + rhs.broadcast(bcastRhs)).eval().reshape(dims),
+      (lhs.broadcast(bcastLhs) * rhs.broadcast(bcastRhs)).eval().reshape(dims),
       [dims]() { return RandomBlock<Layout, 2>(dims, 1, 50); });
 }
 
@@ -755,7 +755,39 @@ static void test_assign_to_tensor_shuffle() {
 #define CALL_SUBTEST_PART(PART) \
   CALL_SUBTEST_##PART
 
-#define CALL_SUBTESTS_DIMS_LAYOUTS(PART, NAME)           \
+#define CALL_SUBTESTS_DIMS_LAYOUTS_TYPES(PART, NAME)           \
+  CALL_SUBTEST_PART(PART)((NAME<float, 1, RowMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<float, 2, RowMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<float, 3, RowMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<float, 4, RowMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<float, 5, RowMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<float, 1, ColMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<float, 2, ColMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<float, 4, ColMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<float, 4, ColMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<float, 5, ColMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<int, 1, RowMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<int, 2, RowMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<int, 3, RowMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<int, 4, RowMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<int, 5, RowMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<int, 1, ColMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<int, 2, ColMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<int, 4, ColMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<int, 4, ColMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<int, 5, ColMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<bool, 1, RowMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<bool, 2, RowMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<bool, 3, RowMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<bool, 4, RowMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<bool, 5, RowMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<bool, 1, ColMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<bool, 2, ColMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<bool, 4, ColMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<bool, 4, ColMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<bool, 5, ColMajor>()))
+
+#define CALL_SUBTESTS_DIMS_LAYOUTS(PART, NAME)     \
   CALL_SUBTEST_PART(PART)((NAME<float, 1, RowMajor>())); \
   CALL_SUBTEST_PART(PART)((NAME<float, 2, RowMajor>())); \
   CALL_SUBTEST_PART(PART)((NAME<float, 3, RowMajor>())); \
@@ -767,36 +799,38 @@ static void test_assign_to_tensor_shuffle() {
   CALL_SUBTEST_PART(PART)((NAME<float, 4, ColMajor>())); \
   CALL_SUBTEST_PART(PART)((NAME<float, 5, ColMajor>()))
 
-#define CALL_SUBTESTS_LAYOUTS(PART, NAME)             \
+#define CALL_SUBTESTS_LAYOUTS_TYPES(PART, NAME)       \
   CALL_SUBTEST_PART(PART)((NAME<float, RowMajor>())); \
-  CALL_SUBTEST_PART(PART)((NAME<float, ColMajor>()))
+  CALL_SUBTEST_PART(PART)((NAME<float, ColMajor>()));  \
+  CALL_SUBTEST_PART(PART)((NAME<bool, RowMajor>())); \
+  CALL_SUBTEST_PART(PART)((NAME<bool, ColMajor>()))
 
 EIGEN_DECLARE_TEST(cxx11_tensor_block_eval) {
   // clang-format off
-  CALL_SUBTESTS_DIMS_LAYOUTS(1, test_eval_tensor_block);
+  CALL_SUBTESTS_DIMS_LAYOUTS_TYPES(1, test_eval_tensor_block);
+  CALL_SUBTESTS_DIMS_LAYOUTS_TYPES(1, test_eval_tensor_binary_expr_block);
   CALL_SUBTESTS_DIMS_LAYOUTS(1, test_eval_tensor_unary_expr_block);
-  CALL_SUBTESTS_DIMS_LAYOUTS(1, test_eval_tensor_binary_expr_block);
   CALL_SUBTESTS_DIMS_LAYOUTS(2, test_eval_tensor_binary_with_unary_expr_block);
-  CALL_SUBTESTS_DIMS_LAYOUTS(2, test_eval_tensor_broadcast);
-  CALL_SUBTESTS_DIMS_LAYOUTS(2, test_eval_tensor_reshape);
-  CALL_SUBTESTS_DIMS_LAYOUTS(3, test_eval_tensor_cast);
-  CALL_SUBTESTS_DIMS_LAYOUTS(3, test_eval_tensor_select);
-  CALL_SUBTESTS_DIMS_LAYOUTS(3, test_eval_tensor_padding);
-  CALL_SUBTESTS_DIMS_LAYOUTS(4, test_eval_tensor_chipping);
-  CALL_SUBTESTS_DIMS_LAYOUTS(4, test_eval_tensor_generator);
-  CALL_SUBTESTS_DIMS_LAYOUTS(4, test_eval_tensor_reverse);
-  CALL_SUBTESTS_DIMS_LAYOUTS(5, test_eval_tensor_slice);
-  CALL_SUBTESTS_DIMS_LAYOUTS(5, test_eval_tensor_shuffle);
+  CALL_SUBTESTS_DIMS_LAYOUTS_TYPES(2, test_eval_tensor_broadcast);
+  CALL_SUBTESTS_DIMS_LAYOUTS_TYPES(2, test_eval_tensor_reshape);
+  CALL_SUBTESTS_DIMS_LAYOUTS_TYPES(3, test_eval_tensor_cast);
+  CALL_SUBTESTS_DIMS_LAYOUTS_TYPES(3, test_eval_tensor_select);
+  CALL_SUBTESTS_DIMS_LAYOUTS_TYPES(3, test_eval_tensor_padding);
+  CALL_SUBTESTS_DIMS_LAYOUTS_TYPES(4, test_eval_tensor_chipping);
+  CALL_SUBTESTS_DIMS_LAYOUTS_TYPES(4, test_eval_tensor_generator);
+  CALL_SUBTESTS_DIMS_LAYOUTS_TYPES(4, test_eval_tensor_reverse);
+  CALL_SUBTESTS_DIMS_LAYOUTS_TYPES(5, test_eval_tensor_slice);
+  CALL_SUBTESTS_DIMS_LAYOUTS_TYPES(5, test_eval_tensor_shuffle);
 
-  CALL_SUBTESTS_LAYOUTS(6, test_eval_tensor_reshape_with_bcast);
-  CALL_SUBTESTS_LAYOUTS(6, test_eval_tensor_forced_eval);
-  CALL_SUBTESTS_LAYOUTS(6, test_eval_tensor_chipping_of_bcast);
+  CALL_SUBTESTS_LAYOUTS_TYPES(6, test_eval_tensor_reshape_with_bcast);
+  CALL_SUBTESTS_LAYOUTS_TYPES(6, test_eval_tensor_forced_eval);
+  CALL_SUBTESTS_LAYOUTS_TYPES(6, test_eval_tensor_chipping_of_bcast);
 
-  CALL_SUBTESTS_DIMS_LAYOUTS(7, test_assign_to_tensor);
-  CALL_SUBTESTS_DIMS_LAYOUTS(7, test_assign_to_tensor_reshape);
-  CALL_SUBTESTS_DIMS_LAYOUTS(7, test_assign_to_tensor_chipping);
-  CALL_SUBTESTS_DIMS_LAYOUTS(8, test_assign_to_tensor_slice);
-  CALL_SUBTESTS_DIMS_LAYOUTS(8, test_assign_to_tensor_shuffle);
+  CALL_SUBTESTS_DIMS_LAYOUTS_TYPES(7, test_assign_to_tensor);
+  CALL_SUBTESTS_DIMS_LAYOUTS_TYPES(7, test_assign_to_tensor_reshape);
+  CALL_SUBTESTS_DIMS_LAYOUTS_TYPES(7, test_assign_to_tensor_chipping);
+  CALL_SUBTESTS_DIMS_LAYOUTS_TYPES(8, test_assign_to_tensor_slice);
+  CALL_SUBTESTS_DIMS_LAYOUTS_TYPES(8, test_assign_to_tensor_shuffle);
 
   // Force CMake to split this test.
   // EIGEN_SUFFIXES;1;2;3;4;5;6;7;8

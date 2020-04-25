@@ -562,36 +562,40 @@ static void test_large_contraction_with_output_kernel() {
 
 EIGEN_DECLARE_TEST(cxx11_tensor_contraction)
 {
-  CALL_SUBTEST(test_evals<ColMajor>());
-  CALL_SUBTEST(test_evals<RowMajor>());
-  CALL_SUBTEST(test_scalar<ColMajor>());
-  CALL_SUBTEST(test_scalar<RowMajor>());
-  CALL_SUBTEST(test_multidims<ColMajor>());
-  CALL_SUBTEST(test_multidims<RowMajor>());
-  CALL_SUBTEST(test_holes<ColMajor>());
-  CALL_SUBTEST(test_holes<RowMajor>());
-  CALL_SUBTEST(test_full_redux<ColMajor>());
-  CALL_SUBTEST(test_full_redux<RowMajor>());
-  CALL_SUBTEST(test_contraction_of_contraction<ColMajor>());
-  CALL_SUBTEST(test_contraction_of_contraction<RowMajor>());
-  CALL_SUBTEST(test_expr<ColMajor>());
-  CALL_SUBTEST(test_expr<RowMajor>());
-  CALL_SUBTEST(test_out_of_order_contraction<ColMajor>());
-  CALL_SUBTEST(test_out_of_order_contraction<RowMajor>());
-  CALL_SUBTEST(test_consistency<ColMajor>());
-  CALL_SUBTEST(test_consistency<RowMajor>());
-  CALL_SUBTEST(test_large_contraction<ColMajor>());
-  CALL_SUBTEST(test_large_contraction<RowMajor>());
-  CALL_SUBTEST(test_matrix_vector<ColMajor>());
-  CALL_SUBTEST(test_matrix_vector<RowMajor>());
-  CALL_SUBTEST(test_tensor_vector<ColMajor>());
-  CALL_SUBTEST(test_tensor_vector<RowMajor>());
-  CALL_SUBTEST(test_small_blocking_factors<ColMajor>());
-  CALL_SUBTEST(test_small_blocking_factors<RowMajor>());
-  CALL_SUBTEST(test_tensor_product<ColMajor>());
-  CALL_SUBTEST(test_tensor_product<RowMajor>());
-  CALL_SUBTEST(test_const_inputs<ColMajor>());
-  CALL_SUBTEST(test_const_inputs<RowMajor>());
-  CALL_SUBTEST(test_large_contraction_with_output_kernel<ColMajor>());
-  CALL_SUBTEST(test_large_contraction_with_output_kernel<RowMajor>());
+  CALL_SUBTEST_1(test_evals<ColMajor>());
+  CALL_SUBTEST_1(test_evals<RowMajor>());
+  CALL_SUBTEST_1(test_scalar<ColMajor>());
+  CALL_SUBTEST_1(test_scalar<RowMajor>());
+  CALL_SUBTEST_2(test_multidims<ColMajor>());
+  CALL_SUBTEST_2(test_multidims<RowMajor>());
+  CALL_SUBTEST_2(test_holes<ColMajor>());
+  CALL_SUBTEST_2(test_holes<RowMajor>());
+  CALL_SUBTEST_3(test_full_redux<ColMajor>());
+  CALL_SUBTEST_3(test_full_redux<RowMajor>());
+  CALL_SUBTEST_3(test_contraction_of_contraction<ColMajor>());
+  CALL_SUBTEST_3(test_contraction_of_contraction<RowMajor>());
+  CALL_SUBTEST_4(test_expr<ColMajor>());
+  CALL_SUBTEST_4(test_expr<RowMajor>());
+  CALL_SUBTEST_4(test_out_of_order_contraction<ColMajor>());
+  CALL_SUBTEST_4(test_out_of_order_contraction<RowMajor>());
+  CALL_SUBTEST_5(test_consistency<ColMajor>());
+  CALL_SUBTEST_5(test_consistency<RowMajor>());
+  CALL_SUBTEST_5(test_large_contraction<ColMajor>());
+  CALL_SUBTEST_5(test_large_contraction<RowMajor>());
+  CALL_SUBTEST_6(test_matrix_vector<ColMajor>());
+  CALL_SUBTEST_6(test_matrix_vector<RowMajor>());
+  CALL_SUBTEST_6(test_tensor_vector<ColMajor>());
+  CALL_SUBTEST_6(test_tensor_vector<RowMajor>());
+  CALL_SUBTEST_7(test_small_blocking_factors<ColMajor>());
+  CALL_SUBTEST_7(test_small_blocking_factors<RowMajor>());
+  CALL_SUBTEST_7(test_tensor_product<ColMajor>());
+  CALL_SUBTEST_7(test_tensor_product<RowMajor>());
+  CALL_SUBTEST_8(test_const_inputs<ColMajor>());
+  CALL_SUBTEST_8(test_const_inputs<RowMajor>());
+  CALL_SUBTEST_8(test_large_contraction_with_output_kernel<ColMajor>());
+  CALL_SUBTEST_8(test_large_contraction_with_output_kernel<RowMajor>());
+
+  // Force CMake to split this test.
+  // EIGEN_SUFFIXES;1;2;3;4;5;6;7;8
+
 }

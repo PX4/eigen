@@ -195,26 +195,23 @@ static void test_constants()
 
 static void test_boolean()
 {
-  Tensor<int, 1> vec(31);
-  std::iota(vec.data(), vec.data() + 31, 0);
+  const int kSize = 31;
+  Tensor<int, 1> vec(kSize);
+  std::iota(vec.data(), vec.data() + kSize, 0);
 
   // Test ||.
   Tensor<bool, 1> bool1 = vec < vec.constant(1) || vec > vec.constant(4);
-  VERIFY_IS_EQUAL(bool1[0], true);
-  VERIFY_IS_EQUAL(bool1[1], false);
-  VERIFY_IS_EQUAL(bool1[2], false);
-  VERIFY_IS_EQUAL(bool1[3], false);
-  VERIFY_IS_EQUAL(bool1[4], false);
-  VERIFY_IS_EQUAL(bool1[5], true);
+  for (int i = 0; i < kSize; ++i) {
+    bool expected = i < 1 || i > 4;
+    VERIFY_IS_EQUAL(bool1[i], expected);
+  }
 
   // Test &&, including cast of operand vec.
   Tensor<bool, 1> bool2 = vec.cast<bool>() && vec < vec.constant(4);
-  VERIFY_IS_EQUAL(bool2[0], false);
-  VERIFY_IS_EQUAL(bool2[1], true);
-  VERIFY_IS_EQUAL(bool2[2], true);
-  VERIFY_IS_EQUAL(bool2[3], true);
-  VERIFY_IS_EQUAL(bool2[4], false);
-  VERIFY_IS_EQUAL(bool2[5], false);
+  for (int i = 0; i < kSize; ++i) {
+    bool expected = bool(i) && i < 4;
+    VERIFY_IS_EQUAL(bool2[i], expected);
+  }
 
   // Compilation tests:
   // Test Tensor<bool> against results of cast or comparison; verifies that

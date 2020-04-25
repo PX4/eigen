@@ -56,6 +56,31 @@ test_lazy_single(int rows, int cols, int depth)
   VERIFY_IS_APPROX(C+=A.lazyProduct(B), ref_prod(D,A,B));
 }
 
+template<typename T>
+void test_dynamic_exact()
+{
+  int rows = internal::random<int>(1,64);
+  int cols = internal::random<int>(1,64);
+  int depth = internal::random<int>(1,65);
+
+  typedef Matrix<T,Dynamic,Dynamic> MatrixX;
+  MatrixX A(rows,depth); A.setRandom();
+  MatrixX B(depth,cols); B.setRandom();
+  MatrixX  C(rows,cols);  C.setRandom();
+  MatrixX  D(C);
+  for(Index i=0;i<C.rows();++i)
+    for(Index j=0;j<C.cols();++j)
+      for(Index k=0;k<A.cols();++k)
+       D.coeffRef(i,j) |= A.coeff(i,k) & B.coeff(k,j);
+  C += A * B;
+  VERIFY_IS_EQUAL(C, D);
+
+  MatrixX E = B.transpose();
+  for(Index i=0;i<B.rows();++i)
+    for(Index j=0;j<B.cols();++j)
+      VERIFY_IS_EQUAL(B(i,j), E(j,i));
+}
+
 template<typename T, int Rows, int Cols, int Depth, int OC, int OA, int OB>
 typename internal::enable_if<  ( (Rows ==1&&Depth!=1&&OA==ColMajor)
                               || (Depth==1&&Rows !=1&&OA==RowMajor)
@@ -78,7 +103,7 @@ void test_lazy_all_layout(int rows=Rows, int cols=Cols, int depth=Depth)
   CALL_SUBTEST(( test_lazy_single<T,Rows,Cols,Depth,RowMajor,ColMajor,RowMajor>(rows,cols,depth) ));
   CALL_SUBTEST(( test_lazy_single<T,Rows,Cols,Depth,ColMajor,RowMajor,RowMajor>(rows,cols,depth) ));
   CALL_SUBTEST(( test_lazy_single<T,Rows,Cols,Depth,RowMajor,RowMajor,RowMajor>(rows,cols,depth) ));
-}
+}  
 
 template<typename T>
 void test_lazy_l1()
@@ -291,6 +316,8 @@ EIGEN_DECLARE_TEST(product_small)
 
     CALL_SUBTEST_6( bug_1311<3>() );
     CALL_SUBTEST_6( bug_1311<5>() );
+
+    CALL_SUBTEST_9( test_dynamic_exact<bool>() );
   }
 
   CALL_SUBTEST_6( product_small_regressions<0>() );

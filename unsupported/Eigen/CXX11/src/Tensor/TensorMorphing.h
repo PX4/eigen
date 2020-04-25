@@ -456,7 +456,9 @@ struct TensorEvaluator<const TensorSlicingOp<StartIndices, Sizes, ArgType>, Devi
     // slice offsets and sizes.
     IsAligned         = false,
     PacketAccess      = TensorEvaluator<ArgType, Device>::PacketAccess,
-    BlockAccess       = TensorEvaluator<ArgType, Device>::BlockAccess,
+    BlockAccess       = TensorEvaluator<ArgType, Device>::BlockAccess &&
+                        // FIXME: Temporary workaround for bug in slicing of bool tensors.
+                        !internal::is_same<typename internal::remove_const<Scalar>::type, bool>::value,
     PreferBlockAccess = true,
     Layout            = TensorEvaluator<ArgType, Device>::Layout,
     CoordAccess       = false,
@@ -525,7 +527,6 @@ struct TensorEvaluator<const TensorSlicingOp<StartIndices, Sizes, ArgType>, Devi
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Dimensions& dimensions() const { return m_dimensions; }
 
-
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType data) {
     m_impl.evalSubExprsIfNeeded(NULL);
     if (!NumTraits<typename internal::remove_const<Scalar>::type>::RequireInitialization
@@ -559,14 +560,14 @@ struct TensorEvaluator<const TensorSlicingOp<StartIndices, Sizes, ArgType>, Devi
     }
     return true;
   }
-  
+
 #ifdef EIGEN_USE_THREADS
   template <typename EvalSubExprsCallback>
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void evalSubExprsIfNeededAsync(
       EvaluatorPointerType data, EvalSubExprsCallback done) {
     m_impl.evalSubExprsIfNeededAsync(nullptr, [done](bool) { done(true); });
   }
-#endif  // EIGEN_USE_THREADS  
+#endif  // EIGEN_USE_THREADS
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void cleanup() {
     m_impl.cleanup();
