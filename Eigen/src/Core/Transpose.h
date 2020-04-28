@@ -243,7 +243,6 @@ struct inplace_transpose_selector<MatrixType,true,false> { // square matrix
   }
 };
 
-// TODO: vectorized path is currently limited to LargestPacketSize x LargestPacketSize cases only.
 template<typename MatrixType>
 struct inplace_transpose_selector<MatrixType,true,true> { // PacketSize x PacketSize
   static void run(MatrixType& m) {
@@ -260,15 +259,64 @@ struct inplace_transpose_selector<MatrixType,true,true> { // PacketSize x Packet
   }
 };
 
+
+template <typename MatrixType, Index Alignment>
+void BlockedInPlaceTranspose(MatrixType& m) {
+  typedef typename MatrixType::Scalar Scalar;
+  typedef typename internal::packet_traits<typename MatrixType::Scalar>::type Packet;
+  const Index PacketSize = internal::packet_traits<Scalar>::size;
+  eigen_assert(m.rows() == m.cols());
+  int row_start = 0;
+  for (; row_start + PacketSize <= m.rows(); row_start += PacketSize) {
+    for (int col_start = row_start; col_start + PacketSize <= m.cols(); col_start += PacketSize) {
+      PacketBlock<Packet> A;
+      if (row_start == col_start) {
+        for (Index i=0; i<PacketSize; ++i)
+          A.packet[i] = m.template packetByOuterInner<Alignment>(row_start + i,col_start);
+        internal::ptranspose(A);
+        for (Index i=0; i<PacketSize; ++i)
+          m.template writePacket<Alignment>(m.rowIndexByOuterInner(row_start + i, col_start), m.colIndexByOuterInner(row_start + i,col_start), A.packet[i]);
+      } else {
+        PacketBlock<Packet> B;
+        for (Index i=0; i<PacketSize; ++i) {
+          A.packet[i] = m.template packetByOuterInner<Alignment>(row_start + i,col_start);
+          B.packet[i] = m.template packetByOuterInner<Alignment>(col_start + i, row_start);
+        }
+        internal::ptranspose(A);
+        internal::ptranspose(B);
+        for (Index i=0; i<PacketSize; ++i) {
+          m.template writePacket<Alignment>(m.rowIndexByOuterInner(row_start + i, col_start), m.colIndexByOuterInner(row_start + i,col_start), A.packet[i]);
+          m.template writePacket<Alignment>(m.rowIndexByOuterInner(col_start + i, row_start), m.colIndexByOuterInner(col_start + i,row_start), B.packet[i]);
+        }
+      }
+    }
+  }
+  for (Index row = row_start; row < m.rows(); ++row) {
+    m.matrix().row(row).swap(m.matrix().col(row));
+  }
+}
+
 template<typename MatrixType,bool MatchPacketSize>
-struct inplace_transpose_selector<MatrixType,false,MatchPacketSize> { // non square matrix
+struct inplace_transpose_selector<MatrixType,false,MatchPacketSize> { // non square or dynamic matrix
   static void run(MatrixType& m) {
-    if (m.rows()==m.cols())
-      m.matrix().template triangularView<StrictlyUpper>().swap(m.matrix().transpose().template triangularView<StrictlyUpper>());
-    else
+    typedef typename MatrixType::Scalar Scalar;
+    if (m.rows() == m.cols()) {
+      const Index PacketSize = internal::packet_traits<Scalar>::size;
+      if (!NumTraits<Scalar>::IsComplex && m.rows() >= PacketSize) {
+        if ((m.rows() % PacketSize) == 0)
+          BlockedInPlaceTranspose<MatrixType,internal::evaluator<MatrixType>::Alignment>(m);
+        else
+          BlockedInPlaceTranspose<MatrixType,Unaligned>(m);
+      }
+      else {
+        m.matrix().template triangularView<StrictlyUpper>().swap(m.matrix().transpose().template triangularView<StrictlyUpper>());
+      }
+    } else {
       m = m.transpose().eval();
+    }
   }
 };
+
 
 } // end namespace internal
 
