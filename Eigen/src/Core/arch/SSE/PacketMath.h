@@ -776,17 +776,10 @@ template<> EIGEN_STRONG_INLINE int predux<Packet4i>(const Packet4i& a)
 }
 #endif
 
-#ifdef EIGEN_VECTORIZE_SSE4_1
-template<> EIGEN_STRONG_INLINE bool predux<Packet16b>(const Packet16b& a) {
-  Packet16b tmp = _mm_or_si128(a, _mm_unpackhi_epi64(a,a));
-  return _mm_extract_epi64(tmp, 0) != 0;
-}
-#else
 template<> EIGEN_STRONG_INLINE bool predux<Packet16b>(const Packet16b& a) {
 Packet4i tmp = _mm_or_si128(a, _mm_unpackhi_epi64(a,a));
   return (pfirst(tmp) != 0) || (pfirst<Packet4i>(_mm_shuffle_epi32(tmp, 1)) != 0);
 }
-#endif
 
 // Other reduction functions:
 
