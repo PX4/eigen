@@ -292,7 +292,7 @@ void BlockedInPlaceTranspose(MatrixType& m) {
     }
   }
   for (Index row = row_start; row < m.rows(); ++row) {
-    m.matrix().row(row).swap(m.matrix().col(row));
+    m.matrix().row(row).swap(m.matrix().col(row).transpose());
   }
 }
 
