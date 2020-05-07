@@ -14,127 +14,27 @@ namespace Eigen {
 
 namespace internal {
 
-template<> struct type_casting_traits<float,numext::int8_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<float,numext::uint8_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<float,numext::int16_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<float,numext::uint16_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
 template<> struct type_casting_traits<float,numext::int32_t>
 { enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
 template<> struct type_casting_traits<float,numext::uint32_t>
 { enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<float,numext::int64_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<float,numext::uint64_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::int8_t,float>
-{ enum { VectorizedCast = 0, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
 template<> struct type_casting_traits<numext::int8_t,numext::uint8_t>
 { enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::int8_t,numext::int16_t>
-{ enum { VectorizedCast = 0, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::int8_t,numext::uint16_t>
-{ enum { VectorizedCast = 0, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::int8_t,numext::int32_t>
-{ enum { VectorizedCast = 0, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::int8_t,numext::uint32_t>
-{ enum { VectorizedCast = 0, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::uint8_t,float>
-{ enum { VectorizedCast = 0, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
 template<> struct type_casting_traits<numext::uint8_t,numext::int8_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::uint8_t,numext::int16_t>
-{ enum { VectorizedCast = 0, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::uint8_t,numext::uint16_t>
-{ enum { VectorizedCast = 0, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::uint8_t,numext::int32_t>
-{ enum { VectorizedCast = 0, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::uint8_t,numext::uint32_t>
-{ enum { VectorizedCast = 0, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::int16_t,float>
-{ enum { VectorizedCast = 0, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::int16_t,numext::int8_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::int16_t,numext::uint8_t>
 { enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
 template<> struct type_casting_traits<numext::int16_t,numext::uint16_t>
 { enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::int16_t,numext::int32_t>
-{ enum { VectorizedCast = 0, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::int16_t,numext::uint32_t>
-{ enum { VectorizedCast = 0, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::int16_t,numext::int64_t>
-{ enum { VectorizedCast = 0, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::int16_t,numext::uint64_t>
-{ enum { VectorizedCast = 0, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::uint16_t,float>
-{ enum { VectorizedCast = 0, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::uint16_t,numext::int8_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::uint16_t,numext::uint8_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
 template<> struct type_casting_traits<numext::uint16_t,numext::int16_t>
 { enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::uint16_t,numext::int32_t>
-{ enum { VectorizedCast = 0, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::uint16_t,numext::uint32_t>
-{ enum { VectorizedCast = 0, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::uint16_t,numext::int64_t>
-{ enum { VectorizedCast = 0, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::uint16_t,numext::uint64_t>
-{ enum { VectorizedCast = 0, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
 template<> struct type_casting_traits<numext::int32_t,float>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::int32_t,numext::int8_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::int32_t,numext::uint8_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::int32_t,numext::int16_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::int32_t,numext::uint16_t>
 { enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
 template<> struct type_casting_traits<numext::int32_t,numext::uint32_t>
 { enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::int32_t,numext::int64_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::int32_t,numext::uint64_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
 template<> struct type_casting_traits<numext::uint32_t,float>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::uint32_t,numext::int8_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::uint32_t,numext::uint8_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::uint32_t,numext::int16_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::uint32_t,numext::uint16_t>
 { enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
 template<> struct type_casting_traits<numext::uint32_t,numext::int32_t>
 { enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::uint32_t,numext::int64_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::uint32_t,numext::uint64_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::int64_t,float>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::int64_t,numext::int16_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::int64_t,numext::uint16_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::int64_t,numext::uint32_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
 template<> struct type_casting_traits<numext::int64_t,numext::uint64_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::uint64_t,float>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::uint64_t,numext::int16_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::uint64_t,numext::uint16_t>
-{ enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
-template<> struct type_casting_traits<numext::uint64_t,numext::int32_t>
 { enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
 template<> struct type_casting_traits<numext::uint64_t,numext::int64_t>
 { enum { VectorizedCast = 1, SrcCoeffRatio = 1, TgtCoeffRatio = 1 }; };
