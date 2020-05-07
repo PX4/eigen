@@ -496,7 +496,7 @@ template<typename ArrayType> void array_complex(const ArrayType& m)
   m2.transposeInPlace();
   VERIFY_IS_APPROX(m2, m1);
   // Check vectorized inplace transpose.
-  ArrayType m5 = ArrayType::Random(130, 130);
+  ArrayType m5 = ArrayType::Random(131, 131);
   ArrayType m6 = m5;
   m6.transposeInPlace();
   VERIFY_IS_APPROX(m6, m5.transpose());
