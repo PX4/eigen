@@ -305,15 +305,6 @@ EIGEN_STRONG_INLINE std::complex<float> predux_mul<Packet2cf>(const Packet2cf& a
                              (a.v[0] * a.v[3]) + (a.v[1] * a.v[2]));
 }
 
-template <int Offset>
-struct palign_impl<Offset, Packet2cf> {
-  EIGEN_STRONG_INLINE static void run(Packet2cf& first, const Packet2cf& second) {
-    if (Offset == 1) {
-      first.v = (Packet4f)__builtin_msa_sldi_b((v16i8)second.v, (v16i8)first.v, Offset * 8);
-    }
-  }
-};
-
 template <>
 struct conj_helper<Packet2cf, Packet2cf, false, true> {
   EIGEN_STRONG_INLINE Packet2cf pmadd(const Packet2cf& x, const Packet2cf& y,
@@ -652,15 +643,6 @@ EIGEN_STRONG_INLINE std::complex<double> predux_mul<Packet1cd>(const Packet1cd& 
 
   return pfirst(a);
 }
-
-template <int Offset>
-struct palign_impl<Offset, Packet1cd> {
-  static EIGEN_STRONG_INLINE void run(Packet1cd& /*first*/, const Packet1cd& /*second*/) {
-    // FIXME is it sure we never have to align a Packet1cd?
-    // Even though a std::complex<double> has 16 bytes, it is not necessarily aligned on a 16 bytes
-    // boundary...
-  }
-};
 
 template <>
 struct conj_helper<Packet1cd, Packet1cd, false, true> {

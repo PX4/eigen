@@ -919,52 +919,6 @@ template<> EIGEN_STRONG_INLINE bool predux_any(const Packet16f& x)
   return !_mm512_kortestz(tmp,tmp);
 }
 
-template <int Offset>
-struct palign_impl<Offset, Packet16f> {
-  static EIGEN_STRONG_INLINE void run(Packet16f& first,
-                                      const Packet16f& second) {
-    if (Offset != 0) {
-      __m512i first_idx = _mm512_set_epi32(
-          Offset + 15, Offset + 14, Offset + 13, Offset + 12, Offset + 11,
-          Offset + 10, Offset + 9, Offset + 8, Offset + 7, Offset + 6,
-          Offset + 5, Offset + 4, Offset + 3, Offset + 2, Offset + 1, Offset);
-
-      __m512i second_idx =
-          _mm512_set_epi32(Offset - 1, Offset - 2, Offset - 3, Offset - 4,
-                           Offset - 5, Offset - 6, Offset - 7, Offset - 8,
-                           Offset - 9, Offset - 10, Offset - 11, Offset - 12,
-                           Offset - 13, Offset - 14, Offset - 15, Offset - 16);
-
-      unsigned short mask = 0xFFFF;
-      mask <<= (16 - Offset);
-
-      first = _mm512_permutexvar_ps(first_idx, first);
-      Packet16f tmp = _mm512_permutexvar_ps(second_idx, second);
-      first = _mm512_mask_blend_ps(mask, first, tmp);
-    }
-  }
-};
-template <int Offset>
-struct palign_impl<Offset, Packet8d> {
-  static EIGEN_STRONG_INLINE void run(Packet8d& first, const Packet8d& second) {
-    if (Offset != 0) {
-      __m512i first_idx = _mm512_set_epi32(
-          0, Offset + 7, 0, Offset + 6, 0, Offset + 5, 0, Offset + 4, 0,
-          Offset + 3, 0, Offset + 2, 0, Offset + 1, 0, Offset);
-
-      __m512i second_idx = _mm512_set_epi32(
-          0, Offset - 1, 0, Offset - 2, 0, Offset - 3, 0, Offset - 4, 0,
-          Offset - 5, 0, Offset - 6, 0, Offset - 7, 0, Offset - 8);
-
-      unsigned char mask = 0xFF;
-      mask <<= (8 - Offset);
-
-      first = _mm512_permutexvar_pd(first_idx, first);
-      Packet8d tmp = _mm512_permutexvar_pd(second_idx, second);
-      first = _mm512_mask_blend_pd(mask, first, tmp);
-    }
-  }
-};
 
 
 #define PACK_OUTPUT(OUTPUT, INPUT, INDEX, STRIDE) \

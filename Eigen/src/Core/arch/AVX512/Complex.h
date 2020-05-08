@@ -153,16 +153,6 @@ EIGEN_STRONG_INLINE Packet4cf predux_half_dowto4<Packet8cf>(const Packet8cf& a) 
   return Packet4cf(res);
 }
 
-template<int Offset>
-struct palign_impl<Offset,Packet8cf>
-{
-  static EIGEN_STRONG_INLINE void run(Packet8cf& first, const Packet8cf& second)
-  {
-    if (Offset==0) return;
-    palign_impl<Offset*2,Packet16f>::run(first.v, second.v);
-  }
-};
-
 template<> struct conj_helper<Packet8cf, Packet8cf, false,true>
 {
   EIGEN_STRONG_INLINE Packet8cf pmadd(const Packet8cf& x, const Packet8cf& y, const Packet8cf& c) const
@@ -239,7 +229,7 @@ template<> struct packet_traits<std::complex<double> >  : default_packet_traits
     HasAbs2   = 0,
     HasMin    = 0,
     HasMax    = 0,
-    HasSetLinear = 0,
+    HasSetLinear = 0
   };
 };
 
@@ -350,16 +340,6 @@ template<> EIGEN_STRONG_INLINE std::complex<double> predux_mul<Packet4cd>(const 
   return predux_mul(pmul(Packet2cd(_mm512_extractf64x4_pd(a.v,0)),
                          Packet2cd(_mm512_extractf64x4_pd(a.v,1))));
 }
-
-template<int Offset>
-struct palign_impl<Offset,Packet4cd>
-{
-  static EIGEN_STRONG_INLINE void run(Packet4cd& first, const Packet4cd& second)
-  {
-    if (Offset==0) return;
-    palign_impl<Offset*2,Packet8d>::run(first.v, second.v);
-  }
-};
 
 template<> struct conj_helper<Packet4cd, Packet4cd, false,true>
 {

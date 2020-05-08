@@ -691,93 +691,6 @@ template<> EIGEN_STRONG_INLINE bool predux_any(const Packet8f& x)
   return _mm256_movemask_ps(x)!=0;
 }
 
-template<int Offset>
-struct palign_impl<Offset,Packet8f>
-{
-  static EIGEN_STRONG_INLINE void run(Packet8f& first, const Packet8f& second)
-  {
-    if (Offset==1)
-    {
-      first = _mm256_blend_ps(first, second, 1);
-      Packet8f tmp1 = _mm256_permute_ps (first, _MM_SHUFFLE(0,3,2,1));
-      Packet8f tmp2 = _mm256_permute2f128_ps (tmp1, tmp1, 1);
-      first = _mm256_blend_ps(tmp1, tmp2, 0x88);
-    }
-    else if (Offset==2)
-    {
-      first = _mm256_blend_ps(first, second, 3);
-      Packet8f tmp1 = _mm256_permute_ps (first, _MM_SHUFFLE(1,0,3,2));
-      Packet8f tmp2 = _mm256_permute2f128_ps (tmp1, tmp1, 1);
-      first = _mm256_blend_ps(tmp1, tmp2, 0xcc);
-    }
-    else if (Offset==3)
-    {
-      first = _mm256_blend_ps(first, second, 7);
-      Packet8f tmp1 = _mm256_permute_ps (first, _MM_SHUFFLE(2,1,0,3));
-      Packet8f tmp2 = _mm256_permute2f128_ps (tmp1, tmp1, 1);
-      first = _mm256_blend_ps(tmp1, tmp2, 0xee);
-    }
-    else if (Offset==4)
-    {
-      first = _mm256_blend_ps(first, second, 15);
-      Packet8f tmp1 = _mm256_permute_ps (first, _MM_SHUFFLE(3,2,1,0));
-      Packet8f tmp2 = _mm256_permute2f128_ps (tmp1, tmp1, 1);
-      first = _mm256_permute_ps(tmp2, _MM_SHUFFLE(3,2,1,0));
-    }
-    else if (Offset==5)
-    {
-      first = _mm256_blend_ps(first, second, 31);
-      first = _mm256_permute2f128_ps(first, first, 1);
-      Packet8f tmp = _mm256_permute_ps (first, _MM_SHUFFLE(0,3,2,1));
-      first = _mm256_permute2f128_ps(tmp, tmp, 1);
-      first = _mm256_blend_ps(tmp, first, 0x88);
-    }
-    else if (Offset==6)
-    {
-      first = _mm256_blend_ps(first, second, 63);
-      first = _mm256_permute2f128_ps(first, first, 1);
-      Packet8f tmp = _mm256_permute_ps (first, _MM_SHUFFLE(1,0,3,2));
-      first = _mm256_permute2f128_ps(tmp, tmp, 1);
-      first = _mm256_blend_ps(tmp, first, 0xcc);
-    }
-    else if (Offset==7)
-    {
-      first = _mm256_blend_ps(first, second, 127);
-      first = _mm256_permute2f128_ps(first, first, 1);
-      Packet8f tmp = _mm256_permute_ps (first, _MM_SHUFFLE(2,1,0,3));
-      first = _mm256_permute2f128_ps(tmp, tmp, 1);
-      first = _mm256_blend_ps(tmp, first, 0xee);
-    }
-  }
-};
-
-template<int Offset>
-struct palign_impl<Offset,Packet4d>
-{
-  static EIGEN_STRONG_INLINE void run(Packet4d& first, const Packet4d& second)
-  {
-    if (Offset==1)
-    {
-      first = _mm256_blend_pd(first, second, 1);
-      __m256d tmp = _mm256_permute_pd(first, 5);
-      first = _mm256_permute2f128_pd(tmp, tmp, 1);
-      first = _mm256_blend_pd(tmp, first, 0xA);
-    }
-    else if (Offset==2)
-    {
-      first = _mm256_blend_pd(first, second, 3);
-      first = _mm256_permute2f128_pd(first, first, 1);
-    }
-    else if (Offset==3)
-    {
-      first = _mm256_blend_pd(first, second, 7);
-      __m256d tmp = _mm256_permute_pd(first, 5);
-      first = _mm256_permute2f128_pd(tmp, tmp, 1);
-      first = _mm256_blend_pd(tmp, first, 5);
-    }
-  }
-};
-
 EIGEN_DEVICE_FUNC inline void
 ptranspose(PacketBlock<Packet8f,8>& kernel) {
   __m256 T0 = _mm256_unpacklo_ps(kernel.packet[0], kernel.packet[1]);
@@ -1077,16 +990,6 @@ template<> EIGEN_STRONG_INLINE Packet8h pinsertlast(const Packet8h& a, Eigen::ha
 {
   return _mm_insert_epi16(a,int(b.x),7);
 }
-
-template<int Offset>
-struct palign_impl<Offset,Packet8h>
-{
-  static EIGEN_STRONG_INLINE void run(Packet8h& first, const Packet8h& second)
-  {
-    if (Offset!=0)
-      first = _mm_alignr_epi8(second,first, Offset*2);
-  }
-};
 
 EIGEN_STRONG_INLINE void
 ptranspose(PacketBlock<Packet8h,8>& kernel) {

@@ -159,22 +159,6 @@ template<> EIGEN_STRONG_INLINE std::complex<float> predux_mul<Packet2cf>(const P
   return pfirst<Packet2cf>(prod);
 }
 
-template<int Offset>
-struct palign_impl<Offset,Packet2cf>
-{
-  static EIGEN_STRONG_INLINE void run(Packet2cf& first, const Packet2cf& second)
-  {
-    if (Offset==1)
-    {
-#ifdef _BIG_ENDIAN
-      first.v = vec_sld(first.v, second.v, 8);
-#else
-      first.v = vec_sld(second.v, first.v, 8);
-#endif
-    }
-  }
-};
-
 template<> struct conj_helper<Packet2cf, Packet2cf, false,true>
 {
   EIGEN_STRONG_INLINE Packet2cf pmadd(const Packet2cf& x, const Packet2cf& y, const Packet2cf& c) const
@@ -345,16 +329,6 @@ template<> EIGEN_STRONG_INLINE Packet1cd preverse(const Packet1cd& a) { return a
 template<> EIGEN_STRONG_INLINE std::complex<double> predux<Packet1cd>(const Packet1cd& a) { return pfirst(a); }
 
 template<> EIGEN_STRONG_INLINE std::complex<double> predux_mul<Packet1cd>(const Packet1cd& a) { return pfirst(a); }
-
-template<int Offset>
-struct palign_impl<Offset,Packet1cd>
-{
-  static EIGEN_STRONG_INLINE void run(Packet1cd& /*first*/, const Packet1cd& /*second*/)
-  {
-    // FIXME is it sure we never have to align a Packet1cd?
-    // Even though a std::complex<double> has 16 bytes, it is not necessarily aligned on a 16 bytes boundary...
-  }
-};
 
 template<> struct conj_helper<Packet1cd, Packet1cd, false,true>
 {

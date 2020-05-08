@@ -675,25 +675,6 @@ EIGEN_STRONG_INLINE int32_t predux_max<Packet4i>(const Packet4i& a) {
   return m[0];
 }
 
-#define PALIGN_MSA(Offset, Type, Command)                                                \
-  template <>                                                                            \
-  struct palign_impl<Offset, Type> {                                                     \
-    EIGEN_STRONG_INLINE static void run(Type& first, const Type& second) {               \
-      if (Offset != 0) first = (Type)(Command((v16i8)second, (v16i8)first, Offset * 4)); \
-    }                                                                                    \
-  };
-
-PALIGN_MSA(0, Packet4f, __builtin_msa_sldi_b)
-PALIGN_MSA(1, Packet4f, __builtin_msa_sldi_b)
-PALIGN_MSA(2, Packet4f, __builtin_msa_sldi_b)
-PALIGN_MSA(3, Packet4f, __builtin_msa_sldi_b)
-PALIGN_MSA(0, Packet4i, __builtin_msa_sldi_b)
-PALIGN_MSA(1, Packet4i, __builtin_msa_sldi_b)
-PALIGN_MSA(2, Packet4i, __builtin_msa_sldi_b)
-PALIGN_MSA(3, Packet4i, __builtin_msa_sldi_b)
-
-#undef PALIGN_MSA
-
 inline std::ostream& operator<<(std::ostream& os, const PacketBlock<Packet4f, 4>& value) {
   os << "[ " << value.packet[0] << "," << std::endl
      << "  " << value.packet[1] << "," << std::endl
@@ -1167,19 +1148,6 @@ EIGEN_STRONG_INLINE Packet2d prsqrt(const Packet2d& a) {
   return pdiv(ones, psqrt(a));
 #endif
 }
-
-#define PALIGN_MSA(Offset, Type, Command)                                                \
-  template <>                                                                            \
-  struct palign_impl<Offset, Type> {                                                     \
-    EIGEN_STRONG_INLINE static void run(Type& first, const Type& second) {               \
-      if (Offset != 0) first = (Type)(Command((v16i8)second, (v16i8)first, Offset * 8)); \
-    }                                                                                    \
-  };
-
-PALIGN_MSA(0, Packet2d, __builtin_msa_sldi_b)
-PALIGN_MSA(1, Packet2d, __builtin_msa_sldi_b)
-
-#undef PALIGN_MSA
 
 inline std::ostream& operator<<(std::ostream& os, const PacketBlock<Packet2d, 2>& value) {
   os << "[ " << value.packet[0] << "," << std::endl << "  " << value.packet[1] << " ]";

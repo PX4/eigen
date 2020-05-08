@@ -298,33 +298,6 @@ inline std::ostream & operator <<(std::ostream & s, const Packet4f & v)
 }
 #endif
 
-
-template<int Offset>
-struct palign_impl<Offset,Packet4i>
-{
-  static EIGEN_STRONG_INLINE void run(Packet4i& first, const Packet4i& second)
-  {
-    switch (Offset % 4) {
-    case 1:
-      first = vec_sld(first, second, 4); break;
-    case 2:
-      first = vec_sld(first, second, 8); break;
-    case 3:
-      first = vec_sld(first, second, 12); break;
-    }
-  }
-};
-
-template<int Offset>
-struct palign_impl<Offset,Packet2d>
-{
-  static EIGEN_STRONG_INLINE void run(Packet2d& first, const Packet2d& second)
-  {
-    if (Offset == 1)
-      first = reinterpret_cast<Packet2d>(vec_sld(reinterpret_cast<Packet4i>(first), reinterpret_cast<Packet4i>(second), 8));
-  }
-};
-
 template<> EIGEN_STRONG_INLINE Packet4i pload<Packet4i>(const int*     from)
 {
   // FIXME: No intrinsic yet
@@ -636,30 +609,6 @@ template<int element> EIGEN_STRONG_INLINE Packet4f vec_splat_packet4f(const Pack
   return splat;
 }
 
-/* This is a tricky one, we have to translate float alignment to vector elements of sizeof double
- */
-template<int Offset>
-struct palign_impl<Offset,Packet4f>
-{
-  static EIGEN_STRONG_INLINE void run(Packet4f& first, const Packet4f& second)
-  {
-    switch (Offset % 4) {
-    case 1:
-      first.v4f[0] = vec_sld(first.v4f[0], first.v4f[1], 8);
-      first.v4f[1] = vec_sld(first.v4f[1], second.v4f[0], 8);
-      break;
-    case 2:
-      first.v4f[0] = first.v4f[1];
-      first.v4f[1] = second.v4f[0];
-      break;
-    case 3:
-      first.v4f[0] = vec_sld(first.v4f[1],  second.v4f[0], 8);
-      first.v4f[1] = vec_sld(second.v4f[0], second.v4f[1], 8);
-      break;
-    }
-  }
-};
-
 template<> EIGEN_STRONG_INLINE Packet4f pload<Packet4f>(const float*   from)
 {
   // FIXME: No intrinsic yet
@@ -942,22 +891,6 @@ template<> EIGEN_STRONG_INLINE Packet4f pblend(const Selector<4>& ifPacket, cons
   return result;
 }
 #else
-template<int Offset>
-struct palign_impl<Offset,Packet4f>
-{
-  static EIGEN_STRONG_INLINE void run(Packet4f& first, const Packet4f& second)
-  {
-    switch (Offset % 4) {
-    case 1:
-      first = vec_sld(first, second, 4); break;
-    case 2:
-      first = vec_sld(first, second, 8); break;
-    case 3:
-      first = vec_sld(first, second, 12); break;
-    }
-  }
-};
-
 template<> EIGEN_STRONG_INLINE Packet4f pload<Packet4f>(const float* from)
 {
   // FIXME: No intrinsic yet

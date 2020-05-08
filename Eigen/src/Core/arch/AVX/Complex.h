@@ -157,16 +157,6 @@ template<> EIGEN_STRONG_INLINE std::complex<float> predux_mul<Packet4cf>(const P
                          Packet2cf(_mm256_extractf128_ps(a.v, 1))));
 }
 
-template<int Offset>
-struct palign_impl<Offset,Packet4cf>
-{
-  static EIGEN_STRONG_INLINE void run(Packet4cf& first, const Packet4cf& second)
-  {
-    if (Offset==0) return;
-    palign_impl<Offset*2,Packet8f>::run(first.v, second.v);
-  }
-};
-
 template<> struct conj_helper<Packet4cf, Packet4cf, false,true>
 {
   EIGEN_STRONG_INLINE Packet4cf pmadd(const Packet4cf& x, const Packet4cf& y, const Packet4cf& c) const
@@ -338,16 +328,6 @@ template<> EIGEN_STRONG_INLINE std::complex<double> predux_mul<Packet2cd>(const 
   return predux(pmul(Packet1cd(_mm256_extractf128_pd(a.v,0)),
                      Packet1cd(_mm256_extractf128_pd(a.v,1))));
 }
-
-template<int Offset>
-struct palign_impl<Offset,Packet2cd>
-{
-  static EIGEN_STRONG_INLINE void run(Packet2cd& first, const Packet2cd& second)
-  {
-    if (Offset==0) return;
-    palign_impl<Offset*2,Packet4d>::run(first.v, second.v);
-  }
-};
 
 template<> struct conj_helper<Packet2cd, Packet2cd, false,true>
 {

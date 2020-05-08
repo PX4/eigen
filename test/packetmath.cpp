@@ -103,7 +103,6 @@ template<typename Scalar,typename Packet> void packetmath()
   EIGEN_ALIGN_MAX Scalar data1[size];
   EIGEN_ALIGN_MAX Scalar data2[size];
   EIGEN_ALIGN_MAX Scalar data3[size];
-  EIGEN_ALIGN_MAX Packet packets[PacketSize*2];
   EIGEN_ALIGN_MAX Scalar ref[size];
   RealScalar refvalue = RealScalar(0);
   for (int i=0; i<size; ++i)
@@ -161,38 +160,6 @@ template<typename Scalar,typename Packet> void packetmath()
         VERIFY(test::areApprox(data3, data2, PacketSize) && "internal::pstoreu masked");
       }
     }
-  }
-
-  for (int offset=0; offset<PacketSize; ++offset)
-  {
-    #define MIN(A,B) (A<B?A:B)
-    packets[0] = internal::pload<Packet>(data1);
-    packets[1] = internal::pload<Packet>(data1+PacketSize);
-         if (offset==0) internal::palign<0>(packets[0], packets[1]);
-    else if (offset==1) internal::palign<MIN(1,PacketSize-1)>(packets[0], packets[1]);
-    else if (offset==2) internal::palign<MIN(2,PacketSize-1)>(packets[0], packets[1]);
-    else if (offset==3) internal::palign<MIN(3,PacketSize-1)>(packets[0], packets[1]);
-    else if (offset==4) internal::palign<MIN(4,PacketSize-1)>(packets[0], packets[1]);
-    else if (offset==5) internal::palign<MIN(5,PacketSize-1)>(packets[0], packets[1]);
-    else if (offset==6) internal::palign<MIN(6,PacketSize-1)>(packets[0], packets[1]);
-    else if (offset==7) internal::palign<MIN(7,PacketSize-1)>(packets[0], packets[1]);
-    else if (offset==8) internal::palign<MIN(8,PacketSize-1)>(packets[0], packets[1]);
-    else if (offset==9) internal::palign<MIN(9,PacketSize-1)>(packets[0], packets[1]);
-    else if (offset==10) internal::palign<MIN(10,PacketSize-1)>(packets[0], packets[1]);
-    else if (offset==11) internal::palign<MIN(11,PacketSize-1)>(packets[0], packets[1]);
-    else if (offset==12) internal::palign<MIN(12,PacketSize-1)>(packets[0], packets[1]);
-    else if (offset==13) internal::palign<MIN(13,PacketSize-1)>(packets[0], packets[1]);
-    else if (offset==14) internal::palign<MIN(14,PacketSize-1)>(packets[0], packets[1]);
-    else if (offset==15) internal::palign<MIN(15,PacketSize-1)>(packets[0], packets[1]);
-    internal::pstore(data2, packets[0]);
-
-    for (int i=0; i<PacketSize; ++i)
-      ref[i] = data1[i+offset];
-
-    // palign is not used anymore, so let's just put a warning if it fails
-    ++g_test_level;
-    VERIFY(test::areApprox(ref, data2, PacketSize) && "internal::palign");
-    --g_test_level;
   }
 
   VERIFY((!PacketTraits::Vectorizable) || PacketTraits::HasAdd);
