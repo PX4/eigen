@@ -1194,26 +1194,6 @@ EIGEN_STRONG_INLINE Packet8d pblend(const Selector<8>& ifPacket,
   return _mm512_mask_blend_pd(m, elsePacket, thenPacket);
 }
 
-template<> EIGEN_STRONG_INLINE Packet16f pinsertfirst(const Packet16f& a, float b)
-{
-  return _mm512_mask_broadcastss_ps(a, (1), _mm_load_ss(&b));
-}
-
-template<> EIGEN_STRONG_INLINE Packet8d pinsertfirst(const Packet8d& a, double b)
-{
-  return _mm512_mask_broadcastsd_pd(a, (1), _mm_load_sd(&b));
-}
-
-template<> EIGEN_STRONG_INLINE Packet16f pinsertlast(const Packet16f& a, float b)
-{
-  return _mm512_mask_broadcastss_ps(a, (1<<15), _mm_load_ss(&b));
-}
-
-template<> EIGEN_STRONG_INLINE Packet8d pinsertlast(const Packet8d& a, double b)
-{
-  return _mm512_mask_broadcastsd_pd(a, (1<<7), _mm_load_sd(&b));
-}
-
 template<> EIGEN_STRONG_INLINE Packet16i pcast<Packet16f, Packet16i>(const Packet16f& a) {
   return _mm512_cvttps_epi32(a);
 }
@@ -1430,16 +1410,6 @@ template<> EIGEN_STRONG_INLINE Packet16h preverse(const Packet16h& a)
   return _mm256_insertf128_si256(
                     _mm256_castsi128_si256(_mm_shuffle_epi8(_mm256_extractf128_si256(a,1),m)),
                                            _mm_shuffle_epi8(_mm256_extractf128_si256(a,0),m), 1);
-}
-
-template<> EIGEN_STRONG_INLINE Packet16h pinsertfirst(const Packet16h& a, Eigen::half b)
-{
-  return _mm256_insert_epi16(a,b.x,0);
-}
-
-template<> EIGEN_STRONG_INLINE Packet16h pinsertlast(const Packet16h& a, Eigen::half b)
-{
-  return _mm256_insert_epi16(a,b.x,15);
 }
 
 template<> EIGEN_STRONG_INLINE Packet16h pgather<Eigen::half, Packet16h>(const Eigen::half* from, Index stride)

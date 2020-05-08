@@ -3074,49 +3074,6 @@ template<> EIGEN_DEVICE_FUNC inline Packet2l pselect(const Packet2l& mask, const
 template<> EIGEN_DEVICE_FUNC inline Packet2ul pselect(const Packet2ul& mask, const Packet2ul& a, const Packet2ul& b)
 { return vbslq_u64(mask, a, b); }
 
-EIGEN_DEVICE_FUNC inline Packet2f pinsertfirst(const Packet2f& a, float b) { return vset_lane_f32(b, a, 0); }
-EIGEN_DEVICE_FUNC inline Packet4f pinsertfirst(const Packet4f& a, float b) { return vsetq_lane_f32(b, a, 0); }
-EIGEN_DEVICE_FUNC inline Packet4c pinsertfirst(const Packet4c& a, int8_t b)
-{
-  return static_cast<int32_t>((static_cast<uint32_t>(a) & 0xffffff00u) |
-      (static_cast<uint32_t>(b) & 0xffu));
-}
-EIGEN_DEVICE_FUNC inline Packet8c pinsertfirst(const Packet8c& a, int8_t b) { return vset_lane_s8(b, a, 0); }
-EIGEN_DEVICE_FUNC inline Packet16c pinsertfirst(const Packet16c& a, int8_t b) { return vsetq_lane_s8(b, a, 0); }
-EIGEN_DEVICE_FUNC inline Packet4uc pinsertfirst(const Packet4uc& a, uint8_t b) { return (a & ~0xffu) | b; }
-EIGEN_DEVICE_FUNC inline Packet8uc pinsertfirst(const Packet8uc& a, uint8_t b) { return vset_lane_u8(b, a, 0); }
-EIGEN_DEVICE_FUNC inline Packet16uc pinsertfirst(const Packet16uc& a, uint8_t b) { return vsetq_lane_u8(b, a, 0); }
-EIGEN_DEVICE_FUNC inline Packet4s pinsertfirst(const Packet4s& a, int16_t b) { return vset_lane_s16(b, a, 0); }
-EIGEN_DEVICE_FUNC inline Packet8s pinsertfirst(const Packet8s& a, int16_t b) { return vsetq_lane_s16(b, a, 0); }
-EIGEN_DEVICE_FUNC inline Packet4us pinsertfirst(const Packet4us& a, uint16_t b) { return vset_lane_u16(b, a, 0); }
-EIGEN_DEVICE_FUNC inline Packet8us pinsertfirst(const Packet8us& a, uint16_t b) { return vsetq_lane_u16(b, a, 0); }
-EIGEN_DEVICE_FUNC inline Packet2i pinsertfirst(const Packet2i& a, int32_t b) { return vset_lane_s32(b, a, 0); }
-EIGEN_DEVICE_FUNC inline Packet4i pinsertfirst(const Packet4i& a, int32_t b) { return vsetq_lane_s32(b, a, 0); }
-EIGEN_DEVICE_FUNC inline Packet2ui pinsertfirst(const Packet2ui& a, uint32_t b) { return vset_lane_u32(b, a, 0); }
-EIGEN_DEVICE_FUNC inline Packet4ui pinsertfirst(const Packet4ui& a, uint32_t b) { return vsetq_lane_u32(b, a, 0); }
-EIGEN_DEVICE_FUNC inline Packet2l pinsertfirst(const Packet2l& a, int64_t b) { return vsetq_lane_s64(b, a, 0); }
-EIGEN_DEVICE_FUNC inline Packet2ul pinsertfirst(const Packet2ul& a, uint64_t b) { return vsetq_lane_u64(b, a, 0); }
-
-EIGEN_DEVICE_FUNC inline Packet2f pinsertlast(const Packet2f& a, float b) { return vset_lane_f32(b, a, 1); }
-EIGEN_DEVICE_FUNC inline Packet4f pinsertlast(const Packet4f& a, float b) { return vsetq_lane_f32(b, a, 3); }
-EIGEN_DEVICE_FUNC inline Packet4c pinsertlast(const Packet4c& a, int8_t b)
-{ return (static_cast<uint32_t>(a) & 0x00ffffffu) | (static_cast<uint32_t>(b) << 24); }
-EIGEN_DEVICE_FUNC inline Packet8c pinsertlast(const Packet8c& a, int8_t b) { return vset_lane_s8(b, a, 7); }
-EIGEN_DEVICE_FUNC inline Packet16c pinsertlast(const Packet16c& a, int8_t b) { return vsetq_lane_s8(b, a, 15); }
-EIGEN_DEVICE_FUNC inline Packet4uc pinsertlast(const Packet4uc& a, uint8_t b) { return (a & ~0xff000000u) | (b << 24); }
-EIGEN_DEVICE_FUNC inline Packet8uc pinsertlast(const Packet8uc& a, uint8_t b) { return vset_lane_u8(b, a, 7); }
-EIGEN_DEVICE_FUNC inline Packet16uc pinsertlast(const Packet16uc& a, uint8_t b) { return vsetq_lane_u8(b, a, 15); }
-EIGEN_DEVICE_FUNC inline Packet4s pinsertlast(const Packet4s& a, int16_t b) { return vset_lane_s16(b, a, 3); }
-EIGEN_DEVICE_FUNC inline Packet8s pinsertlast(const Packet8s& a, int16_t b) { return vsetq_lane_s16(b, a, 7); }
-EIGEN_DEVICE_FUNC inline Packet4us pinsertlast(const Packet4us& a, uint16_t b) { return vset_lane_u16(b, a, 3); }
-EIGEN_DEVICE_FUNC inline Packet8us pinsertlast(const Packet8us& a, uint16_t b) { return vsetq_lane_u16(b, a, 7); }
-EIGEN_DEVICE_FUNC inline Packet2i pinsertlast(const Packet2i& a, int32_t b) { return vset_lane_s32(b, a, 1); }
-EIGEN_DEVICE_FUNC inline Packet4i pinsertlast(const Packet4i& a, int32_t b) { return vsetq_lane_s32(b, a, 3); }
-EIGEN_DEVICE_FUNC inline Packet2ui pinsertlast(const Packet2ui& a, uint32_t b) { return vset_lane_u32(b, a, 1); }
-EIGEN_DEVICE_FUNC inline Packet4ui pinsertlast(const Packet4ui& a, uint32_t b) { return vsetq_lane_u32(b, a, 3); }
-EIGEN_DEVICE_FUNC inline Packet2l pinsertlast(const Packet2l& a, int64_t b) { return vsetq_lane_s64(b, a, 1); }
-EIGEN_DEVICE_FUNC inline Packet2ul pinsertlast(const Packet2ul& a, uint64_t b) { return vsetq_lane_u64(b, a, 1); }
-
 /**
  * Computes the integer square root
  * @remarks The calculation is performed using an algorithm which iterates through each binary digit of the result
@@ -3435,10 +3392,6 @@ ptranspose(PacketBlock<Packet2d, 2>& kernel)
 
 template<> EIGEN_DEVICE_FUNC inline Packet2d pselect( const Packet2d& mask, const Packet2d& a, const Packet2d& b)
 { return vbslq_f64(vreinterpretq_u64_f64(mask), a, b); }
-
-EIGEN_DEVICE_FUNC inline Packet2d pinsertfirst(const Packet2d& a, double b) { return vsetq_lane_f64(b, a, 0); }
-
-EIGEN_DEVICE_FUNC inline Packet2d pinsertlast(const Packet2d& a, double b) { return vsetq_lane_f64(b, a, 1); }
 
 #endif // EIGEN_ARCH_ARM64
 

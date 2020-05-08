@@ -763,27 +763,6 @@ template<> EIGEN_STRONG_INLINE Packet4d pblend(const Selector<4>& ifPacket, cons
   return _mm256_blendv_pd(thenPacket, elsePacket, false_mask);
 }
 
-template<> EIGEN_STRONG_INLINE Packet8f pinsertfirst(const Packet8f& a, float b)
-{
-  return _mm256_blend_ps(a,pset1<Packet8f>(b),1);
-}
-
-template<> EIGEN_STRONG_INLINE Packet4d pinsertfirst(const Packet4d& a, double b)
-{
-  return _mm256_blend_pd(a,pset1<Packet4d>(b),1);
-}
-
-template<> EIGEN_STRONG_INLINE Packet8f pinsertlast(const Packet8f& a, float b)
-{
-  return _mm256_blend_ps(a,pset1<Packet8f>(b),(1<<7));
-}
-
-template<> EIGEN_STRONG_INLINE Packet4d pinsertlast(const Packet4d& a, double b)
-{
-  return _mm256_blend_pd(a,pset1<Packet4d>(b),(1<<3));
-}
-
-
 // Packet math for Eigen::half
 template<> struct unpacket_traits<Packet8h> { typedef Eigen::half type; enum {size=8, alignment=Aligned16, vectorizable=true, masked_load_available=false, masked_store_available=false}; typedef Packet8h half; };
 
@@ -979,16 +958,6 @@ template<> EIGEN_STRONG_INLINE Packet8h preverse(const Packet8h& a)
 {
   __m128i m = _mm_setr_epi8(14,15,12,13,10,11,8,9,6,7,4,5,2,3,0,1);
   return _mm_shuffle_epi8(a,m);
-}
-
-template<> EIGEN_STRONG_INLINE Packet8h pinsertfirst(const Packet8h& a, Eigen::half b)
-{
-  return _mm_insert_epi16(a,int(b.x),0);
-}
-
-template<> EIGEN_STRONG_INLINE Packet8h pinsertlast(const Packet8h& a, Eigen::half b)
-{
-  return _mm_insert_epi16(a,int(b.x),7);
 }
 
 EIGEN_STRONG_INLINE void

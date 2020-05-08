@@ -288,26 +288,6 @@ template<typename Scalar,typename Packet> void packetmath()
     }
   }
 
-  if (PacketTraits::HasInsert || g_vectorize_sse) {
-    // pinsertfirst
-    for (int i=0; i<PacketSize; ++i)
-      ref[i] = data1[i];
-    Scalar s = internal::random<Scalar>();
-    ref[0] = s;
-    internal::pstore(data2, internal::pinsertfirst(internal::pload<Packet>(data1),s));
-    VERIFY(test::areApprox(ref, data2, PacketSize) && "internal::pinsertfirst");
-  }
-
-  if (PacketTraits::HasInsert || g_vectorize_sse) {
-    // pinsertlast
-    for (int i=0; i<PacketSize; ++i)
-      ref[i] = data1[i];
-    Scalar s = internal::random<Scalar>();
-    ref[PacketSize-1] = s;
-    internal::pstore(data2, internal::pinsertlast(internal::pload<Packet>(data1),s));
-    VERIFY(test::areApprox(ref, data2, PacketSize) && "internal::pinsertlast");
-  }
-
   {
     for (int i = 0; i < PacketSize; ++i) {
       // "if" mask

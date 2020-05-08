@@ -440,30 +440,6 @@ ptranspose(PacketBlock<Packet4cd,4>& kernel) {
   kernel.packet[0] = Packet4cd(_mm512_shuffle_f64x2(T0, T2, EIGEN_SSE_SHUFFLE_MASK(0,2,0,2))); // [a0 b0 c0 d0]
 }
 
-template<> EIGEN_STRONG_INLINE Packet8cf pinsertfirst(const Packet8cf& a, std::complex<float> b)
-{
-  Packet2cf tmp = Packet2cf(_mm512_extractf32x4_ps(a.v,0));
-  tmp = pinsertfirst(tmp, b);
-  return Packet8cf( _mm512_insertf32x4(a.v, tmp.v, 0) );
-}
-
-template<> EIGEN_STRONG_INLINE Packet4cd pinsertfirst(const Packet4cd& a, std::complex<double> b)
-{
-  return Packet4cd(_mm512_castsi512_pd( _mm512_inserti32x4(_mm512_castpd_si512(a.v), _mm_castpd_si128(pset1<Packet1cd>(b).v), 0) ));
-}
-
-template<> EIGEN_STRONG_INLINE Packet8cf pinsertlast(const Packet8cf& a, std::complex<float> b)
-{
-  Packet2cf tmp = Packet2cf(_mm512_extractf32x4_ps(a.v,3) );
-  tmp = pinsertlast(tmp, b);
-  return Packet8cf( _mm512_insertf32x4(a.v, tmp.v, 3) );
-}
-
-template<> EIGEN_STRONG_INLINE Packet4cd pinsertlast(const Packet4cd& a, std::complex<double> b)
-{
-  return Packet4cd(_mm512_castsi512_pd( _mm512_inserti32x4(_mm512_castpd_si512(a.v), _mm_castpd_si128(pset1<Packet1cd>(b).v), 3) ));
-}
-
 } // end namespace internal
 
 } // end namespace Eigen

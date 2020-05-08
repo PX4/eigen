@@ -66,17 +66,17 @@ struct linspaced_op_impl<Scalar,/*IsInteger*/false>
     {
       Packet pi = plset<Packet>(Scalar(i-m_size1));
       Packet res = padd(pset1<Packet>(m_high), pmul(pset1<Packet>(m_step), pi));
-      if(i==0)
-        res = pinsertfirst(res, m_low);
-      return res;
+      if (EIGEN_PREDICT_TRUE(i != 0)) return res;
+      Packet mask = pcmp_lt(pset1<Packet>(0), plset<Packet>(0));
+      return pselect<Packet>(mask, res, pset1<Packet>(m_low));
     }
     else
     {
       Packet pi = plset<Packet>(Scalar(i));
       Packet res = padd(pset1<Packet>(m_low), pmul(pset1<Packet>(m_step), pi));
-      if(i==m_size1-unpacket_traits<Packet>::size+1)
-        res = pinsertlast(res, m_high);
-      return res;
+      if(EIGEN_PREDICT_TRUE(i != m_size1-unpacket_traits<Packet>::size+1)) return res;
+      Packet mask = pcmp_lt(plset<Packet>(0), pset1<Packet>(unpacket_traits<Packet>::size-1));
+      return pselect<Packet>(mask, res, pset1<Packet>(m_high));
     }
   }
 
