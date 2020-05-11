@@ -1,6 +1,6 @@
 #ifdef EIGEN_USE_SYCL
 
-#include <SYCL/sycl.hpp>
+#include <CL/sycl.hpp>
 #include <iostream>
 
 #include "tensor_benchmarks.h"

@@ -564,7 +564,7 @@ struct TensorEvaluator<const TensorSlicingOp<StartIndices, Sizes, ArgType>, Devi
 #ifdef EIGEN_USE_THREADS
   template <typename EvalSubExprsCallback>
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void evalSubExprsIfNeededAsync(
-      EvaluatorPointerType data, EvalSubExprsCallback done) {
+      EvaluatorPointerType /*data*/, EvalSubExprsCallback done) {
     m_impl.evalSubExprsIfNeededAsync(nullptr, [done](bool) { done(true); });
   }
 #endif  // EIGEN_USE_THREADS
