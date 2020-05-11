@@ -73,8 +73,7 @@ struct packet_traits<half> : default_packet_traits {
     HasRsqrt = 0,
     HasExp = 0,
     HasLog = 0,
-    HasBlend = 0,
-    HasInsert = 1
+    HasBlend = 0
   };
 };
 
@@ -88,7 +87,6 @@ template<> struct packet_traits<float>  : default_packet_traits
     size = 16,
     HasHalfPacket = 1,
     HasBlend = 0,
-    HasInsert = 1,
     HasSin = EIGEN_FAST_MATH,
     HasCos = EIGEN_FAST_MATH,
 #if EIGEN_GNUC_AT_LEAST(5, 3) || (!EIGEN_COMP_GNUC_STRICT)
@@ -117,7 +115,6 @@ template<> struct packet_traits<double> : default_packet_traits
     AlignedOnScalar = 1,
     size = 8,
     HasHalfPacket = 1,
-    HasInsert = 1,
 #if EIGEN_GNUC_AT_LEAST(5, 3) || (!EIGEN_COMP_GNUC_STRICT)
     HasSqrt = EIGEN_FAST_MATH,
     HasRsqrt = EIGEN_FAST_MATH,
@@ -1322,11 +1319,6 @@ EIGEN_STRONG_INLINE Packet16h float2half(const Packet16f& a) {
 template<> EIGEN_STRONG_INLINE Packet16h ptrue(const Packet16h& a) {
   return ptrue(Packet8i(a));
 }
-
-template<> EIGEN_STRONG_INLINE Packet16h pnot(const Packet16h& a) {
-  return _mm256_xor_si256(a, ptrue(a));
-}
-
 
 template<> EIGEN_STRONG_INLINE Packet16h por(const Packet16h& a,const Packet16h& b) {
   // in some cases Packet8i is a wrapper around __m256i, so we need to

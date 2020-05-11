@@ -58,7 +58,6 @@ struct default_packet_traits
     HasConj      = 1,
     HasSetLinear = 1,
     HasBlend     = 0,
-    HasInsert    = 0,
 
     HasDiv    = 0,
     HasSqrt   = 0,
@@ -191,8 +190,10 @@ psub(const Packet& a, const Packet& b) { return a-b; }
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
 pnegate(const Packet& a) { return -a; }
 
-/** \internal \returns conj(a) (coeff-wise) */
+template<> EIGEN_DEVICE_FUNC inline bool
+pnegate(const bool& a) { return !a; }
 
+/** \internal \returns conj(a) (coeff-wise) */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
 pconj(const Packet& a) { return numext::conj(a); }
 
@@ -269,14 +270,30 @@ pldexp(const Packet &a, const Packet &exponent) {
   return ldexp(a, static_cast<int>(exponent));
 }
 
-// Notice: The following ops accept and operator on bitwise masks.
-// The value of each field in a masks is Scalar(0) or ~Scalar(0).
-// For boolean packet like Packet16b, this is different from the
-// representation of true and false, which are 1 and 0.
-// As an example
-//    ptrue<Packet16b>()     = 0xffffffffffffffffffffffffffffffff
-// while
-//    pset1<Packet16b>(true) = 0x01010101010101010101010101010101
+/** \internal \returns zero bits */
+template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
+pzero(const Packet& /*a*/) { Packet b; memset((void*)&b, 0, sizeof(b)); return b;}
+
+template<> EIGEN_DEVICE_FUNC inline float pzero<float>(const float& a) {
+  EIGEN_UNUSED_VARIABLE(a);
+  return 0.f;
+}
+
+template<> EIGEN_DEVICE_FUNC inline double pzero<double>(const double& a) {
+  EIGEN_UNUSED_VARIABLE(a);
+  return 0.;
+}
+
+/** \internal \returns one bits */
+template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
+ptrue(const Packet& /*a*/) { Packet b; memset((void*)&b, 0xff, sizeof(b)); return b;}
+
+template <typename RealScalar>
+EIGEN_DEVICE_FUNC inline std::complex<RealScalar> ptrue(const std::complex<RealScalar>& /*a*/) {
+  RealScalar b;
+  b = ptrue(b);
+  return std::complex<RealScalar>(b, b);
+}
 
 /** \internal \returns the bitwise and of \a a and \a b */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
@@ -292,36 +309,7 @@ pxor(const Packet& a, const Packet& b) { return a ^ b; }
 
 /** \internal \returns the bitwise and of \a a and not \a b */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
-pandnot(const Packet& a, const Packet& b) { return a & (~b); }
-
-/** \internal \returns ones */
-template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
-ptrue(const Packet& /*a*/) { Packet b; memset((void*)&b, 0xff, sizeof(b)); return b;}
-
-/** \internal \returns zeros */
-template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
-pzero(const Packet& a) { return pxor(a,a); }
-
-template<> EIGEN_DEVICE_FUNC inline float pzero<float>(const float& a) {
-  EIGEN_UNUSED_VARIABLE(a);
-  return 0.f;
-}
-
-template<> EIGEN_DEVICE_FUNC inline double pzero<double>(const double& a) {
-  EIGEN_UNUSED_VARIABLE(a);
-  return 0.;
-}
-
-template <typename RealScalar>
-EIGEN_DEVICE_FUNC inline std::complex<RealScalar> ptrue(const std::complex<RealScalar>& /*a*/) {
-  RealScalar b;
-  b = ptrue(b);
-  return std::complex<RealScalar>(b, b);
-}
-
-/** \internal \returns the bitwise not of \a a */
-template <typename Packet> EIGEN_DEVICE_FUNC inline Packet
-pnot(const Packet& a) { return pxor(ptrue(a), a);}
+pandnot(const Packet& a, const Packet& b) { return pand(a, pxor(ptrue(b), b)); }
 
 /** \internal \returns a <= b as a bit mask */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
@@ -337,7 +325,7 @@ pcmp_eq(const Packet& a, const Packet& b) { return a==b ? ptrue(a) : pzero(a); }
 
 /** \internal \returns a < b or a==NaN or b==NaN as a bit mask */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
-pcmp_lt_or_nan(const Packet& a, const Packet& b) { return pnot(pcmp_le(b,a)); } 
+pcmp_lt_or_nan(const Packet& a, const Packet& b) { return a>=b ? pzero(a) : ptrue(a); } 
 
 /** \internal \returns \a or \b for each field in packet according to \mask */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
@@ -355,7 +343,10 @@ template<> EIGEN_DEVICE_FUNC inline double pselect<double>(
   return numext::equal_strict(cond,0.) ? b : a;
 }
 
-
+template<> EIGEN_DEVICE_FUNC inline bool pselect<bool>(
+    const bool& cond, const bool& a, const bool& b) {
+  return cond ? a : b;
+}
 
 /** \internal \returns the min of \a a and \a b  (coeff-wise) */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet

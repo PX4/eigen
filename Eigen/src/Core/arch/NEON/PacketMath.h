@@ -136,7 +136,6 @@ struct packet_traits<float> : default_packet_traits
     HasConj      = 1,
     HasSetLinear = 0,
     HasBlend     = 0,
-    HasInsert    = 1,
 
     HasDiv   = 1,
     HasFloor = 1,
@@ -177,8 +176,7 @@ struct packet_traits<int8_t> : default_packet_traits
     HasMax       = 1,
     HasConj      = 1,
     HasSetLinear = 0,
-    HasBlend     = 0,
-    HasInsert    = 1,
+    HasBlend     = 0
   };
 };
 
@@ -209,7 +207,6 @@ struct packet_traits<uint8_t> : default_packet_traits
     HasConj      = 1,
     HasSetLinear = 0,
     HasBlend     = 0,
-    HasInsert    = 1,
 
     HasSqrt = 1
   };
@@ -241,8 +238,7 @@ struct packet_traits<int16_t> : default_packet_traits
     HasMax       = 1,
     HasConj      = 1,
     HasSetLinear = 0,
-    HasBlend     = 0,
-    HasInsert    = 1,
+    HasBlend     = 0
   };
 };
 
@@ -273,8 +269,6 @@ struct packet_traits<uint16_t> : default_packet_traits
     HasConj      = 1,
     HasSetLinear = 0,
     HasBlend     = 0,
-    HasInsert    = 1,
-
     HasSqrt = 1
   };
 };
@@ -305,8 +299,7 @@ struct packet_traits<int32_t> : default_packet_traits
     HasMax       = 1,
     HasConj      = 1,
     HasSetLinear = 0,
-    HasBlend     = 0,
-    HasInsert    = 1,
+    HasBlend     = 0
   };
 };
 
@@ -337,7 +330,6 @@ struct packet_traits<uint32_t> : default_packet_traits
     HasConj      = 1,
     HasSetLinear = 0,
     HasBlend     = 0,
-    HasInsert    = 1,
 
     HasSqrt = 1
   };
@@ -370,8 +362,7 @@ struct packet_traits<int64_t> : default_packet_traits
     HasMax       = 1,
     HasConj      = 1,
     HasSetLinear = 0,
-    HasBlend     = 0,
-    HasInsert    = 1,
+    HasBlend     = 0
   };
 };
 
@@ -402,8 +393,7 @@ struct packet_traits<uint64_t> : default_packet_traits
     HasMax       = 1,
     HasConj      = 1,
     HasSetLinear = 0,
-    HasBlend     = 0,
-    HasInsert    = 1,
+    HasBlend     = 0
   };
 };
 
@@ -1498,42 +1488,6 @@ template<> EIGEN_STRONG_INLINE Packet2l pandnot<Packet2l>(const Packet2l& a, con
 template<> EIGEN_STRONG_INLINE Packet2ul pandnot<Packet2ul>(const Packet2ul& a, const Packet2ul& b)
 { return vbicq_u64(a,b); }
 
-template<> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet2f pnot<Packet2f>(const Packet2f& a)
-{ return vreinterpret_f32_u32(vmvn_u32(vreinterpret_u32_f32(a))); }
-template<> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet4f pnot<Packet4f>(const Packet4f& a)
-{ return vreinterpretq_f32_u32(vmvnq_u32(vreinterpretq_u32_f32(a))); }
-template<> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet4c pnot<Packet4c>(const Packet4c& a)
-{ return ~a; }
-template<> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet8c pnot<Packet8c>(const Packet8c& a)
-{ return vmvn_s8(a); }
-template<> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet16c pnot<Packet16c>(const Packet16c& a)
-{ return vmvnq_s8(a); }
-template<> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet4uc pnot<Packet4uc>(const Packet4uc& a)
-{ return ~a; }
-template<> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet8uc pnot<Packet8uc>(const Packet8uc& a)
-{ return vmvn_u8(a); }
-template<> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet16uc pnot<Packet16uc>(const Packet16uc& a)
-{ return vmvnq_u8(a); }
-template<> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet4s pnot<Packet4s>(const Packet4s& a)
-{ return vmvn_s16(a); }
-template<> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet8s pnot<Packet8s>(const Packet8s& a)
-{ return vmvnq_s16(a); }
-template<> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet4us pnot<Packet4us>(const Packet4us& a)
-{ return vmvn_u16(a); }
-template<> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet8us pnot<Packet8us>(const Packet8us& a)
-{ return vmvnq_u16(a); }
-template<> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet2i pnot<Packet2i>(const Packet2i& a)
-{ return vmvn_s32(a); }
-template<> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet4i pnot<Packet4i>(const Packet4i& a)
-{ return vmvnq_s32(a); }
-template<> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet2ui pnot<Packet2ui>(const Packet2ui& a)
-{ return vmvn_u32(a); }
-template<> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet4ui pnot<Packet4ui>(const Packet4ui& a)
-{ return vmvnq_u32(a); }
-template<> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet2l pnot<Packet2l>(const Packet2l& a)
-{ return vreinterpretq_s64_s32(vmvnq_s32(vreinterpretq_s32_s64(a))); }
-template<> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet2ul pnot<Packet2ul>(const Packet2ul& a)
-{ return vreinterpretq_u64_u32(vmvnq_u32(vreinterpretq_u32_u64(a))); }
 
 template<int N> EIGEN_STRONG_INLINE Packet4c parithmetic_shift_right(Packet4c& a)
 { return vget_lane_s32(vreinterpret_s32_s8(vshr_n_s8(vreinterpret_s8_s32(vdup_n_s32(a)), N)), 0); }
@@ -3218,7 +3172,6 @@ template<> struct packet_traits<double>  : default_packet_traits
     HasConj      = 1,
     HasSetLinear = 0,
     HasBlend     = 0,
-    HasInsert    = 1,
 
     HasDiv   = 1,
     HasFloor = 1,

@@ -62,7 +62,6 @@ template<> struct packet_traits<float>  : default_packet_traits
     AlignedOnScalar = 1,
     size = 8,
     HasHalfPacket = 1,
-    HasInsert = 1,
 
     HasDiv = 1,
     HasSin = EIGEN_FAST_MATH,
@@ -93,7 +92,6 @@ template<> struct packet_traits<double> : default_packet_traits
     AlignedOnScalar = 1,
     size=4,
     HasHalfPacket = 1,
-    HasInsert = 1,
 
     HasDiv  = 1,
     HasExp  = 1,
@@ -131,8 +129,7 @@ struct packet_traits<Eigen::half> : default_packet_traits {
     HasRsqrt = 0,
     HasExp = 0,
     HasLog = 0,
-    HasBlend = 0,
-    HasInsert = 1
+    HasBlend = 0
   };
 };
 #endif

@@ -108,7 +108,6 @@ struct packet_traits<float> : default_packet_traits {
     HasTanh = EIGEN_FAST_MATH,
     HasErf = EIGEN_FAST_MATH,
     HasBlend = 1,
-    HasInsert = 1,
     HasFloor = 1
 
 #ifdef EIGEN_VECTORIZE_SSE4_1
@@ -133,8 +132,7 @@ struct packet_traits<double> : default_packet_traits {
     HasExp  = 1,
     HasSqrt = 1,
     HasRsqrt = 1,
-    HasBlend = 1,
-    HasInsert = 1
+    HasBlend = 1
 
 #ifdef EIGEN_VECTORIZE_SSE4_1
     ,
@@ -171,10 +169,10 @@ template<> struct packet_traits<bool> : default_packet_traits
     size=16,
 
     HasAdd       = 1,
-    HasSub       = 0,
+    HasSub       = 1,
     HasShift     = 0,
     HasMul       = 1,
-    HasNegate    = 0,
+    HasNegate    = 1,
     HasAbs       = 0,
     HasAbs2      = 0,
     HasMin       = 0,
@@ -254,6 +252,7 @@ template<> EIGEN_STRONG_INLINE Packet16b padd<Packet16b>(const Packet16b& a, con
 template<> EIGEN_STRONG_INLINE Packet4f psub<Packet4f>(const Packet4f& a, const Packet4f& b) { return _mm_sub_ps(a,b); }
 template<> EIGEN_STRONG_INLINE Packet2d psub<Packet2d>(const Packet2d& a, const Packet2d& b) { return _mm_sub_pd(a,b); }
 template<> EIGEN_STRONG_INLINE Packet4i psub<Packet4i>(const Packet4i& a, const Packet4i& b) { return _mm_sub_epi32(a,b); }
+template<> EIGEN_STRONG_INLINE Packet16b psub<Packet16b>(const Packet16b& a, const Packet16b& b) { return _mm_xor_si128(a,b); }
 
 template<> EIGEN_STRONG_INLINE Packet4f pnegate(const Packet4f& a)
 {
@@ -268,6 +267,11 @@ template<> EIGEN_STRONG_INLINE Packet2d pnegate(const Packet2d& a)
 template<> EIGEN_STRONG_INLINE Packet4i pnegate(const Packet4i& a)
 {
   return psub(Packet4i(_mm_setr_epi32(0,0,0,0)), a);
+}
+
+template<> EIGEN_STRONG_INLINE Packet16b pnegate(const Packet16b& a)
+{
+  return psub(pset1<Packet16b>(false), a);
 }
 
 template<> EIGEN_STRONG_INLINE Packet4f pconj(const Packet4f& a) { return a; }
@@ -305,10 +309,28 @@ template<> EIGEN_STRONG_INLINE Packet2d pmadd(const Packet2d& a, const Packet2d&
 #endif
 
 #ifdef EIGEN_VECTORIZE_SSE4_1
-template<> EIGEN_DEVICE_FUNC inline Packet4f pselect(const Packet4f& mask, const Packet4f& a, const Packet4f& b) {  return _mm_blendv_ps(b,a,mask); }
+template<> EIGEN_DEVICE_FUNC inline Packet4f pselect(const Packet4f& mask, const Packet4f& a, const Packet4f& b) {
+  return _mm_blendv_ps(b,a,mask);
+}
+
+template<> EIGEN_DEVICE_FUNC inline Packet4i pselect(const Packet4i& mask, const Packet4i& a, const Packet4i& b) {
+  return _mm_castps_si128(_mm_blendv_ps(_mm_castsi128_ps(b),_mm_castsi128_ps(a),_mm_castsi128_ps(mask)));
+}
 
 template<> EIGEN_DEVICE_FUNC inline Packet2d pselect(const Packet2d& mask, const Packet2d& a, const Packet2d& b) {  return _mm_blendv_pd(b,a,mask); }
+
+template<> EIGEN_DEVICE_FUNC inline Packet16b pselect(const Packet16b& mask, const Packet16b& a, const Packet16b& b) {
+  return _mm_blendv_epi8(b,a,mask);
+}
+#else
+template<> EIGEN_DEVICE_FUNC inline Packet16b pselect(const Packet16b& mask, const Packet16b& a, const Packet16b& b) {
+  Packet16b a_part = _mm_and_si128(mask, a);
+  Packet16b b_part = _mm_andnot_si128(mask, b);
+  return _mm_or_si128(a_part, b_part);
+}
 #endif
+
+
 
 template<> EIGEN_STRONG_INLINE Packet4f pmin<Packet4f>(const Packet4f& a, const Packet4f& b) {
 #if EIGEN_COMP_GNUC && EIGEN_COMP_GNUC < 63
@@ -567,6 +589,23 @@ template<> EIGEN_STRONG_INLINE Packet4i ploaddup<Packet4i>(const int*     from)
   return vec4i_swizzle1(tmp, 0, 0, 1, 1);
 }
 
+// Loads 8 bools from memory and returns the packet
+// {b0, b0, b1, b1, b2, b2, b3, b3, b4, b4, b5, b5, b6, b6, b7, b7}
+template<> EIGEN_STRONG_INLINE Packet16b ploaddup<Packet16b>(const bool*     from)
+{
+  __m128i tmp = _mm_castpd_si128(pload1<Packet2d>(reinterpret_cast<const double*>(from)));
+  return  _mm_unpacklo_epi8(tmp, tmp);
+}
+
+// Loads 4 bools from memory and returns the packet
+// {b0, b0  b0, b0, b1, b1, b1, b1, b2, b2, b2, b2, b3, b3, b3, b3}
+template<> EIGEN_STRONG_INLINE Packet16b
+ploadquad<Packet16b>(const bool* from) {
+  __m128i tmp = _mm_castps_si128(pload1<Packet4f>(reinterpret_cast<const float*>(from)));
+  tmp = _mm_unpacklo_epi8(tmp, tmp);
+  return  _mm_unpacklo_epi16(tmp, tmp);
+}
+
 template<> EIGEN_STRONG_INLINE void pstore<float>(float*   to, const Packet4f& from) { EIGEN_DEBUG_ALIGNED_STORE _mm_store_ps(to, from); }
 template<> EIGEN_STRONG_INLINE void pstore<double>(double* to, const Packet2d& from) { EIGEN_DEBUG_ALIGNED_STORE _mm_store_pd(to, from); }
 template<> EIGEN_STRONG_INLINE void pstore<int>(int*       to, const Packet4i& from) { EIGEN_DEBUG_ALIGNED_STORE _mm_store_si128(reinterpret_cast<__m128i*>(to), from); }
@@ -588,6 +627,14 @@ template<> EIGEN_DEVICE_FUNC inline Packet2d pgather<double, Packet2d>(const dou
 template<> EIGEN_DEVICE_FUNC inline Packet4i pgather<int, Packet4i>(const int* from, Index stride)
 {
  return _mm_set_epi32(from[3*stride], from[2*stride], from[1*stride], from[0*stride]);
+}
+
+template<> EIGEN_DEVICE_FUNC inline Packet16b pgather<bool, Packet16b>(const bool* from, Index stride)
+{
+  return _mm_set_epi8(from[15*stride], from[14*stride], from[13*stride], from[12*stride],
+                      from[11*stride], from[10*stride], from[9*stride], from[8*stride],
+                      from[7*stride], from[6*stride], from[5*stride], from[4*stride],
+                      from[3*stride], from[2*stride], from[1*stride], from[0*stride]);
  }
 
 template<> EIGEN_DEVICE_FUNC inline void pscatter<float, Packet4f>(float* to, const Packet4f& from, Index stride)
@@ -609,6 +656,14 @@ template<> EIGEN_DEVICE_FUNC inline void pscatter<int, Packet4i>(int* to, const 
   to[stride*2] = _mm_cvtsi128_si32(_mm_shuffle_epi32(from, 2));
   to[stride*3] = _mm_cvtsi128_si32(_mm_shuffle_epi32(from, 3));
 }
+template<> EIGEN_DEVICE_FUNC inline void pscatter<bool, Packet16b>(bool* to, const Packet16b& from, Index stride)
+{
+  to[4*stride*0] = _mm_cvtsi128_si32(from);
+  to[4*stride*1] = _mm_cvtsi128_si32(_mm_shuffle_epi32(from, 1));
+  to[4*stride*2] = _mm_cvtsi128_si32(_mm_shuffle_epi32(from, 2));
+  to[4*stride*3] = _mm_cvtsi128_si32(_mm_shuffle_epi32(from, 3));
+}
+
 
 // some compilers might be tempted to perform multiple moves instead of using a vector path.
 template<> EIGEN_STRONG_INLINE void pstore1<Packet4f>(float* to, const float& a)
@@ -653,12 +708,19 @@ template<> EIGEN_STRONG_INLINE int    pfirst<Packet4i>(const Packet4i& a) { retu
 template<> EIGEN_STRONG_INLINE bool   pfirst<Packet16b>(const Packet16b& a) { int x = _mm_cvtsi128_si32(a); return static_cast<bool>(x & 1); }
 #endif
 
-template<> EIGEN_STRONG_INLINE Packet4f preverse(const Packet4f& a)
-{ return _mm_shuffle_ps(a,a,0x1B); }
-template<> EIGEN_STRONG_INLINE Packet2d preverse(const Packet2d& a)
-{ return _mm_shuffle_pd(a,a,0x1); }
-template<> EIGEN_STRONG_INLINE Packet4i preverse(const Packet4i& a)
-{ return _mm_shuffle_epi32(a,0x1B); }
+template<> EIGEN_STRONG_INLINE Packet4f preverse(const Packet4f& a) { return _mm_shuffle_ps(a,a,0x1B); }
+template<> EIGEN_STRONG_INLINE Packet2d preverse(const Packet2d& a) { return _mm_shuffle_pd(a,a,0x1); }
+template<> EIGEN_STRONG_INLINE Packet4i preverse(const Packet4i& a) { return _mm_shuffle_epi32(a,0x1B); }
+template<> EIGEN_STRONG_INLINE Packet16b preverse(const Packet16b& a) {
+#ifdef EIGEN_VECTORIZE_SSSE3
+  __m128i mask = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+  return _mm_shuffle_epi8(a, mask);
+#else
+  Packet16b tmp = _mm_shuffle_epi32(a, _MM_SHUFFLE(0, 1, 2, 3));
+  tmp = _mm_shufflehi_epi16(_mm_shufflelo_epi16(tmp, _MM_SHUFFLE(2, 3, 0, 1)), _MM_SHUFFLE(2, 3, 0, 1));
+  return _mm_or_si128(_mm_slli_epi16(tmp, 8), _mm_srli_epi16(tmp, 8));
+#endif
+}
 
 template<> EIGEN_STRONG_INLINE Packet4f pabs(const Packet4f& a)
 {
@@ -777,7 +839,7 @@ template<> EIGEN_STRONG_INLINE int predux<Packet4i>(const Packet4i& a)
 #endif
 
 template<> EIGEN_STRONG_INLINE bool predux<Packet16b>(const Packet16b& a) {
-Packet4i tmp = _mm_or_si128(a, _mm_unpackhi_epi64(a,a));
+  Packet4i tmp = _mm_or_si128(a, _mm_unpackhi_epi64(a,a));
   return (pfirst(tmp) != 0) || (pfirst<Packet4i>(_mm_shuffle_epi32(tmp, 1)) != 0);
 }
 
@@ -802,6 +864,12 @@ template<> EIGEN_STRONG_INLINE int predux_mul<Packet4i>(const Packet4i& a)
   EIGEN_ALIGN16 int aux[4];
   pstore(aux, a);
   return  (aux[0] * aux[1]) * (aux[2] * aux[3]);
+}
+
+template<> EIGEN_STRONG_INLINE bool predux_mul<Packet16b>(const Packet16b& a) {
+  Packet4i tmp = _mm_and_si128(a, _mm_unpackhi_epi64(a,a));
+  return ((pfirst<Packet4i>(tmp) == 0x01010101) &&
+          (pfirst<Packet4i>(_mm_shuffle_epi32(tmp, 1)) == 0x01010101));
 }
 
 // min
@@ -904,6 +972,87 @@ ptranspose(PacketBlock<Packet16b,4>& kernel) {
   kernel.packet[3] = _mm_unpackhi_epi16(T1, T3);
 }
 
+EIGEN_DEVICE_FUNC inline void
+ptranspose(PacketBlock<Packet16b,16>& kernel) {
+  // If we number the elements in the input thus:
+  // kernel.packet[ 0] = {00, 01, 02, 03, 04, 05, 06, 07, 08, 09, 0a, 0b, 0c, 0d, 0e, 0f}
+  // kernel.packet[ 1] = {10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 1a, 1b, 1c, 1d, 1e, 1f}
+  // ...
+  // kernel.packet[15] = {f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, fa, fb, fc, fd, fe, ff},
+  //
+  // the desired output is:
+  // kernel.packet[ 0] = {00, 10, 20, 30, 40, 50, 60, 70, 80, 90, a0, b0, c0, d0, e0, f0}
+  // kernel.packet[ 1] = {01, 11, 21, 31, 41, 51, 61, 71, 81, 91, a1, b1, c1, d1, e1, f1}
+  // ...
+  // kernel.packet[15] = {0f, 1f, 2f, 3f, 4f, 5f, 6f, 7f, 8f, 9f, af, bf, cf, df, ef, ff},
+  __m128i t0 =  _mm_unpacklo_epi8(kernel.packet[0], kernel.packet[1]); // 00 10 01 11 02 12 03 13 04 14 05 15 06 16 07 17
+  __m128i t1 =  _mm_unpackhi_epi8(kernel.packet[0], kernel.packet[1]); // 08 18 09 19 0a 1a 0b 1b 0c 1c 0d 1d 0e 1e 0f 1f
+  __m128i t2 =  _mm_unpacklo_epi8(kernel.packet[2], kernel.packet[3]); // 20 30 21 31 22 32 ...                     27 37
+  __m128i t3 =  _mm_unpackhi_epi8(kernel.packet[2], kernel.packet[3]); // 28 38 29 39 2a 3a ...                     2f 3f
+  __m128i t4 =  _mm_unpacklo_epi8(kernel.packet[4], kernel.packet[5]); // 40 50 41 51 42 52                         47 57
+  __m128i t5 =  _mm_unpackhi_epi8(kernel.packet[4], kernel.packet[5]); // 48 58 49 59 4a 5a
+  __m128i t6 =  _mm_unpacklo_epi8(kernel.packet[6], kernel.packet[7]);
+  __m128i t7 =  _mm_unpackhi_epi8(kernel.packet[6], kernel.packet[7]);
+  __m128i t8 =  _mm_unpacklo_epi8(kernel.packet[8], kernel.packet[9]);
+  __m128i t9 =  _mm_unpackhi_epi8(kernel.packet[8], kernel.packet[9]);
+  __m128i ta =  _mm_unpacklo_epi8(kernel.packet[10], kernel.packet[11]);
+  __m128i tb =  _mm_unpackhi_epi8(kernel.packet[10], kernel.packet[11]);
+  __m128i tc =  _mm_unpacklo_epi8(kernel.packet[12], kernel.packet[13]);
+  __m128i td =  _mm_unpackhi_epi8(kernel.packet[12], kernel.packet[13]);
+  __m128i te =  _mm_unpacklo_epi8(kernel.packet[14], kernel.packet[15]);
+  __m128i tf =  _mm_unpackhi_epi8(kernel.packet[14], kernel.packet[15]);
+
+  __m128i s0 =  _mm_unpacklo_epi16(t0, t2); // 00 10 20 30 01 11 21 31 02 12 22 32 03 13 23 33
+  __m128i s1 =  _mm_unpackhi_epi16(t0, t2); // 04 14 24 34
+  __m128i s2 =  _mm_unpacklo_epi16(t1, t3); // 08 18 28 38 ...
+  __m128i s3 =  _mm_unpackhi_epi16(t1, t3); // 0c 1c 2c 3c ...
+  __m128i s4 =  _mm_unpacklo_epi16(t4, t6); // 40 50 60 70 41 51 61 71 42 52 62 72 43 53 63 73
+  __m128i s5 =  _mm_unpackhi_epi16(t4, t6); // 44 54 64 74 ...
+  __m128i s6 =  _mm_unpacklo_epi16(t5, t7);
+  __m128i s7 =  _mm_unpackhi_epi16(t5, t7);
+  __m128i s8 =  _mm_unpacklo_epi16(t8, ta);
+  __m128i s9 =  _mm_unpackhi_epi16(t8, ta);
+  __m128i sa =  _mm_unpacklo_epi16(t9, tb);
+  __m128i sb =  _mm_unpackhi_epi16(t9, tb);
+  __m128i sc =  _mm_unpacklo_epi16(tc, te);
+  __m128i sd =  _mm_unpackhi_epi16(tc, te);
+  __m128i se =  _mm_unpacklo_epi16(td, tf);
+  __m128i sf =  _mm_unpackhi_epi16(td, tf);
+
+  __m128i u0 =  _mm_unpacklo_epi32(s0, s4); // 00 10 20 30 40 50 60 70 01 11 21 31 41 51 61 71
+  __m128i u1 =  _mm_unpackhi_epi32(s0, s4); // 02 12 22 32 42 52 62 72 03 13 23 33 43 53 63 73
+  __m128i u2 =  _mm_unpacklo_epi32(s1, s5);
+  __m128i u3 =  _mm_unpackhi_epi32(s1, s5);
+  __m128i u4 =  _mm_unpacklo_epi32(s2, s6);
+  __m128i u5 =  _mm_unpackhi_epi32(s2, s6);
+  __m128i u6 =  _mm_unpacklo_epi32(s3, s7);
+  __m128i u7 =  _mm_unpackhi_epi32(s3, s7);
+  __m128i u8 =  _mm_unpacklo_epi32(s8, sc);
+  __m128i u9 =  _mm_unpackhi_epi32(s8, sc);
+  __m128i ua =  _mm_unpacklo_epi32(s9, sd);
+  __m128i ub =  _mm_unpackhi_epi32(s9, sd);
+  __m128i uc =  _mm_unpacklo_epi32(sa, se);
+  __m128i ud =  _mm_unpackhi_epi32(sa, se);
+  __m128i ue =  _mm_unpacklo_epi32(sb, sf);
+  __m128i uf =  _mm_unpackhi_epi32(sb, sf);
+
+  kernel.packet[0]  = _mm_unpacklo_epi64(u0, u8);
+  kernel.packet[1]  = _mm_unpackhi_epi64(u0, u8);
+  kernel.packet[2]  = _mm_unpacklo_epi64(u1, u9);
+  kernel.packet[3]  = _mm_unpackhi_epi64(u1, u9);
+  kernel.packet[4]  = _mm_unpacklo_epi64(u2, ua);
+  kernel.packet[5]  = _mm_unpackhi_epi64(u2, ua);
+  kernel.packet[6]  = _mm_unpacklo_epi64(u3, ub);
+  kernel.packet[7]  = _mm_unpackhi_epi64(u3, ub);
+  kernel.packet[8]  = _mm_unpacklo_epi64(u4, uc);
+  kernel.packet[9]  = _mm_unpackhi_epi64(u4, uc);
+  kernel.packet[10] = _mm_unpacklo_epi64(u5, ud);
+  kernel.packet[11] = _mm_unpackhi_epi64(u5, ud);
+  kernel.packet[12] = _mm_unpacklo_epi64(u6, ue);
+  kernel.packet[13] = _mm_unpackhi_epi64(u6, ue);
+  kernel.packet[14] = _mm_unpacklo_epi64(u7, uf);
+  kernel.packet[15] = _mm_unpackhi_epi64(u7, uf);
+}
 
 template<> EIGEN_STRONG_INLINE Packet4i pblend(const Selector<4>& ifPacket, const Packet4i& thenPacket, const Packet4i& elsePacket) {
   const __m128i zero = _mm_setzero_si128();

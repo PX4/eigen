@@ -10,11 +10,25 @@
 
 #include "packetmath_test_shared.h"
 
-#define REF_ADD(a,b) ((a)+(b))
-#define REF_SUB(a,b) ((a)-(b))
-#define REF_MUL(a,b) ((a)*(b))
-#define REF_DIV(a,b) ((a)/(b))
-#define REF_ABS_DIFF(a,b) ((a)>(b)?(a)-(b):(b)-(a))
+template <typename T>
+inline T REF_ADD(const T& a, const T& b) { return a + b;}
+template <typename T>
+inline T REF_SUB(const T& a, const T& b) { return a - b;}
+template <typename T>
+inline T REF_MUL(const T& a, const T& b) { return a * b;}
+template <typename T>
+inline T REF_DIV(const T& a, const T& b) { return a / b;}
+template <typename T>
+inline T REF_ABS_DIFF(const T& a, const T& b) { return a>b ? a - b : b-a;}
+
+// Specializations for bool
+template <>
+inline bool REF_ADD(const bool& a, const bool& b) { return a || b;}
+template <>
+inline bool REF_SUB(const bool& a, const bool& b) { return a ^ b;}
+template <>
+inline bool REF_MUL(const bool& a, const bool& b) { return a && b;}
+
 
 template<typename FromScalar, typename FromPacket, typename ToScalar, typename ToPacket, bool CanCast = false>
 struct test_cast_helper;
@@ -70,7 +84,8 @@ void test_cast() {
   test_cast_helper<FromScalar, FromPacket, ToScalar, ToPacket, CanCast>::run();
 }
 
-template<typename Scalar,typename Packet> void packetmath_boolean()
+template<typename Scalar,typename Packet>
+void packetmath_boolean_mask_ops()
 {
   const int PacketSize = internal::unpacket_traits<Packet>::size;
   const int size = 2*PacketSize;
@@ -82,9 +97,18 @@ template<typename Scalar,typename Packet> void packetmath_boolean()
   {
     data1[i] = internal::random<Scalar>();
   }
-  CHECK_CWISE2_IF(true, internal::por, internal::por);
-  CHECK_CWISE2_IF(true, internal::pxor, internal::pxor);
-  CHECK_CWISE2_IF(true, internal::pand, internal::pand);
+  CHECK_CWISE1(internal::ptrue, internal::ptrue);
+  CHECK_CWISE2_IF(true, internal::pandnot, internal::pandnot);
+  for (int i = 0; i < PacketSize; ++i) {
+    data1[i] = Scalar(i);
+    data1[i + PacketSize] = internal::random<bool>() ? data1[i] : Scalar(0);
+  }
+  CHECK_CWISE2_IF(true, internal::pcmp_eq, internal::pcmp_eq);
+}
+
+template<>
+void packetmath_boolean_mask_ops<bool, internal::Packet16b>()
+{
 }
 
 template<typename Scalar,typename Packet> void packetmath()
@@ -171,9 +195,6 @@ template<typename Scalar,typename Packet> void packetmath()
   CHECK_CWISE2_IF(PacketTraits::HasMul, REF_MUL,  internal::pmul);
   CHECK_CWISE2_IF(PacketTraits::HasDiv, REF_DIV, internal::pdiv);
 
-  CHECK_CWISE1(internal::pnot, internal::pnot);
-  CHECK_CWISE1(internal::pzero, internal::pzero);
-  CHECK_CWISE1(internal::ptrue, internal::ptrue);
   if (PacketTraits::HasNegate)
     CHECK_CWISE1(internal::negate, internal::pnegate);
   CHECK_CWISE1(numext::conj, internal::pconj);
@@ -252,7 +273,7 @@ template<typename Scalar,typename Packet> void packetmath()
 
   ref[0] = Scalar(1);
   for (int i=0; i<PacketSize; ++i)
-    ref[0] *= data1[i];
+    ref[0] = REF_MUL(ref[0], data1[i]);
   VERIFY(internal::isApprox(ref[0], internal::predux_mul(internal::pload<Packet>(data1))) && "internal::predux_mul");
 
   for (int i=0; i<PacketSize; ++i)
@@ -271,6 +292,7 @@ template<typename Scalar,typename Packet> void packetmath()
       VERIFY(test::isApproxAbs(data2[j], data1[i+j*PacketSize], refvalue) && "ptranspose");
     }
   }
+
 
   if (PacketTraits::HasBlend) {
     Packet thenPacket = internal::pload<Packet>(data1);
@@ -304,24 +326,20 @@ template<typename Scalar,typename Packet> void packetmath()
     CHECK_CWISE3_IF(true, internal::pselect, internal::pselect);
   }
 
-  {
-    for (int i = 0; i < PacketSize; ++i) {
-      data1[i] = Scalar(i);
-      data1[i + PacketSize] = internal::random<bool>() ? data1[i] : Scalar(0);
-    }
-    CHECK_CWISE2_IF(true, internal::pcmp_eq, internal::pcmp_eq);
-  }
-
   CHECK_CWISE1_IF(PacketTraits::HasSqrt, numext::sqrt, internal::psqrt);
 
   for (int i=0; i<size; ++i)
   {
     data1[i] = internal::random<Scalar>();
   }
-  CHECK_CWISE2_IF(true, internal::pandnot, internal::pandnot);
+  CHECK_CWISE1(internal::pzero, internal::pzero);
+  CHECK_CWISE2_IF(true, internal::por, internal::por);
+  CHECK_CWISE2_IF(true, internal::pxor, internal::pxor);
+  CHECK_CWISE2_IF(true, internal::pand, internal::pand);
 
-  packetmath_boolean<Scalar, Packet>();
+  packetmath_boolean_mask_ops<Scalar, Packet>();
 }
+
 
 
 template<typename Scalar,typename Packet> void packetmath_real()
@@ -753,7 +771,7 @@ EIGEN_DECLARE_TEST(packetmath)
     CALL_SUBTEST_12( test::runner<std::complex<double> >::run() );
     CALL_SUBTEST_13(( packetmath<half,internal::packet_traits<half>::type>() ));
 #ifdef EIGEN_PACKET_MATH_SSE_H
-    CALL_SUBTEST_14(( packetmath_boolean<bool,internal::packet_traits<bool>::type>() ));
+    CALL_SUBTEST_14(( packetmath<bool,internal::packet_traits<bool>::type>() ));
 #endif
     g_first_pass = false;
   }

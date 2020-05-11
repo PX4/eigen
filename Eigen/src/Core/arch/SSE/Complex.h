@@ -45,8 +45,7 @@ template<> struct packet_traits<std::complex<float> >  : default_packet_traits
     HasMin    = 0,
     HasMax    = 0,
     HasSetLinear = 0,
-    HasBlend  = 1,
-    HasInsert = 1
+    HasBlend  = 1
   };
 };
 #endif
@@ -84,7 +83,6 @@ template<> EIGEN_STRONG_INLINE Packet2cf pmul<Packet2cf>(const Packet2cf& a, con
 }
 
 template<> EIGEN_STRONG_INLINE Packet2cf ptrue  <Packet2cf>(const Packet2cf& a) { return Packet2cf(ptrue(Packet4f(a.v))); }
-template<> EIGEN_STRONG_INLINE Packet2cf pnot   <Packet2cf>(const Packet2cf& a) { return Packet2cf(pnot(Packet4f(a.v))); }
 
 template<> EIGEN_STRONG_INLINE Packet2cf pand   <Packet2cf>(const Packet2cf& a, const Packet2cf& b) { return Packet2cf(_mm_and_ps(a.v,b.v)); }
 template<> EIGEN_STRONG_INLINE Packet2cf por    <Packet2cf>(const Packet2cf& a, const Packet2cf& b) { return Packet2cf(_mm_or_ps(a.v,b.v)); }
@@ -292,7 +290,6 @@ template<> EIGEN_STRONG_INLINE Packet1cd pmul<Packet1cd>(const Packet1cd& a, con
 }
 
 template<> EIGEN_STRONG_INLINE Packet1cd ptrue  <Packet1cd>(const Packet1cd& a) { return Packet1cd(ptrue(Packet2d(a.v))); }
-template<> EIGEN_STRONG_INLINE Packet1cd pnot   <Packet1cd>(const Packet1cd& a) { return Packet1cd(pnot(Packet2d(a.v))); }
 template<> EIGEN_STRONG_INLINE Packet1cd pand   <Packet1cd>(const Packet1cd& a, const Packet1cd& b) { return Packet1cd(_mm_and_pd(a.v,b.v)); }
 template<> EIGEN_STRONG_INLINE Packet1cd por    <Packet1cd>(const Packet1cd& a, const Packet1cd& b) { return Packet1cd(_mm_or_pd(a.v,b.v)); }
 template<> EIGEN_STRONG_INLINE Packet1cd pxor   <Packet1cd>(const Packet1cd& a, const Packet1cd& b) { return Packet1cd(_mm_xor_pd(a.v,b.v)); }

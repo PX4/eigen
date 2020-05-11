@@ -41,8 +41,7 @@ template<> struct packet_traits<std::complex<float> >  : default_packet_traits
     HasAbs2   = 0,
     HasMin    = 0,
     HasMax    = 0,
-    HasSetLinear = 0,
-    HasInsert = 1
+    HasSetLinear = 0
   };
 };
 
@@ -59,7 +58,6 @@ template<> struct unpacket_traits<Packet8cf> {
 };
 
 template<> EIGEN_STRONG_INLINE Packet8cf ptrue<Packet8cf>(const Packet8cf& a) { return Packet8cf(ptrue(Packet16f(a.v))); }
-template<> EIGEN_STRONG_INLINE Packet8cf pnot<Packet8cf>(const Packet8cf& a) { return Packet8cf(pnot(Packet16f(a.v))); }
 template<> EIGEN_STRONG_INLINE Packet8cf padd<Packet8cf>(const Packet8cf& a, const Packet8cf& b) { return Packet8cf(_mm512_add_ps(a.v,b.v)); }
 template<> EIGEN_STRONG_INLINE Packet8cf psub<Packet8cf>(const Packet8cf& a, const Packet8cf& b) { return Packet8cf(_mm512_sub_ps(a.v,b.v)); }
 template<> EIGEN_STRONG_INLINE Packet8cf pnegate(const Packet8cf& a)
@@ -266,7 +264,6 @@ template<> EIGEN_STRONG_INLINE Packet4cd pmul<Packet4cd>(const Packet4cd& a, con
 }
 
 template<> EIGEN_STRONG_INLINE Packet4cd ptrue<Packet4cd>(const Packet4cd& a) { return Packet4cd(ptrue(Packet8d(a.v))); }
-template<> EIGEN_STRONG_INLINE Packet4cd pnot<Packet4cd>(const Packet4cd& a) { return Packet4cd(pnot(Packet8d(a.v))); }
 template<> EIGEN_STRONG_INLINE Packet4cd pand   <Packet4cd>(const Packet4cd& a, const Packet4cd& b) { return Packet4cd(pand(a.v,b.v)); }
 template<> EIGEN_STRONG_INLINE Packet4cd por    <Packet4cd>(const Packet4cd& a, const Packet4cd& b) { return Packet4cd(por(a.v,b.v)); }
 template<> EIGEN_STRONG_INLINE Packet4cd pxor   <Packet4cd>(const Packet4cd& a, const Packet4cd& b) { return Packet4cd(pxor(a.v,b.v)); }
