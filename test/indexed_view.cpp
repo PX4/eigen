@@ -429,6 +429,16 @@ void check_indexed_view()
     A(all, eii).col(0) = A.col(eii(0));
   }
 
+  // bug 1815: IndexedView should allow linear access
+  {
+    VERIFY( MATCH( b(eii)(0), "3" ) );
+    VERIFY( MATCH( a(eii)(0), "3" ) );
+    VERIFY( MATCH( A(1,eii)(0), "103"));
+    VERIFY( MATCH( A(eii,1)(0), "301"));
+    VERIFY( MATCH( A(1,all)(1), "101"));
+    VERIFY( MATCH( A(all,1)(1), "101"));
+  }
+
 }
 
 EIGEN_DECLARE_TEST(indexed_view)

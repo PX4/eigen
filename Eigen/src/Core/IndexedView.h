@@ -54,7 +54,8 @@ struct traits<IndexedView<XprType, RowIndices, ColIndices> >
     DirectAccessMask = (int(InnerIncr)!=UndefinedIncr && int(OuterIncr)!=UndefinedIncr && InnerIncr>=0 && OuterIncr>=0) ? DirectAccessBit : 0,
     FlagsRowMajorBit = IsRowMajor ? RowMajorBit : 0,
     FlagsLvalueBit = is_lvalue<XprType>::value ? LvalueBit : 0,
-    Flags = (traits<XprType>::Flags & (HereditaryBits | DirectAccessMask)) | FlagsLvalueBit | FlagsRowMajorBit
+    FlagsLinearAccessBit = (RowsAtCompileTime == 1 || ColsAtCompileTime == 1) ? LinearAccessBit : 0,
+    Flags = (traits<XprType>::Flags & (HereditaryBits | DirectAccessMask )) | FlagsLvalueBit | FlagsRowMajorBit | FlagsLinearAccessBit
   };
 
   typedef Block<XprType,RowsAtCompileTime,ColsAtCompileTime,IsInnerPannel> BlockType;
@@ -168,7 +169,9 @@ struct unary_evaluator<IndexedView<ArgType, RowIndices, ColIndices>, IndexBased>
   enum {
     CoeffReadCost = evaluator<ArgType>::CoeffReadCost /* TODO + cost of row/col index */,
 
-    Flags = (evaluator<ArgType>::Flags & (HereditaryBits /*| LinearAccessBit | DirectAccessBit*/)),
+    FlagsLinearAccessBit = (traits<XprType>::RowsAtCompileTime == 1 || traits<XprType>::ColsAtCompileTime == 1) ? LinearAccessBit : 0,
+
+    Flags = (evaluator<ArgType>::Flags & (HereditaryBits /*| LinearAccessBit | DirectAccessBit*/)) | FlagsLinearAccessBit,
 
     Alignment = 0
   };
@@ -191,6 +194,31 @@ struct unary_evaluator<IndexedView<ArgType, RowIndices, ColIndices>, IndexBased>
   Scalar& coeffRef(Index row, Index col)
   {
     return m_argImpl.coeffRef(m_xpr.rowIndices()[row], m_xpr.colIndices()[col]);
+  }
+
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
+  Scalar& coeffRef(Index index)
+  {
+    EIGEN_STATIC_ASSERT_LVALUE(XprType)
+    Index row = XprType::RowsAtCompileTime == 1 ? 0 : index;
+    Index col = XprType::RowsAtCompileTime == 1 ? index : 0;
+    return m_argImpl.coeffRef( m_xpr.rowIndices()[row], m_xpr.colIndices()[col]);
+  }
+
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
+  const Scalar& coeffRef(Index index) const
+  {
+    Index row = XprType::RowsAtCompileTime == 1 ? 0 : index;
+    Index col = XprType::RowsAtCompileTime == 1 ? index : 0;
+    return m_argImpl.coeffRef( m_xpr.rowIndices()[row], m_xpr.colIndices()[col]);
+  }
+
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
+  const CoeffReturnType coeff(Index index) const
+  {
+    Index row = XprType::RowsAtCompileTime == 1 ? 0 : index;
+    Index col = XprType::RowsAtCompileTime == 1 ? index : 0;
+    return m_argImpl.coeff( m_xpr.rowIndices()[row], m_xpr.colIndices()[col]);
   }
 
 protected:
