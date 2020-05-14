@@ -439,6 +439,12 @@ void check_indexed_view()
     VERIFY( MATCH( A(all,1)(1), "101"));
   }
 
+  //Bug IndexView with a single static row should be RowMajor:
+  {
+    // A(1, seq(0,2,1)).cwiseAbs().colwise().replicate(2).eval();
+    STATIC_CHECK(( (internal::evaluator<decltype( A(1,seq(0,2,1)) )>::Flags & RowMajorBit) == RowMajorBit ));
+  }
+
 }
 
 EIGEN_DECLARE_TEST(indexed_view)
