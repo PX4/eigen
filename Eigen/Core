@@ -330,6 +330,10 @@ using std::ptrdiff_t;
 #include "src/Core/CoreIterators.h"
 #include "src/Core/ConditionEstimator.h"
 
+#if defined(EIGEN_ARCH_PPC)
+#include "src/Core/arch/AltiVec/MatrixProduct.h"
+#endif
+
 #include "src/Core/BooleanRedux.h"
 #include "src/Core/Select.h"
 #include "src/Core/VectorwiseOp.h"
