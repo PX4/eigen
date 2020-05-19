@@ -21,14 +21,13 @@ inline T REF_DIV(const T& a, const T& b) { return a / b;}
 template <typename T>
 inline T REF_ABS_DIFF(const T& a, const T& b) { return a>b ? a - b : b-a;}
 
-// Specializations for bool
+// Specializations for bool.
 template <>
 inline bool REF_ADD(const bool& a, const bool& b) { return a || b;}
 template <>
 inline bool REF_SUB(const bool& a, const bool& b) { return a ^ b;}
 template <>
 inline bool REF_MUL(const bool& a, const bool& b) { return a && b;}
-
 
 template<typename FromScalar, typename FromPacket, typename ToScalar, typename ToPacket, bool CanCast = false>
 struct test_cast_helper;
@@ -106,10 +105,14 @@ void packetmath_boolean_mask_ops()
   CHECK_CWISE2_IF(true, internal::pcmp_eq, internal::pcmp_eq);
 }
 
+// Packet16b representing bool does not support ptrue, pandnot or pcmp_eq, since the scalar path
+// (for some compilers) compute the bitwise and with 0x1 of the results to keep the value in [0,1].
+#ifdef EIGEN_PACKET_MATH_SSE_H
 template<>
 void packetmath_boolean_mask_ops<bool, internal::Packet16b>()
 {
 }
+#endif
 
 template<typename Scalar,typename Packet> void packetmath()
 {
