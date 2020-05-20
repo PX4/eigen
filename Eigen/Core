@@ -335,7 +335,7 @@ using std::ptrdiff_t;
 #include "src/Core/CoreIterators.h"
 #include "src/Core/ConditionEstimator.h"
 
-#if EIGEN_ARCH_PPC
+#if defined(EIGEN_VECTORIZE_ALTIVEC) || defined(EIGEN_VECTORIZE_VSX)
 #include "src/Core/arch/AltiVec/MatrixProduct.h"
 #endif
 
