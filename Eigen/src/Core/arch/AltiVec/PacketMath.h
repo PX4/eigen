@@ -659,6 +659,38 @@ template<> EIGEN_DEVICE_FUNC inline void pscatter<unsigned short int, Packet8us>
   pscatter_size8<Packet8us>(to, from, stride);
 }
 
+template<typename Packet> EIGEN_DEVICE_FUNC inline void pscatter_size16(__UNPACK_TYPE__(Packet)* to, const Packet& from, Index stride)
+{
+  EIGEN_ALIGN16 __UNPACK_TYPE__(Packet) a[16];
+  pstore<__UNPACK_TYPE__(Packet)>(a, from);
+  to[0*stride] = a[0];
+  to[1*stride] = a[1];
+  to[2*stride] = a[2];
+  to[3*stride] = a[3];
+  to[4*stride] = a[4];
+  to[5*stride] = a[5];
+  to[6*stride] = a[6];
+  to[7*stride] = a[7];
+  to[8*stride] = a[8];
+  to[9*stride] = a[9];
+  to[10*stride] = a[10];
+  to[11*stride] = a[11];
+  to[12*stride] = a[12];
+  to[13*stride] = a[13];
+  to[14*stride] = a[14];
+  to[15*stride] = a[15];
+}
+
+template<> EIGEN_DEVICE_FUNC inline void pscatter<int8_t, Packet16c>(int8_t* to, const Packet16c& from, Index stride)
+{
+  pscatter_size16<Packet16c>(to, from, stride);
+}
+
+template<> EIGEN_DEVICE_FUNC inline void pscatter<uint8_t, Packet16uc>(uint8_t* to, const Packet16uc& from, Index stride)
+{
+  pscatter_size16<Packet16uc>(to, from, stride);
+}
+
 template<> EIGEN_STRONG_INLINE Packet4f   plset<Packet4f>(const float&     a) { return pset1<Packet4f>(a) + p4f_COUNTDOWN;  }
 template<> EIGEN_STRONG_INLINE Packet4i   plset<Packet4i>(const int&       a) { return pset1<Packet4i>(a) + p4i_COUNTDOWN;  }
 template<> EIGEN_STRONG_INLINE Packet8s   plset<Packet8s>(const short int& a) { return pset1<Packet8s>(a) + p8s_COUNTDOWN; }
