@@ -2679,9 +2679,9 @@ struct gemm_pack_rhs<Scalar, Index, DataMapper, nr, RowMajor, Conjugate, PanelMo
   typedef typename DataMapper::LinearMapper LinearMapper;
   enum { PacketSize = packet_traits<Scalar>::size,
          HalfPacketSize = unpacket_traits<HalfPacket>::size,
-         QuarterPacketSize = unpacket_traits<QuarterPacket>::size,
-         HasHalf = (int)HalfPacketSize < (int)PacketSize,
-         HasQuarter = (int)QuarterPacketSize < (int)HalfPacketSize };
+		 QuarterPacketSize = unpacket_traits<QuarterPacket>::size};
+  bool HasHalf = (int)HalfPacketSize < (int)PacketSize;
+  bool HasQuarter = (int)QuarterPacketSize < (int)HalfPacketSize;
   EIGEN_DONT_INLINE void operator()(Scalar* blockB, const DataMapper& rhs, Index depth, Index cols, Index stride=0, Index offset=0)
   {
     EIGEN_ASM_COMMENT("EIGEN PRODUCT PACK RHS ROWMAJOR");
