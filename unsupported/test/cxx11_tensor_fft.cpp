@@ -228,10 +228,10 @@ template <typename RealScalar>
 static void test_fft_non_power_of_2_round_trip(int exponent) {
   int n = (1 << exponent) + 1;
 
-  Eigen::DSizes<std::int64_t, 1> dimensions;
+  Eigen::DSizes<ptrdiff_t, 1> dimensions;
   dimensions[0] = n;
-  const DSizes<std::int64_t, 1> arr = dimensions;
-  Tensor<RealScalar, 1, ColMajor, std::int64_t> input;
+  const DSizes<ptrdiff_t, 1> arr = dimensions;
+  Tensor<RealScalar, 1, ColMajor, ptrdiff_t> input;
 
   input.resize(arr);
   input.setRandom();
@@ -242,7 +242,7 @@ static void test_fft_non_power_of_2_round_trip(int exponent) {
   Tensor<std::complex<RealScalar>, 1, ColMajor> forward =
       input.template fft<BothParts, FFT_FORWARD>(fft);
 
-  Tensor<RealScalar, 1, ColMajor, std::int64_t> output =
+  Tensor<RealScalar, 1, ColMajor, ptrdiff_t> output =
       forward.template fft<RealPart, FFT_REVERSE>(fft);
 
   for (int i = 0; i < n; ++i) {

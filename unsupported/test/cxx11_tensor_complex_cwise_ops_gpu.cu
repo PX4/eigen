@@ -77,6 +77,8 @@ void test_cuda_complex_cwise_ops() {
         gpu_out.device(gpu_device) = -gpu_in1;
         expected = -a;
         break;
+      case NbOps:
+        break;
     }
     assert(cudaMemcpyAsync(actual.data(), d_out, complex_bytes, cudaMemcpyDeviceToHost,
                            gpu_device.stream()) == cudaSuccess);
