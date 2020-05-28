@@ -53,7 +53,6 @@ static void test_static_reshape() {
   Eigen::IndexList<type2index<2>, type2index<3>, type2index<7>> dim;
   Tensor<float, 3> reshaped = tensor.reshape(static_cast<Eigen::DSizes<ptrdiff_t,3>>(dim));
 
-
   for (int i = 0; i < 2; ++i) {
     for (int j = 0; j < 3; ++j) {
       for (int k = 0; k < 7; ++k) {

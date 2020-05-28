@@ -29,58 +29,113 @@ inline bool REF_SUB(const bool& a, const bool& b) { return a ^ b;}
 template <>
 inline bool REF_MUL(const bool& a, const bool& b) { return a && b;}
 
-template<typename FromScalar, typename FromPacket, typename ToScalar, typename ToPacket, bool CanCast = false>
-struct test_cast_helper;
-
-template<typename FromScalar, typename FromPacket, typename ToScalar, typename ToPacket>
-struct test_cast_helper<FromScalar, FromPacket, ToScalar, ToPacket, false> {
-  static void run() {}
-};
-
-template<typename FromScalar, typename FromPacket, typename ToScalar, typename ToPacket>
-struct test_cast_helper<FromScalar, FromPacket, ToScalar, ToPacket, true> {
-  static void run() {
-    static const int PacketSize = internal::unpacket_traits<FromPacket>::size;
-    EIGEN_ALIGN_MAX FromScalar data1[PacketSize];
-    EIGEN_ALIGN_MAX ToScalar data2[PacketSize];
-    EIGEN_ALIGN_MAX ToScalar ref[PacketSize];
-
-    // Construct a packet of scalars that will not overflow when casting
-    for (int i=0; i<PacketSize; ++i) {
-      const FromScalar from_scalar = Array<FromScalar,1,1>::Random().value();
-      const ToScalar to_scalar = Array<ToScalar,1,1>::Random().value();
-      const FromScalar c = sizeof(ToScalar) > sizeof(FromScalar) ? static_cast<FromScalar>(to_scalar) : from_scalar;
-      data1[i] = (NumTraits<FromScalar>::IsSigned && !NumTraits<ToScalar>::IsSigned) ? numext::abs(c) : c;
+// Uses pcast to cast from one array to another.
+template<typename SrcPacket, typename TgtPacket, int SrcCoeffRatio, int TgtCoeffRatio>
+struct pcast_array {
+  static void cast(const typename internal::unpacket_traits<SrcPacket>::type* src, size_t size, typename internal::unpacket_traits<TgtPacket>::type* dst) {
+    static const int TgtPacketSize = internal::unpacket_traits<TgtPacket>::size;
+    for (size_t i=0; i<size; i+=TgtPacketSize) {
+      internal::pstoreu(dst+i, internal::pcast<SrcPacket,TgtPacket>(internal::ploadu<SrcPacket>(src+i)));
     }
-
-    for (int i=0; i<PacketSize; ++i)
-      ref[i] = static_cast<const ToScalar>(data1[i]);
-    internal::pstore(data2, internal::pcast<FromPacket, ToPacket>(internal::pload<FromPacket>(data1)));
-
-    VERIFY(test::areApprox(ref, data2, PacketSize) && "internal::pcast<>");
   }
 };
 
-template<typename FromPacket, typename ToScalar>
+template<typename SrcPacket,typename TgtPacket>
+struct pcast_array<SrcPacket, TgtPacket, 2, 1>{
+  static void cast(const typename internal::unpacket_traits<SrcPacket>::type* src, size_t size, typename internal::unpacket_traits<TgtPacket>::type* dst) {
+    static const int SrcPacketSize = internal::unpacket_traits<SrcPacket>::size;
+    static const int TgtPacketSize = internal::unpacket_traits<TgtPacket>::size;
+    for (size_t i=0; i<size; i+=TgtPacketSize) {
+      SrcPacket a = internal::ploadu<SrcPacket>(src+i);
+      SrcPacket b = internal::ploadu<SrcPacket>(src+i+SrcPacketSize);
+      internal::pstoreu(dst+i, internal::pcast<SrcPacket,TgtPacket>(a, b));
+    }
+  }
+};
+
+template<typename SrcPacket, typename TgtPacket>
+struct pcast_array<SrcPacket, TgtPacket, 4, 1>{
+  static void cast(const typename internal::unpacket_traits<SrcPacket>::type* src, size_t size, typename internal::unpacket_traits<TgtPacket>::type* dst) {
+    static const int SrcPacketSize = internal::unpacket_traits<SrcPacket>::size;
+    static const int TgtPacketSize = internal::unpacket_traits<TgtPacket>::size;
+    for (size_t i=0; i<size; i+=TgtPacketSize) {
+      SrcPacket a = internal::ploadu<SrcPacket>(src+i);
+      SrcPacket b = internal::ploadu<SrcPacket>(src+i+SrcPacketSize);
+      SrcPacket c = internal::ploadu<SrcPacket>(src+i+2*SrcPacketSize);
+      SrcPacket d = internal::ploadu<SrcPacket>(src+i+3*SrcPacketSize);
+      internal::pstoreu(dst+i, internal::pcast<SrcPacket,TgtPacket>(a, b));
+    }
+  }
+};
+
+template<typename SrcPacket, typename TgtPacket, int SrcCoeffRatio, int TgtCoeffRatio, bool CanCast = false>
+struct test_cast_helper;
+
+template<typename SrcPacket, typename TgtPacket, int SrcCoeffRatio, int TgtCoeffRatio>
+struct test_cast_helper<SrcPacket, TgtPacket, SrcCoeffRatio, TgtCoeffRatio, false> {
+  static void run() {}
+};
+
+template<typename SrcPacket, typename TgtPacket, int SrcCoeffRatio, int TgtCoeffRatio>
+struct test_cast_helper<SrcPacket, TgtPacket, SrcCoeffRatio, TgtCoeffRatio, true> {
+  static void run() {
+    typedef typename internal::unpacket_traits<SrcPacket>::type SrcScalar;
+    typedef typename internal::unpacket_traits<TgtPacket>::type TgtScalar;
+    static const int SrcPacketSize = internal::unpacket_traits<SrcPacket>::size;
+    static const int TgtPacketSize = internal::unpacket_traits<TgtPacket>::size;
+    static const int DataSize = SrcPacketSize*SrcCoeffRatio;
+    VERIFY(DataSize == TgtPacketSize*TgtCoeffRatio && "Packet sizes and cast ratios are mismatched.");
+
+    EIGEN_ALIGN_MAX SrcScalar data1[DataSize];
+    EIGEN_ALIGN_MAX TgtScalar data2[DataSize];
+    EIGEN_ALIGN_MAX TgtScalar ref[DataSize];
+
+    // Construct a packet of scalars that will not overflow when casting
+    for (int i=0; i<DataSize; ++i) {
+      const SrcScalar a = Array<SrcScalar,1,1>::Random().value();
+      const TgtScalar b = Array<TgtScalar,1,1>::Random().value();
+      const SrcScalar c = sizeof(TgtScalar) > sizeof(SrcScalar) ? static_cast<SrcScalar>(b) : a;
+      data1[i] = (NumTraits<SrcScalar>::IsSigned && !NumTraits<TgtScalar>::IsSigned) ? numext::abs(c) : c;
+    }
+
+    for (int i=0; i<DataSize; ++i)
+      ref[i] = static_cast<const TgtScalar>(data1[i]);
+
+    pcast_array<SrcPacket, TgtPacket, SrcCoeffRatio, TgtCoeffRatio>::cast(data1, DataSize, data2);
+
+    VERIFY(test::areApprox(ref, data2, DataSize) && "internal::pcast<>");
+  }
+};
+
+template<typename SrcScalar, typename TgtScalar>
 void test_cast() {
-  typedef typename internal::unpacket_traits<FromPacket>::type FromScalar;
-  typedef typename internal::packet_traits<FromScalar> FromPacketTraits;
-  typedef typename internal::packet_traits<ToScalar>::type Full;
-  typedef typename internal::unpacket_traits<Full>::half Half;
-  typedef typename internal::unpacket_traits<typename internal::unpacket_traits<Full>::half>::half Quarter;
+  typedef typename internal::packet_traits<SrcScalar> SrcPacketTraits;
+  typedef typename internal::packet_traits<TgtScalar> TgtPacketTraits;
+  typedef typename internal::type_casting_traits<SrcScalar, TgtScalar> TypeCastingTraits;
+  static const int SrcCoeffRatio = TypeCastingTraits::SrcCoeffRatio;
+  static const int TgtCoeffRatio = TypeCastingTraits::TgtCoeffRatio;
 
-  static const int PacketSize = internal::unpacket_traits<FromPacket>::size;
-  static const bool CanCast =
-      FromPacketTraits::HasCast &&
-      (PacketSize == internal::unpacket_traits<Full>::size ||
-      PacketSize == internal::unpacket_traits<Half>::size ||
-      PacketSize == internal::unpacket_traits<Quarter>::size);
+  static const bool HasFullCast = TypeCastingTraits::VectorizedCast;
+  static const bool HasHalfCast = HasFullCast && internal::packet_traits<SrcScalar>::HasHalfPacket && internal::packet_traits<TgtScalar>::HasHalfPacket;
 
-  typedef typename internal::conditional<internal::unpacket_traits<Quarter>::size == PacketSize, Quarter,
-      typename internal::conditional<internal::unpacket_traits<Half>::size == PacketSize, Half, Full>::type>::type
-      ToPacket;
+  test_cast_helper<typename SrcPacketTraits::type, typename TgtPacketTraits::type, SrcCoeffRatio, TgtCoeffRatio, HasFullCast>::run();
+  test_cast_helper<typename SrcPacketTraits::half, typename TgtPacketTraits::half, SrcCoeffRatio, TgtCoeffRatio, HasHalfCast>::run();
+}
 
-  test_cast_helper<FromScalar, FromPacket, ToScalar, ToPacket, CanCast>::run();
+template<typename Scalar, typename Packet> void packetmath_pcast_ops() {
+  const static bool IsFullPacket = internal::is_same<typename internal::packet_traits<Scalar>::type,Packet>::value;
+  if (IsFullPacket) {
+    test_cast<Scalar, float>();
+    test_cast<Scalar, double>();
+    test_cast<Scalar, int8_t>();
+    test_cast<Scalar, uint8_t>();
+    test_cast<Scalar, int16_t>();
+    test_cast<Scalar, uint16_t>();
+    test_cast<Scalar, int32_t>();
+    test_cast<Scalar, uint32_t>();
+    test_cast<Scalar, int64_t>();
+    test_cast<Scalar, uint64_t>();
+  }
 }
 
 template<typename Scalar,typename Packet>
@@ -341,6 +396,7 @@ template<typename Scalar,typename Packet> void packetmath()
   CHECK_CWISE2_IF(true, internal::pand, internal::pand);
 
   packetmath_boolean_mask_ops<Scalar, Packet>();
+  packetmath_pcast_ops<Scalar, Packet>();
 }
 
 
@@ -583,19 +639,6 @@ template<typename Scalar,typename Packet> void packetmath_notcomplex()
   EIGEN_ALIGN_MAX Scalar ref[PacketSize*4];
 
   Array<Scalar,Dynamic,1>::Map(data1, PacketSize*4).setRandom();
-
-  if (PacketTraits::HasCast) {
-    test_cast<Packet, float>();
-    test_cast<Packet, double>();
-    test_cast<Packet, int8_t>();
-    test_cast<Packet, uint8_t>();
-    test_cast<Packet, int16_t>();
-    test_cast<Packet, uint16_t>();
-    test_cast<Packet, int32_t>();
-    test_cast<Packet, uint32_t>();
-    test_cast<Packet, int64_t>();
-    test_cast<Packet, uint64_t>();
-  }
 
   ref[0] = data1[0];
   for (int i=0; i<PacketSize; ++i)

@@ -96,7 +96,6 @@ struct default_packet_traits
     HasRint   = 0,
     HasFloor  = 0,
     HasCeil   = 0,
-    HasCast   = 0, 
     HasSign   = 0
   };
 };
@@ -325,7 +324,7 @@ pcmp_eq(const Packet& a, const Packet& b) { return a==b ? ptrue(a) : pzero(a); }
 
 /** \internal \returns a < b or a==NaN or b==NaN as a bit mask */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
-pcmp_lt_or_nan(const Packet& a, const Packet& b) { return a>=b ? pzero(a) : ptrue(a); } 
+pcmp_lt_or_nan(const Packet& a, const Packet& b) { return a>=b ? pzero(a) : ptrue(a); }
 
 /** \internal \returns \a or \b for each field in packet according to \mask */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
@@ -392,7 +391,7 @@ ploaddup(const typename unpacket_traits<Packet>::type* from) { return *from; }
   * For instance, for a packet of 8 elements, 2 scalars will be read from \a *from and
   * replicated to form: {from[0],from[0],from[0],from[0],from[1],from[1],from[1],from[1]}
   * Currently, this function is only used in matrix products.
-  * For packet-size smaller or equal to 4, this function is equivalent to pload1 
+  * For packet-size smaller or equal to 4, this function is equivalent to pload1
   */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
 ploadquad(const typename unpacket_traits<Packet>::type* from)
