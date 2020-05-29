@@ -1,0 +1,20 @@
+
+.build:
+  stage: build
+  image: fedora
+  before_script:
+     - dnf -y install gcc-c++ cmake make
+  script:
+    - cmake -B builddir -DEIGEN_TEST_CXX11=${EIGEN_TEST_CXX11}
+    - cmake --build builddir --target buildtests
+    - cd builddir && ctest --output-on-failure
+
+CXX11 ON:
+  variables:
+    EIGEN_TEST_CXX11: "ON"
+  extends: .build
+  
+CXX11 OFF:
+  variables:
+    EIGEN_TEST_CXX11: "OFF"
+  extends: .build
