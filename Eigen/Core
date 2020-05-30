@@ -36,7 +36,7 @@
 
 // Disable the ipa-cp-clone optimization flag with MinGW 6.x or newer (enabled by default with -O3)
 // See http://eigen.tuxfamily.org/bz/show_bug.cgi?id=556 for details.
-#if EIGEN_COMP_MINGW && EIGEN_GNUC_AT_LEAST(4,6)
+#if EIGEN_COMP_MINGW && EIGEN_GNUC_AT_LEAST(4,6) && EIGEN_GNUC_AT_MOST(5,5)
   #pragma GCC optimize ("-fno-ipa-cp-clone")
 #endif
 
