@@ -103,7 +103,7 @@ template<typename SparseMatrixType> void sparse_product()
     // make sure the right product implementation is called:
     if((!SparseMatrixType::IsRowMajor) && m2.rows()<=m3.cols())
     {
-      VERIFY_EVALUATION_COUNT(m4 = m2*m3, 3); // 1 temp for the result + 2 for transposing and get a sorted result.
+      VERIFY_EVALUATION_COUNT(m4 = m2*m3, 2); // 2 for transposing and get a sorted result.
       VERIFY_EVALUATION_COUNT(m4 = (m2*m3).pruned(0), 1);
       VERIFY_EVALUATION_COUNT(m4 = (m2*m3).eval().pruned(0), 4);
     }
