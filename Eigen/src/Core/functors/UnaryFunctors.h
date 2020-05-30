@@ -951,8 +951,7 @@ template <typename T>
 struct scalar_logistic_op {
   EIGEN_EMPTY_STRUCT_CTOR(scalar_logistic_op)
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE T operator()(const T& x) const {
-    const T one = T(1);
-    return one / (one + numext::exp(-x));
+    return packetOp(x);
   }
 
   template <typename Packet> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
@@ -978,17 +977,7 @@ template <>
 struct scalar_logistic_op<float> {
   EIGEN_EMPTY_STRUCT_CTOR(scalar_logistic_op)
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE float operator()(const float& x) const {
-    // The upper cut-off is the smallest x for which the rational approximation evaluates to 1.
-    // Choosing this value saves us a few instructions clamping the results at the end.
-#ifdef EIGEN_VECTORIZE_FMA
-    const float cutoff_upper = 15.7243833541870117f;
-#else
-    const float cutoff_upper = 15.6437711715698242f;
-#endif
-    const float cutoff_lower = -9.f;
-    if (x > cutoff_upper) return 1.0f;
-    else if (x < cutoff_lower) return numext::exp(x);
-    else return 1.0f / (1.0f + numext::exp(-x));
+    return packetOp(x);
   }
 
   template <typename Packet> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
@@ -997,7 +986,8 @@ struct scalar_logistic_op<float> {
     const Packet lt_mask = pcmp_lt<Packet>(_x, cutoff_lower);
     const bool any_small = predux(lt_mask);
 
-    // Clamp the input to be at most 'cutoff_upper'.
+    // The upper cut-off is the smallest x for which the rational approximation evaluates to 1.
+    // Choosing this value saves us a few instructions clamping the results at the end.
 #ifdef EIGEN_VECTORIZE_FMA
     const Packet cutoff_upper = pset1<Packet>(15.7243833541870117f);
 #else
