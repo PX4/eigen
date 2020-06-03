@@ -984,7 +984,7 @@ struct scalar_logistic_op<float> {
   Packet packetOp(const Packet& _x) const {
     const Packet cutoff_lower = pset1<Packet>(-9.f);
     const Packet lt_mask = pcmp_lt<Packet>(_x, cutoff_lower);
-    const bool any_small = predux(lt_mask);
+    const bool any_small = predux_any(lt_mask);
 
     // The upper cut-off is the smallest x for which the rational approximation evaluates to 1.
     // Choosing this value saves us a few instructions clamping the results at the end.
