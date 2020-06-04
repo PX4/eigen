@@ -447,18 +447,20 @@ template<typename Scalar,typename Packet> void packetmath_real()
     VERIFY((numext::isnan)(data2[0]));
   }
 
-  {
+  if (PacketTraits::HasExp) {
     internal::scalar_logistic_op<Scalar> logistic;
     for (int i=0; i<size; ++i)
     {
       data1[i] = internal::random<Scalar>(-20,20);
     }
-    internal::pstore(data2, logistic.packetOp(internal::pload<Packet>(data1)));
+
+    test::packet_helper<PacketTraits::HasExp,Packet> h;
+    h.store(data2, logistic.packetOp(h.load(data1)));
     for (int i=0; i<PacketSize; ++i) {
       VERIFY_IS_APPROX(data2[i],logistic(data1[i]));
-      #ifdef EIGEN_VECTORIZE // don't check for exactness when using the i387 FPU
+#ifdef EIGEN_VECTORIZE // don't check for exactness when using the i387 FPU
       VERIFY_IS_EQUAL(data2[i],logistic(data1[i]));
-      #endif
+#endif
     }
   }
 
