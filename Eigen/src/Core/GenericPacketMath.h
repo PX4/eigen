@@ -524,7 +524,7 @@ template<typename Packet> EIGEN_DEVICE_FUNC inline bool predux_any(const Packet&
   //  - bits full of ones (NaN for floats),
   //  - or first bit equals to 1 (1 for ints, smallest denormal for floats).
   // For all these cases, taking the sum is just fine, and this boils down to a no-op for scalars.
-  return bool(predux(a));
+  return bool(numext::not_equal_strict(a, pzero(a)));
 }
 
 /** \internal \returns the reversed elements of \a a*/
