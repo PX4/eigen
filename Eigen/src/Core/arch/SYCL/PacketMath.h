@@ -514,11 +514,11 @@ SYCL_PCMP(eq, cl::sycl::cl_double2)
 template <typename T> struct convert_to_integer;
 
 template <> struct convert_to_integer<float> {
-  using type = int;
+  using type = std::int32_t;
   using packet_type = cl::sycl::cl_int4;
 };
 template <> struct convert_to_integer<double> {
-  using type = long;
+  using type = std::int64_t;
   using packet_type = cl::sycl::cl_long2;
 };
 

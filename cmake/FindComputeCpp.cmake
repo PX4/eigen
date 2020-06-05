@@ -31,6 +31,7 @@
 
 cmake_minimum_required(VERSION 3.4.3)
 include(FindPackageHandleStandardArgs)
+include(ComputeCppIRMap)
 
 set(COMPUTECPP_USER_FLAGS "" CACHE STRING "User flags for compute++")
 separate_arguments(COMPUTECPP_USER_FLAGS)
@@ -64,11 +65,13 @@ endif()
 
 find_program(ComputeCpp_DEVICE_COMPILER_EXECUTABLE compute++
   HINTS ${computecpp_host_find_hint}
-  PATH_SUFFIXES bin)
+  PATH_SUFFIXES bin
+  NO_SYSTEM_ENVIRONMENT_PATH)
 
 find_program(ComputeCpp_INFO_EXECUTABLE computecpp_info
   HINTS ${computecpp_host_find_hint}
-  PATH_SUFFIXES bin)
+  PATH_SUFFIXES bin
+  NO_SYSTEM_ENVIRONMENT_PATH)
 
 find_library(COMPUTECPP_RUNTIME_LIBRARY
   NAMES ComputeCpp ComputeCpp_vs2015
@@ -77,7 +80,7 @@ find_library(COMPUTECPP_RUNTIME_LIBRARY
   DOC "ComputeCpp Runtime Library")
 
 find_library(COMPUTECPP_RUNTIME_LIBRARY_DEBUG
-  NAMES ComputeCpp ComputeCpp_vs2015_d
+  NAMES ComputeCpp_d ComputeCpp ComputeCpp_vs2015_d
   HINTS ${computecpp_find_hint}
   PATH_SUFFIXES lib
   DOC "ComputeCpp Debug Runtime Library")
@@ -112,7 +115,7 @@ else()
     if (COMPUTECPP_PLATFORM_IS_SUPPORTED)
       message(STATUS "platform - your system can support ComputeCpp")
     else()
-      message(WARNING "platform - your system CANNOT support ComputeCpp")
+      message(STATUS "platform - your system is not officially supported")
     endif()
   endif()
 endif()
@@ -151,6 +154,8 @@ endif()
 list(APPEND COMPUTECPP_DEVICE_COMPILER_FLAGS -sycl-target ${COMPUTECPP_BITCODE})
 message(STATUS "compute++ flags - ${COMPUTECPP_DEVICE_COMPILER_FLAGS}")
 
+include(ComputeCppCompilerChecks)
+
 if(NOT TARGET OpenCL::OpenCL)
   add_library(OpenCL::OpenCL UNKNOWN IMPORTED)
   set_target_properties(OpenCL::OpenCL PROPERTIES
@@ -163,7 +168,7 @@ if(NOT TARGET ComputeCpp::ComputeCpp)
   add_library(ComputeCpp::ComputeCpp UNKNOWN IMPORTED)
   set_target_properties(ComputeCpp::ComputeCpp PROPERTIES
     IMPORTED_LOCATION_DEBUG          "${COMPUTECPP_RUNTIME_LIBRARY_DEBUG}"
-    IMPORTED_LOCATION_RELWITHDEBINFO "${COMPUTECPP_RUNTIME_LIBRARY_DEBUG}"
+    IMPORTED_LOCATION_RELWITHDEBINFO "${COMPUTECPP_RUNTIME_LIBRARY}"
     IMPORTED_LOCATION                "${COMPUTECPP_RUNTIME_LIBRARY}"
     INTERFACE_INCLUDE_DIRECTORIES    "${ComputeCpp_INCLUDE_DIRS}"
     INTERFACE_LINK_LIBRARIES         "OpenCL::OpenCL"
@@ -200,7 +205,7 @@ define_property(
 ####################
 #
 #  Adds a custom target for running compute++ and adding a dependency for the
-#  resulting integration header.
+#  resulting integration header and kernel binary.
 #
 #  TARGET : Name of the target.
 #  SOURCE : Source file to be compiled.
@@ -230,6 +235,7 @@ function(__build_ir)
   # using the same source file will be generated with a different rule.
   set(baseSyclName ${CMAKE_CURRENT_BINARY_DIR}/${SDK_BUILD_IR_TARGET}_${sourceFileName})
   set(outputSyclFile ${baseSyclName}.sycl)
+  set(outputDeviceFile ${baseSyclName}.${IR_MAP_${COMPUTECPP_BITCODE}})
   set(depFileName ${baseSyclName}.sycl.d)
 
   set(include_directories "$<TARGET_PROPERTY:${SDK_BUILD_IR_TARGET},INCLUDE_DIRECTORIES>")
@@ -273,7 +279,9 @@ function(__build_ir)
   get_target_property(target_libraries ${SDK_BUILD_IR_TARGET} LINK_LIBRARIES)
   if(target_libraries)
     foreach(library ${target_libraries})
-      list(APPEND ir_dependencies ${library})
+      if(TARGET ${library})
+        list(APPEND ir_dependencies ${library})
+      endif()
     endforeach()
   endif()
 
@@ -281,19 +289,20 @@ function(__build_ir)
   # CMake throws an error if it is unsupported by the generator (i. e. not ninja)
   if((NOT CMAKE_VERSION VERSION_LESS 3.7.0) AND
           CMAKE_GENERATOR MATCHES "Ninja")
-    file(RELATIVE_PATH relOutputFile ${CMAKE_BINARY_DIR} ${outputSyclFile})
+    file(RELATIVE_PATH relOutputFile ${CMAKE_BINARY_DIR} ${outputDeviceFile})
     set(generate_depfile -MMD -MF ${depFileName} -MT ${relOutputFile})
     set(enable_depfile DEPFILE ${depFileName})
   endif()
 
   # Add custom command for running compute++
   add_custom_command(
-    OUTPUT ${outputSyclFile}
+    OUTPUT ${outputDeviceFile} ${outputSyclFile}
     COMMAND ${ComputeCpp_DEVICE_COMPILER_EXECUTABLE}
             ${COMPUTECPP_DEVICE_COMPILER_FLAGS}
             ${generated_include_directories}
             ${generated_compile_definitions}
-            -o ${outputSyclFile}
+            -sycl-ih ${outputSyclFile}
+            -o ${outputDeviceFile}
             -c ${SDK_BUILD_IR_SOURCE}
             ${generate_depfile}
     DEPENDS ${ir_dependencies}
@@ -308,7 +317,7 @@ function(__build_ir)
 
   if(NOT MSVC)
     # Add a custom target for the generated integration header
-    add_custom_target(${headerTargetName} DEPENDS ${outputSyclFile})
+    add_custom_target(${headerTargetName} DEPENDS ${outputDeviceFile} ${outputSyclFile})
     add_dependencies(${SDK_BUILD_IR_TARGET} ${headerTargetName})
   endif()
 
@@ -391,6 +400,8 @@ function(add_sycl_to_target)
     "${multi_value_args}"
     ${ARGN}
   )
+
+  set_target_properties(${SDK_ADD_SYCL_TARGET} PROPERTIES LINKER_LANGUAGE CXX)
 
   # If the CXX compiler is set to compute++ enable the driver.
   get_filename_component(cmakeCxxCompilerFileName "${CMAKE_CXX_COMPILER}" NAME)
