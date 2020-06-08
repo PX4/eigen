@@ -2680,14 +2680,14 @@ struct gemm_pack_rhs<Scalar, Index, DataMapper, nr, RowMajor, Conjugate, PanelMo
   enum { PacketSize = packet_traits<Scalar>::size,
          HalfPacketSize = unpacket_traits<HalfPacket>::size,
 		 QuarterPacketSize = unpacket_traits<QuarterPacket>::size};
-  bool HasHalf = (int)HalfPacketSize < (int)PacketSize;
-  bool HasQuarter = (int)QuarterPacketSize < (int)HalfPacketSize;
   EIGEN_DONT_INLINE void operator()(Scalar* blockB, const DataMapper& rhs, Index depth, Index cols, Index stride=0, Index offset=0)
   {
     EIGEN_ASM_COMMENT("EIGEN PRODUCT PACK RHS ROWMAJOR");
     EIGEN_UNUSED_VARIABLE(stride);
     EIGEN_UNUSED_VARIABLE(offset);
     eigen_assert(((!PanelMode) && stride==0 && offset==0) || (PanelMode && stride>=depth && offset<=stride));
+    const bool HasHalf = (int)HalfPacketSize < (int)PacketSize;
+    const bool HasQuarter = (int)QuarterPacketSize < (int)HalfPacketSize;
     conj_if<NumTraits<Scalar>::IsComplex && Conjugate> cj;
     Index packet_cols8 = nr>=8 ? (cols/8) * 8 : 0;
     Index packet_cols4 = nr>=4 ? (cols/4) * 4 : 0;
