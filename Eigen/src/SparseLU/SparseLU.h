@@ -355,6 +355,9 @@ class SparseLU : public SparseSolverBase<SparseLU<_MatrixType,_OrderingType> >, 
       return (m_detPermR * m_detPermC) > 0 ? det : -det;
     }
 
+    Index nnzL() const { return m_nnzL; };
+    Index nnzU() const { return m_nnzU; };
+
   protected:
     // Functions 
     void initperfvalues()
