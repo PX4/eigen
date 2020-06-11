@@ -200,6 +200,18 @@ template<typename T, int Size, int _Rows, int _Cols, int _Options> class DenseSt
       if (this != &other) m_data = other.m_data;
       return *this; 
     }
+#if EIGEN_HAS_RVALUE_REFERENCES
+    EIGEN_DEVICE_FUNC DenseStorage(DenseStorage&& other) EIGEN_NOEXCEPT
+      : m_data(std::move(other.m_data))
+    {
+    }
+    EIGEN_DEVICE_FUNC DenseStorage& operator=(DenseStorage&& other) EIGEN_NOEXCEPT
+    {
+      if (this != &other)
+        m_data = std::move(other.m_data);
+      return *this;
+    }
+#endif
     EIGEN_DEVICE_FUNC DenseStorage(Index size, Index rows, Index cols) {
       EIGEN_INTERNAL_DENSE_STORAGE_CTOR_PLUGIN({})
       eigen_internal_assert(size==rows*cols && rows==_Rows && cols==_Cols);
