@@ -242,14 +242,26 @@ struct InnerMostDimReducer<Self, Op, true, true> {
       }
       return reducer.finalize(accum);
     } else {
+      const typename Self::Index UnrollSize =
+          (numValuesToReduce / (2*packetSize)) * 2*packetSize;
       const typename Self::Index VectorizedSize =
           (numValuesToReduce / packetSize) * packetSize;
       typename Self::PacketReturnType paccum =
           reducer.template initializePacket<typename Self::PacketReturnType>();
-      for (typename Self::Index j = 0; j < VectorizedSize; j += packetSize) {
+      typename Self::PacketReturnType paccum2 =
+          reducer.template initializePacket<typename Self::PacketReturnType>();
+      for (typename Self::Index j = 0; j < UnrollSize; j += packetSize * 2) {
         reducer.reducePacket(
             self.m_impl.template packet<Unaligned>(firstIndex + j), &paccum);
+        reducer.reducePacket(
+            self.m_impl.template packet<Unaligned>(firstIndex + j + packetSize),
+            &paccum2);
       }
+      for (typename Self::Index j = UnrollSize; j < VectorizedSize; j+= packetSize) {
+        reducer.reducePacket(self.m_impl.template packet<Unaligned>(
+                                 firstIndex + j), &paccum);
+      }
+      reducer.reducePacket(paccum2, &paccum);
       for (typename Self::Index j = VectorizedSize; j < numValuesToReduce;
            ++j) {
         reducer.reduce(self.m_impl.coeff(firstIndex + j), &accum);
