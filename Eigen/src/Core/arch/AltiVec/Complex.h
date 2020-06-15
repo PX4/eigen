@@ -269,19 +269,13 @@ template<> EIGEN_STRONG_INLINE void pstoreu<std::complex<double> >(std::complex<
 template<> EIGEN_STRONG_INLINE Packet1cd pset1<Packet1cd>(const std::complex<double>&  from)
 { /* here we really have to use unaligned loads :( */ return ploadu<Packet1cd>(&from); }
 
-template<> EIGEN_DEVICE_FUNC inline Packet1cd pgather<std::complex<double>, Packet1cd>(const std::complex<double>* from, Index stride)
+template<> EIGEN_DEVICE_FUNC inline Packet1cd pgather<std::complex<double>, Packet1cd>(const std::complex<double>* from, Index)
 {
-  EIGEN_ALIGN16 std::complex<double> af[2];
-  af[0] = from[0*stride];
-  af[1] = from[1*stride];
-  return pload<Packet1cd>(af);
+  return pload<Packet1cd>(from);
 }
-template<> EIGEN_DEVICE_FUNC inline void pscatter<std::complex<double>, Packet1cd>(std::complex<double>* to, const Packet1cd& from, Index stride)
+template<> EIGEN_DEVICE_FUNC inline void pscatter<std::complex<double>, Packet1cd>(std::complex<double>* to, const Packet1cd& from, Index)
 {
-  EIGEN_ALIGN16 std::complex<double> af[2];
-  pstore<std::complex<double> >(af, from);
-  to[0*stride] = af[0];
-  to[1*stride] = af[1];
+  pstore<std::complex<double> >(to, from);
 }
 
 template<> EIGEN_STRONG_INLINE Packet1cd padd<Packet1cd>(const Packet1cd& a, const Packet1cd& b) { return Packet1cd(a.v + b.v); }
