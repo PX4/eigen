@@ -389,7 +389,7 @@ struct packet_traits<uint64_t> : default_packet_traits
 };
 
 #if EIGEN_GNUC_AT_MOST(4, 4) && !EIGEN_COMP_LLVM
-// workaround gcc 4.2, 4.3 and 4.4 compilatin issue
+// workaround gcc 4.2, 4.3 and 4.4 compilation issue
 EIGEN_STRONG_INLINE float32x4_t vld1q_f32(const float* x) { return ::vld1q_f32((const float32_t*)x); }
 EIGEN_STRONG_INLINE float32x2_t vld1_f32(const float* x) { return ::vld1_f32 ((const float32_t*)x); }
 EIGEN_STRONG_INLINE float32x2_t vld1_dup_f32(const float* x) { return ::vld1_dup_f32 ((const float32_t*)x); }
@@ -867,6 +867,16 @@ template<> EIGEN_STRONG_INLINE Packet2i pmul<Packet2i>(const Packet2i& a, const 
 template<> EIGEN_STRONG_INLINE Packet4i pmul<Packet4i>(const Packet4i& a, const Packet4i& b) { return vmulq_s32(a,b); }
 template<> EIGEN_STRONG_INLINE Packet2ui pmul<Packet2ui>(const Packet2ui& a, const Packet2ui& b) { return vmul_u32(a,b); }
 template<> EIGEN_STRONG_INLINE Packet4ui pmul<Packet4ui>(const Packet4ui& a, const Packet4ui& b) { return vmulq_u32(a,b); }
+template<> EIGEN_STRONG_INLINE Packet2l pmul<Packet2l>(const Packet2l& a, const Packet2l& b) {
+  return vcombine_s64(
+    vdup_n_s64(vgetq_lane_s64(a, 0)*vgetq_lane_s64(b, 0)),
+    vdup_n_s64(vgetq_lane_s64(a, 1)*vgetq_lane_s64(b, 1)));
+}
+template<> EIGEN_STRONG_INLINE Packet2ul pmul<Packet2ul>(const Packet2ul& a, const Packet2ul& b) {
+  return vcombine_u64(
+    vdup_n_u64(vgetq_lane_u64(a, 0)*vgetq_lane_u64(b, 0)),
+    vdup_n_u64(vgetq_lane_u64(a, 1)*vgetq_lane_u64(b, 1)));
+}
 
 template<> EIGEN_STRONG_INLINE Packet2f pdiv<Packet2f>(const Packet2f& a, const Packet2f& b)
 {
@@ -1233,6 +1243,26 @@ template<> EIGEN_STRONG_INLINE Packet2ui pcmp_le<Packet2ui>(const Packet2ui& a, 
 { return vcle_u32(a,b); }
 template<> EIGEN_STRONG_INLINE Packet4ui pcmp_le<Packet4ui>(const Packet4ui& a, const Packet4ui& b)
 { return vcleq_u32(a,b); }
+template<> EIGEN_STRONG_INLINE Packet2l pcmp_le<Packet2l>(const Packet2l& a, const Packet2l& b)
+{
+#if EIGEN_ARCH_ARM64
+  return vreinterpretq_s64_u64(vcleq_s64(a,b));
+#else
+  return vcombine_s64(
+      vdup_n_s64(vgetq_lane_s64(a, 0) <= vgetq_lane_s64(b, 0) ? numext::int64_t(-1) : 0),
+      vdup_n_s64(vgetq_lane_s64(a, 1) <= vgetq_lane_s64(b, 1) ? numext::int64_t(-1) : 0));
+#endif
+}
+template<> EIGEN_STRONG_INLINE Packet2ul pcmp_le<Packet2ul>(const Packet2ul& a, const Packet2ul& b)
+{
+#if EIGEN_ARCH_ARM64
+  return vcleq_u64(a,b);
+#else
+  return vcombine_u64(
+      vdup_n_u64(vgetq_lane_u64(a, 0) <= vgetq_lane_u64(b, 0) ? numext::uint64_t(-1) : 0),
+      vdup_n_u64(vgetq_lane_u64(a, 1) <= vgetq_lane_u64(b, 1) ? numext::uint64_t(-1) : 0));
+#endif
+}
 
 template<> EIGEN_STRONG_INLINE Packet2f pcmp_lt<Packet2f>(const Packet2f& a, const Packet2f& b)
 { return vreinterpret_f32_u32(vclt_f32(a,b)); }
@@ -1274,6 +1304,26 @@ template<> EIGEN_STRONG_INLINE Packet2ui pcmp_lt<Packet2ui>(const Packet2ui& a, 
 { return vclt_u32(a,b); }
 template<> EIGEN_STRONG_INLINE Packet4ui pcmp_lt<Packet4ui>(const Packet4ui& a, const Packet4ui& b)
 { return vcltq_u32(a,b); }
+template<> EIGEN_STRONG_INLINE Packet2l pcmp_lt<Packet2l>(const Packet2l& a, const Packet2l& b)
+{
+#if EIGEN_ARCH_ARM64
+  return vreinterpretq_s64_u64(vcltq_s64(a,b));
+#else
+  return vcombine_s64(
+      vdup_n_s64(vgetq_lane_s64(a, 0) < vgetq_lane_s64(b, 0) ? numext::int64_t(-1) : 0),
+      vdup_n_s64(vgetq_lane_s64(a, 1) < vgetq_lane_s64(b, 1) ? numext::int64_t(-1) : 0));
+#endif
+}
+template<> EIGEN_STRONG_INLINE Packet2ul pcmp_lt<Packet2ul>(const Packet2ul& a, const Packet2ul& b)
+{
+#if EIGEN_ARCH_ARM64
+  return vcltq_u64(a,b);
+#else
+  return vcombine_u64(
+      vdup_n_u64(vgetq_lane_u64(a, 0) < vgetq_lane_u64(b, 0) ? numext::uint64_t(-1) : 0),
+      vdup_n_u64(vgetq_lane_u64(a, 1) < vgetq_lane_u64(b, 1) ? numext::uint64_t(-1) : 0));
+#endif
+}
 
 template<> EIGEN_STRONG_INLINE Packet2f pcmp_eq<Packet2f>(const Packet2f& a, const Packet2f& b)
 { return vreinterpret_f32_u32(vceq_f32(a,b)); }
@@ -1315,6 +1365,26 @@ template<> EIGEN_STRONG_INLINE Packet2ui pcmp_eq<Packet2ui>(const Packet2ui& a, 
 { return vceq_u32(a,b); }
 template<> EIGEN_STRONG_INLINE Packet4ui pcmp_eq<Packet4ui>(const Packet4ui& a, const Packet4ui& b)
 { return vceqq_u32(a,b); }
+template<> EIGEN_STRONG_INLINE Packet2l pcmp_eq<Packet2l>(const Packet2l& a, const Packet2l& b)
+{
+#if EIGEN_ARCH_ARM64
+  return vreinterpretq_s64_u64(vceqq_s64(a,b));
+#else
+  return vcombine_s64(
+      vdup_n_s64(vgetq_lane_s64(a, 0) == vgetq_lane_s64(b, 0) ? numext::int64_t(-1) : 0),
+      vdup_n_s64(vgetq_lane_s64(a, 1) == vgetq_lane_s64(b, 1) ? numext::int64_t(-1) : 0));
+#endif
+}
+template<> EIGEN_STRONG_INLINE Packet2ul pcmp_eq<Packet2ul>(const Packet2ul& a, const Packet2ul& b)
+{
+#if EIGEN_ARCH_ARM64
+  return vceqq_u64(a,b);
+#else
+  return vcombine_u64(
+      vdup_n_u64(vgetq_lane_u64(a, 0) == vgetq_lane_u64(b, 0) ? numext::uint64_t(-1) : 0),
+      vdup_n_u64(vgetq_lane_u64(a, 1) == vgetq_lane_u64(b, 1) ? numext::uint64_t(-1) : 0));
+#endif
+}
 
 template<> EIGEN_STRONG_INLINE Packet2f pcmp_lt_or_nan<Packet2f>(const Packet2f& a, const Packet2f& b)
 { return vreinterpret_f32_u32(vmvn_u32(vcge_f32(a,b))); }
