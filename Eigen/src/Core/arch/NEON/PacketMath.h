@@ -338,7 +338,7 @@ struct packet_traits<int64_t> : default_packet_traits
     Vectorizable = 1,
     AlignedOnScalar = 1,
     size = 2,
-    HasHalfPacket = 1,
+    HasHalfPacket = 0,
 
     HasCmp       = 1,
     HasAdd       = 1,
@@ -368,7 +368,7 @@ struct packet_traits<uint64_t> : default_packet_traits
     Vectorizable = 1,
     AlignedOnScalar = 1,
     size = 2,
-    HasHalfPacket = 1,
+    HasHalfPacket = 0,
 
     HasCmp       = 1,
     HasAdd       = 1,

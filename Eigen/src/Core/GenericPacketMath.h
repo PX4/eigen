@@ -162,10 +162,15 @@ EIGEN_DEVICE_FUNC inline TgtPacket
 pcast(const SrcPacket& a, const SrcPacket& /*b*/) {
   return static_cast<TgtPacket>(a);
 }
-
 template <typename SrcPacket, typename TgtPacket>
 EIGEN_DEVICE_FUNC inline TgtPacket
 pcast(const SrcPacket& a, const SrcPacket& /*b*/, const SrcPacket& /*c*/, const SrcPacket& /*d*/) {
+  return static_cast<TgtPacket>(a);
+}
+template <typename SrcPacket, typename TgtPacket>
+EIGEN_DEVICE_FUNC inline TgtPacket
+pcast(const SrcPacket& a, const SrcPacket& /*b*/, const SrcPacket& /*c*/, const SrcPacket& /*d*/,
+      const SrcPacket& /*e*/, const SrcPacket& /*f*/, const SrcPacket& /*g*/, const SrcPacket& /*h*/) {
   return static_cast<TgtPacket>(a);
 }
 
