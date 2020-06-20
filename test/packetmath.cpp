@@ -836,6 +836,7 @@ EIGEN_DECLARE_TEST(packetmath)
 #ifdef EIGEN_PACKET_MATH_SSE_H
     CALL_SUBTEST_14(( packetmath<bool,internal::packet_traits<bool>::type>() ));
 #endif
+    CALL_SUBTEST_15(( packetmath<bfloat16,internal::packet_traits<bfloat16>::type>() ));
     g_first_pass = false;
   }
 }

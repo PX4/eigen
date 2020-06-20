@@ -45,6 +45,7 @@ EIGEN_DECLARE_TEST(numext) {
   CALL_SUBTEST( check_abs<long>() );
   CALL_SUBTEST( check_abs<unsigned long>() );
   CALL_SUBTEST( check_abs<half>() );
+  CALL_SUBTEST( check_abs<bfloat16>() );
   CALL_SUBTEST( check_abs<float>() );
   CALL_SUBTEST( check_abs<double>() );
   CALL_SUBTEST( check_abs<long double>() );

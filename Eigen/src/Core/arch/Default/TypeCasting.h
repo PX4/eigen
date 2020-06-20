@@ -71,6 +71,49 @@ template<>
 struct functor_traits<scalar_cast_op<Eigen::half, float> >
 { enum { Cost = NumTraits<float>::AddCost, PacketAccess = false }; };
 
+
+template<>
+struct scalar_cast_op<float, Eigen::bfloat16> {
+  EIGEN_EMPTY_STRUCT_CTOR(scalar_cast_op)
+  typedef Eigen::bfloat16 result_type;
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Eigen::bfloat16 operator() (const float& a) const {
+    return Eigen::bfloat16(a);
+  }
+};
+
+template<>
+struct functor_traits<scalar_cast_op<float, Eigen::bfloat16> >
+{ enum { Cost = NumTraits<float>::AddCost, PacketAccess = false }; };
+
+
+template<>
+struct scalar_cast_op<int, Eigen::bfloat16> {
+  EIGEN_EMPTY_STRUCT_CTOR(scalar_cast_op)
+  typedef Eigen::bfloat16 result_type;
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Eigen::bfloat16 operator() (const int& a) const {
+    return Eigen::bfloat16(static_cast<float>(a));
+  }
+};
+
+template<>
+struct functor_traits<scalar_cast_op<int, Eigen::bfloat16> >
+{ enum { Cost = NumTraits<float>::AddCost, PacketAccess = false }; };
+
+
+template<>
+struct scalar_cast_op<Eigen::bfloat16, float> {
+  EIGEN_EMPTY_STRUCT_CTOR(scalar_cast_op)
+  typedef float result_type;
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE float operator() (const Eigen::bfloat16& a) const {
+    return static_cast<float>(a);
+  }
+};
+
+template<>
+struct functor_traits<scalar_cast_op<Eigen::bfloat16, float> >
+{ enum { Cost = NumTraits<float>::AddCost, PacketAccess = false }; };
+
+
 }
 }
 

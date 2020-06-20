@@ -50,6 +50,7 @@ T apply_bit_op(Bits a, Bits b, Func f) {
   EIGEN_TEST_MAKE_BITWISE2(OP,FUNC,float)                 \
   EIGEN_TEST_MAKE_BITWISE2(OP,FUNC,double)                \
   EIGEN_TEST_MAKE_BITWISE2(OP,FUNC,half)                  \
+  EIGEN_TEST_MAKE_BITWISE2(OP,FUNC,bfloat16)              \
   EIGEN_TEST_MAKE_BITWISE2(OP,FUNC,std::complex<float>)   \
   EIGEN_TEST_MAKE_BITWISE2(OP,FUNC,std::complex<double>)
 

@@ -62,6 +62,7 @@ namespace Eigen {
 
 #include "src/SpecialFunctions/BesselFunctionsImpl.h"
 #include "src/SpecialFunctions/BesselFunctionsPacketMath.h"
+#include "src/SpecialFunctions/BesselFunctionsBFloat16.h"
 #include "src/SpecialFunctions/BesselFunctionsHalf.h"
 #include "src/SpecialFunctions/BesselFunctionsFunctors.h"
 #include "src/SpecialFunctions/BesselFunctionsArrayAPI.h"
@@ -70,6 +71,7 @@ namespace Eigen {
 #include "src/SpecialFunctions/HipVectorCompatibility.h"
 #endif
 #include "src/SpecialFunctions/SpecialFunctionsPacketMath.h"
+#include "src/SpecialFunctions/SpecialFunctionsBFloat16.h"
 #include "src/SpecialFunctions/SpecialFunctionsHalf.h"
 #include "src/SpecialFunctions/SpecialFunctionsFunctors.h"
 #include "src/SpecialFunctions/SpecialFunctionsArrayAPI.h"
