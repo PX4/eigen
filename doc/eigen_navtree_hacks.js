@@ -137,7 +137,7 @@ function initNavTree(toroot,relpath)
      }
   })
 
-  $(window).load(showRoot);
+  $(window).on("load", showRoot);
 }
 
 // return false if the the node has no children at all, or has only section/subsection children
@@ -241,6 +241,6 @@ $(document).ready(function() {
     }
   })();
 
-  $(window).load(resizeHeight);
+  $(window).on("load", resizeHeight);
 });
 
