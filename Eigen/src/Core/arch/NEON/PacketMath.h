@@ -1023,6 +1023,8 @@ template<> EIGEN_STRONG_INLINE Packet2ul pdiv<Packet2ul>(const Packet2ul& /*a*/,
 // MLA: 10 GFlop/s ; FMA: 12 GFlops/s.
 template<> EIGEN_STRONG_INLINE Packet4f pmadd(const Packet4f& a, const Packet4f& b, const Packet4f& c)
 { return vfmaq_f32(c,a,b); }
+template<> EIGEN_STRONG_INLINE Packet2f pmadd(const Packet2f& a, const Packet2f& b, const Packet2f& c)
+{ return vfma_f32(c,a,b); }
 #else
 template<> EIGEN_STRONG_INLINE Packet4f pmadd(const Packet4f& a, const Packet4f& b, const Packet4f& c)
 {
@@ -1045,6 +1047,10 @@ template<> EIGEN_STRONG_INLINE Packet4f pmadd(const Packet4f& a, const Packet4f&
 #else
   return vmlaq_f32(c,a,b);
 #endif
+}
+template<> EIGEN_STRONG_INLINE Packet2f pmadd(const Packet2f& a, const Packet2f& b, const Packet2f& c)
+{
+  return vmla_f32(c,a,b);
 }
 #endif
 

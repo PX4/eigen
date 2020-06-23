@@ -8,6 +8,7 @@
 // Public License v. 2.0. If a copy of the MPL was not distributed
 // with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <limits>
 #include "packetmath_test_shared.h"
 
 template <typename T>
@@ -666,9 +667,6 @@ void packetmath_real() {
     h.store(data2, logistic.packetOp(h.load(data1)));
     for (int i = 0; i < PacketSize; ++i) {
       VERIFY_IS_APPROX(data2[i], logistic(data1[i]));
-#ifdef EIGEN_VECTORIZE  // don't check for exactness when using the i387 FPU
-      VERIFY_IS_EQUAL(data2[i], logistic(data1[i]));
-#endif
     }
   }
 
@@ -702,11 +700,16 @@ void packetmath_real() {
       VERIFY_IS_EQUAL(std::log((std::numeric_limits<Scalar>::min)()), data2[0]);
       VERIFY((numext::isnan)(data2[1]));
 
-      data1[0] = std::numeric_limits<Scalar>::denorm_min();
-      data1[1] = -std::numeric_limits<Scalar>::denorm_min();
-      h.store(data2, internal::plog(h.load(data1)));
-      // VERIFY_IS_EQUAL(std::log(std::numeric_limits<Scalar>::denorm_min()), data2[0]);
-      VERIFY((numext::isnan)(data2[1]));
+      // Note: 32-bit arm always flushes denorms to zero.
+#if !EIGEN_ARCH_ARM
+      if (std::numeric_limits<Scalar>::has_denorm == std::float_denorm_style::denorm_present) {
+        data1[0] = std::numeric_limits<Scalar>::denorm_min();
+        data1[1] = -std::numeric_limits<Scalar>::denorm_min();
+        h.store(data2, internal::plog(h.load(data1)));
+        // VERIFY_IS_EQUAL(std::log(std::numeric_limits<Scalar>::denorm_min()), data2[0]);
+        VERIFY((numext::isnan)(data2[1]));
+      }
+#endif
 
       data1[0] = Scalar(-1.0f);
       h.store(data2, internal::plog(h.load(data1)));
@@ -744,6 +747,11 @@ void packetmath_real() {
           VERIFY(data2[1] <= Scalar(1.) && data2[1] >= Scalar(-1.));
           VERIFY(data2[PacketSize + 0] <= Scalar(1.) && data2[PacketSize + 0] >= Scalar(-1.));
           VERIFY(data2[PacketSize + 1] <= Scalar(1.) && data2[PacketSize + 1] >= Scalar(-1.));
+
+          VERIFY_IS_APPROX(data2[0], std::cos(data1[0]));
+          VERIFY_IS_APPROX(data2[1], std::cos(data1[1]));
+          VERIFY_IS_APPROX(data2[PacketSize + 0], std::sin(data1[0]));
+          VERIFY_IS_APPROX(data2[PacketSize + 1], std::sin(data1[1]));
 
           VERIFY_IS_APPROX(numext::abs2(data2[0]) + numext::abs2(data2[PacketSize + 0]), Scalar(1));
           VERIFY_IS_APPROX(numext::abs2(data2[1]) + numext::abs2(data2[PacketSize + 1]), Scalar(1));
