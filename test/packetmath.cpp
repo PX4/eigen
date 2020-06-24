@@ -247,12 +247,42 @@ void packetmath_boolean_mask_ops() {
     data1[i + PacketSize] = internal::random<bool>() ? data1[i] : Scalar(0);
   }
   CHECK_CWISE2_IF(true, internal::pcmp_eq, internal::pcmp_eq);
+
+  //Test (-0) == (0) for signed operations
+  for (int i = 0; i < PacketSize; ++i) {
+    data1[i] = Scalar(-0.0);
+    data1[i + PacketSize] = internal::random<bool>() ? data1[i] : Scalar(0);
+  }
+  CHECK_CWISE2_IF(true, internal::pcmp_eq, internal::pcmp_eq);
+
+  //Test NaN
+  for (int i = 0; i < PacketSize; ++i) {
+    data1[i] = std::numeric_limits<Scalar>::quiet_NaN();
+    data1[i + PacketSize] = internal::random<bool>() ? data1[i] : Scalar(0);
+  }
+  CHECK_CWISE2_IF(true, internal::pcmp_eq, internal::pcmp_eq);
 }
 
 // Packet16b representing bool does not support ptrue, pandnot or pcmp_eq, since the scalar path
 // (for some compilers) compute the bitwise and with 0x1 of the results to keep the value in [0,1].
 template<>
 void packetmath_boolean_mask_ops<bool, internal::packet_traits<bool>::type>() {}
+
+template <typename Scalar, typename Packet>
+void packetmath_minus_zero_add() {
+  const int PacketSize = internal::unpacket_traits<Packet>::size;
+  const int size = 2 * PacketSize;
+  EIGEN_ALIGN_MAX Scalar data1[size];
+  EIGEN_ALIGN_MAX Scalar data2[size];
+  EIGEN_ALIGN_MAX Scalar ref[size];
+
+  for (int i = 0; i < PacketSize; ++i) {
+    data1[i] = Scalar(-0.0);
+    data1[i + PacketSize] = Scalar(-0.0);
+  }
+  CHECK_CWISE2_IF(internal::packet_traits<Scalar>::HasAdd, REF_ADD, internal::padd);
+}
+
 
 template <typename Scalar, typename Packet>
 void packetmath() {
@@ -454,6 +484,7 @@ void packetmath() {
 
   packetmath_boolean_mask_ops<Scalar, Packet>();
   packetmath_pcast_ops_runner<Scalar, Packet>::run();
+  packetmath_minus_zero_add<Scalar, Packet>();
 }
 
 template <typename Scalar, typename Packet>
