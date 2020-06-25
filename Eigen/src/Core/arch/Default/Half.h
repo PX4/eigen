@@ -86,7 +86,7 @@ struct half_base : public __half_raw {
   #if (defined(EIGEN_CUDA_SDK_VER) && EIGEN_CUDA_SDK_VER >= 90000)
   EIGEN_DEVICE_FUNC half_base(const __half& h) : __half_raw(*(__half_raw*)&h) {}
   #endif
- #endif    
+ #endif
 #endif
 };
 
@@ -133,6 +133,11 @@ struct half : public half_impl::half_base {
       : half_impl::half_base(half_impl::float_to_half_rtne(static_cast<float>(val))) {}
   explicit EIGEN_DEVICE_FUNC half(float f)
       : half_impl::half_base(half_impl::float_to_half_rtne(f)) {}
+  // Following the convention of numpy, converting between complex and
+  // float will lead to loss of imag value.
+  template<typename RealScalar>
+  explicit EIGEN_DEVICE_FUNC half(std::complex<RealScalar> c)
+      : half_impl::half_base(half_impl::float_to_half_rtne(static_cast<float>(c.real()))) {}
 
   EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(bool) const {
     // +0.0 and -0.0 become false, everything else becomes true.
@@ -173,6 +178,11 @@ struct half : public half_impl::half_base {
   }
   EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(double) const {
     return static_cast<double>(half_impl::half_to_float(*this));
+  }
+
+  template<typename RealScalar>
+  EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(std::complex<RealScalar>) const {
+    return std::complex<RealScalar>(static_cast<RealScalar>(*this), RealScalar(0));
   }
 };
 
