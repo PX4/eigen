@@ -29,9 +29,6 @@ variables:
     paths:
       - builddir/
     policy: push
-  tags:
-    - gce
-    - kubernetes
 
 .run_tests:
   allow_failure: true
@@ -46,9 +43,6 @@ variables:
     paths:
       - builddir/
     policy: pull
-  tags:
-    - gce
-    - kubernetes
 
 build-test-cxx11-on:
   extends: .build-tests
