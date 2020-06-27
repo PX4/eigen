@@ -1,0 +1,87 @@
+# This file is part of Eigen, a lightweight C++ template library
+# for linear algebra.
+#
+# Copyright (c) 2020, Arm Limited and Contributors
+#
+# This Source Code Form is subject to the terms of the Mozilla
+# Public License v. 2.0. If a copy of the MPL was not distributed
+# with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+stages:
+  - build
+  - test
+  - doc
+
+variables:
+  CMAKE_GENERATOR: "Ninja"
+
+.build-tests:
+  allow_failure: true
+  stage: build
+  image: fedora
+  before_script:
+    - dnf -y install gcc-c++ cmake make ninja-build
+  script:
+    - cmake -B builddir -DEIGEN_TEST_CXX11=${EIGEN_TEST_CXX11}
+    - cmake --build builddir --target buildtests
+  cache:
+    key: "$CI_JOB_NAME"
+    paths:
+      - builddir/
+    policy: push
+  tags:
+    - gce
+    - kubernetes
+
+.run_tests:
+  allow_failure: true
+  stage: test
+  image: fedora
+  before_script:
+    - dnf -y install cmake
+  script:
+    - cd builddir && ctest --output-on-failure
+  cache:
+    key: "$CI_JOB_NAME"
+    paths:
+      - builddir/
+    policy: pull
+  tags:
+    - gce
+    - kubernetes
+
+build-test-cxx11-on:
+  extends: .build-tests
+  variables:
+    EIGEN_TEST_CXX11: "ON"
+
+build-test-cxx11-off:
+  extends: .build-tests
+  variables:
+    EIGEN_TEST_CXX11: "OFF"
+
+run-tests-cxx11-on:
+  extends: .run_tests
+  dependencies:
+    - build-test-cxx11-on
+
+run-tests-cxx11-off:
+  extends: .run_tests
+  dependencies:
+    - build-test-cxx11-off
+
+build-doc:
+  only:
+    - schedules
+  image: fedora
+  stage: doc
+  before_script:
+    - dnf -y install g++ cmake make doxygen doxygen-latex
+  script:
+    - cmake -G "Unix Makefiles" -B builddir -DCMAKE_BUILD_TYPE=Release
+    - cmake --build builddir --target doc
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_JOB_ID"
+    paths:
+      - builddir/doc/html
+    expire_in: 2 days
