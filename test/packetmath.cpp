@@ -702,7 +702,7 @@ void packetmath_real() {
 
       // Note: 32-bit arm always flushes denorms to zero.
 #if !EIGEN_ARCH_ARM
-      if (std::numeric_limits<Scalar>::has_denorm == std::float_denorm_style::denorm_present) {
+      if (std::numeric_limits<Scalar>::has_denorm == std::denorm_present) {
         data1[0] = std::numeric_limits<Scalar>::denorm_min();
         data1[1] = -std::numeric_limits<Scalar>::denorm_min();
         h.store(data2, internal::plog(h.load(data1)));
