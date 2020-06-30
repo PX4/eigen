@@ -151,14 +151,6 @@ struct vectorization_logic
     VERIFY(test_assign(Vector1(),Vector1().template cast<Scalar>(),
       InnerVectorizedTraversal,CompleteUnrolling));
 
-
-    VERIFY(test_assign(Vector1(),Vector1(),
-      InnerVectorizedTraversal,CompleteUnrolling));
-    VERIFY(test_assign(Vector1(),Vector1()+Vector1(),
-      InnerVectorizedTraversal,CompleteUnrolling));
-    VERIFY(test_assign(Vector1(),Vector1().cwiseProduct(Vector1()),
-      InnerVectorizedTraversal,CompleteUnrolling));
-
     VERIFY(test_assign(Matrix44(),Matrix44()+Matrix44(),
       InnerVectorizedTraversal,InnerUnrolling));
 
@@ -322,14 +314,6 @@ struct vectorization_logic_half
     VERIFY(test_assign(Vector1(),Vector1().cwiseProduct(Vector1()),
       InnerVectorizedTraversal,CompleteUnrolling));
     VERIFY(test_assign(Vector1(),Vector1().template cast<Scalar>(),
-      InnerVectorizedTraversal,CompleteUnrolling));
-
-
-    VERIFY(test_assign(Vector1(),Vector1(),
-      InnerVectorizedTraversal,CompleteUnrolling));
-    VERIFY(test_assign(Vector1(),Vector1()+Vector1(),
-      InnerVectorizedTraversal,CompleteUnrolling));
-    VERIFY(test_assign(Vector1(),Vector1().cwiseProduct(Vector1()),
       InnerVectorizedTraversal,CompleteUnrolling));
 
     VERIFY(test_assign(Matrix57(),Matrix57()+Matrix57(),
