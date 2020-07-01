@@ -211,8 +211,8 @@ struct packetmath_pcast_ops_runner {
     test_cast_runner<Packet, int64_t>::run();
     test_cast_runner<Packet, uint64_t>::run();
     test_cast_runner<Packet, bool>::run();
-    test_cast_runner<Packet, std::complex<float>>::run();
-    test_cast_runner<Packet, std::complex<double>>::run();
+    test_cast_runner<Packet, std::complex<float> >::run();
+    test_cast_runner<Packet, std::complex<double> >::run();
     test_cast_runner<Packet, half>::run();
     test_cast_runner<Packet, bfloat16>::run();
   }
@@ -222,8 +222,8 @@ struct packetmath_pcast_ops_runner {
 template <typename Scalar, typename Packet>
 struct packetmath_pcast_ops_runner<Scalar, Packet, typename internal::enable_if<NumTraits<Scalar>::IsComplex>::type> {
   static void run() {
-    test_cast_runner<Packet, std::complex<float>>::run();
-    test_cast_runner<Packet, std::complex<double>>::run();
+    test_cast_runner<Packet, std::complex<float> >::run();
+    test_cast_runner<Packet, std::complex<double> >::run();
     test_cast_runner<Packet, half>::run();
     test_cast_runner<Packet, bfloat16>::run();
   }
@@ -252,7 +252,7 @@ void packetmath_boolean_mask_ops() {
 // Packet16b representing bool does not support ptrue, pandnot or pcmp_eq, since the scalar path
 // (for some compilers) compute the bitwise and with 0x1 of the results to keep the value in [0,1].
 template<>
-void packetmath_boolean_mask_ops<bool, typename internal::packet_traits<bool>::type>() {}
+void packetmath_boolean_mask_ops<bool, internal::packet_traits<bool>::type>() {}
 
 template <typename Scalar, typename Packet>
 void packetmath() {
