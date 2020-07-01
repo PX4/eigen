@@ -94,6 +94,7 @@ struct packet_traits<float> : default_packet_traits {
     size = 4,
     HasHalfPacket = 0,
 
+    HasCmp  = 1,
     HasDiv = 1,
     HasSin = EIGEN_FAST_MATH,
     HasCos = EIGEN_FAST_MATH,
@@ -128,6 +129,7 @@ struct packet_traits<double> : default_packet_traits {
     size=2,
     HasHalfPacket = 0,
 
+    HasCmp  = 1,
     HasDiv  = 1,
     HasExp  = 1,
     HasSqrt = 1,

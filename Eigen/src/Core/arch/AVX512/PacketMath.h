@@ -103,6 +103,7 @@ template<> struct packet_traits<float>  : default_packet_traits
     HasTanh = EIGEN_FAST_MATH,
     HasErf = EIGEN_FAST_MATH,
 #endif
+    HasCmp  = 1,
     HasDiv = 1
   };
  };
@@ -119,6 +120,7 @@ template<> struct packet_traits<double> : default_packet_traits
     HasSqrt = EIGEN_FAST_MATH,
     HasRsqrt = EIGEN_FAST_MATH,
 #endif
+    HasCmp  = 1,
     HasDiv = 1
   };
 };
@@ -1656,6 +1658,7 @@ struct packet_traits<bfloat16> : default_packet_traits {
     HasTanh = EIGEN_FAST_MATH,
     HasErf = EIGEN_FAST_MATH,
 #endif
+    HasCmp  = 1,
     HasDiv = 1
   };
 };

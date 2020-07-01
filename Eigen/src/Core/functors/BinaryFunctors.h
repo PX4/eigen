@@ -260,7 +260,7 @@ template<typename LhsScalar, typename RhsScalar, ComparisonName cmp>
 struct functor_traits<scalar_cmp_with_cast_op<LhsScalar,RhsScalar, cmp> > {
   enum {
     Cost = (NumTraits<LhsScalar>::AddCost+NumTraits<RhsScalar>::AddCost)/2,
-    PacketAccess = internal::is_same<LhsScalar, RhsScalar>::value && internal::is_same<LhsScalar, float>::value
+    PacketAccess = internal::is_same<LhsScalar, RhsScalar>::value && packet_traits<LhsScalar>::HasCmp
   };
 };
 
