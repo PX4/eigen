@@ -309,7 +309,7 @@ template<typename ArrayType> void array_real(const ArrayType& m)
   VERIFY_IS_APPROX(m1.cube(), cube(m1));
   VERIFY_IS_APPROX(cos(m1+RealScalar(3)*m2), cos((m1+RealScalar(3)*m2).eval()));
   VERIFY_IS_APPROX(m1.sign(), sign(m1));
-
+  VERIFY((m1.sqrt().sign().isNaN() == (Eigen::isnan)(sign(sqrt(m1)))).all());
 
   // avoid NaNs with abs() so verification doesn't fail
   m3 = m1.abs();

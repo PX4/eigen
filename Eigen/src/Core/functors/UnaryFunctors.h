@@ -904,9 +904,9 @@ struct functor_traits<scalar_boolean_not_op<Scalar> > {
   * \brief Template functor to compute the signum of a scalar
   * \sa class CwiseUnaryOp, Cwise::sign()
   */
-template<typename Scalar,bool iscpx=(NumTraits<Scalar>::IsComplex!=0) > struct scalar_sign_op;
+template<typename Scalar,bool is_complex=(NumTraits<Scalar>::IsComplex!=0), bool is_integer=(NumTraits<Scalar>::IsInteger!=0) > struct scalar_sign_op;
 template<typename Scalar>
-struct scalar_sign_op<Scalar,false> {
+struct scalar_sign_op<Scalar, false, true> {
   EIGEN_EMPTY_STRUCT_CTOR(scalar_sign_op)
   EIGEN_DEVICE_FUNC inline const Scalar operator() (const Scalar& a) const
   {
@@ -916,8 +916,21 @@ struct scalar_sign_op<Scalar,false> {
   //template <typename Packet>
   //EIGEN_DEVICE_FUNC inline Packet packetOp(const Packet& a) const { return internal::psign(a); }
 };
+
 template<typename Scalar>
-struct scalar_sign_op<Scalar,true> {
+struct scalar_sign_op<Scalar, false, false> {
+  EIGEN_EMPTY_STRUCT_CTOR(scalar_sign_op)
+  EIGEN_DEVICE_FUNC inline const Scalar operator() (const Scalar& a) const
+  {
+    return (numext::isnan)(a) ? a : Scalar( (a>Scalar(0)) - (a<Scalar(0)) );
+  }
+  //TODO
+  //template <typename Packet>
+  //EIGEN_DEVICE_FUNC inline Packet packetOp(const Packet& a) const { return internal::psign(a); }
+};
+
+template<typename Scalar, bool is_integer>
+struct scalar_sign_op<Scalar,true, is_integer> {
   EIGEN_EMPTY_STRUCT_CTOR(scalar_sign_op)
   EIGEN_DEVICE_FUNC inline const Scalar operator() (const Scalar& a) const
   {

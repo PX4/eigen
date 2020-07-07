@@ -205,7 +205,7 @@ template<typename Scalar, typename NewType> struct scalar_cast_op;
 template<typename Scalar> struct scalar_random_op;
 template<typename Scalar> struct scalar_constant_op;
 template<typename Scalar> struct scalar_identity_op;
-template<typename Scalar,bool iscpx> struct scalar_sign_op;
+template<typename Scalar,bool is_complex, bool is_integer> struct scalar_sign_op;
 template<typename Scalar,typename ScalarExponent> struct scalar_pow_op;
 template<typename LhsScalar,typename RhsScalar=LhsScalar> struct scalar_hypot_op;
 template<typename LhsScalar,typename RhsScalar=LhsScalar> struct scalar_product_op;
