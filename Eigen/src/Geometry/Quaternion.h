@@ -211,10 +211,12 @@ class QuaternionBase : public RotationBase<Derived, 3>
   }
   #endif
 
+#ifndef EIGEN_NO_IO
   friend std::ostream& operator<<(std::ostream& s, const QuaternionBase<Derived>& q) {
     s << q.x() << "i + " << q.y() << "j + " << q.z() << "k" << " + " << q.w();
     return s;
   }
+#endif
 
 #ifdef EIGEN_QUATERNIONBASE_PLUGIN
 # include EIGEN_QUATERNIONBASE_PLUGIN
