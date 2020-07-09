@@ -36,7 +36,7 @@
 #ifndef EIGEN_HALF_H
 #define EIGEN_HALF_H
 
-#if __cplusplus > 199711L
+#if EIGEN_HAS_CXX11
 #define EIGEN_EXPLICIT_CAST(tgt_type) explicit operator tgt_type()
 #else
 #define EIGEN_EXPLICIT_CAST(tgt_type) operator tgt_type()
@@ -47,6 +47,20 @@
 namespace Eigen {
 
 struct half;
+
+// explicit conversion operators are no available before C++11 so we first cast
+// half to RealScalar rather than to std::complex<RealScalar> directly
+#if !EIGEN_HAS_CXX11
+namespace internal {
+template <typename RealScalar>
+struct cast_impl<half, std::complex<RealScalar> > {
+  EIGEN_DEVICE_FUNC static inline std::complex<RealScalar> run(const half &x)
+  {
+    return static_cast<std::complex<RealScalar> >(static_cast<RealScalar>(x));
+  }
+};
+} // namespace internal
+#endif  // EIGEN_HAS_CXX11
 
 namespace half_impl {
 
@@ -736,7 +750,6 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC Eigen::half __ldg(const Eigen::half* ptr) 
       __ldg(reinterpret_cast<const unsigned short*>(ptr)));
 }
 #endif
-
 
 #if defined(EIGEN_GPU_COMPILE_PHASE)
 namespace Eigen {

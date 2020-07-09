@@ -27,6 +27,20 @@ namespace Eigen {
 
 struct bfloat16;
 
+// explicit conversion operators are no available before C++11 so we first cast
+// bfloat16 to RealScalar rather than to std::complex<RealScalar> directly
+#if !EIGEN_HAS_CXX11
+namespace internal {
+template <typename RealScalar>
+struct cast_impl<bfloat16, std::complex<RealScalar> > {
+  EIGEN_DEVICE_FUNC static inline std::complex<RealScalar> run(const bfloat16 &x)
+  {
+    return static_cast<std::complex<RealScalar> >(static_cast<RealScalar>(x));
+  }
+};
+} // namespace internal
+#endif  // EIGEN_HAS_CXX11
+
 namespace bfloat16_impl {
 
 // Make our own __bfloat16_raw definition.

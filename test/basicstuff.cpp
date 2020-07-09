@@ -195,41 +195,73 @@ template<typename MatrixType> void basicStuffComplex(const MatrixType& m)
   VERIFY(!static_cast<const MatrixType&>(cm).imag().isZero());
 }
 
+template<typename SrcScalar, typename TgtScalar, bool SrcIsHalfOrBF16 = (internal::is_same<SrcScalar, half>::value || internal::is_same<SrcScalar, bfloat16>::value)> struct casting_test;
+
+
 template<typename SrcScalar, typename TgtScalar>
-void casting_test()
-{
-  Matrix<SrcScalar,4,4> m;
-  for (int i=0; i<m.rows(); ++i) {
-    for (int j=0; j<m.cols(); ++j) {
-      m(i, j) = internal::random_without_cast_overflow<SrcScalar,TgtScalar>::value();
+struct casting_test<SrcScalar, TgtScalar, false> {
+  static void run() {
+    Matrix<SrcScalar,4,4> m;
+    for (int i=0; i<m.rows(); ++i) {
+      for (int j=0; j<m.cols(); ++j) {
+        m(i, j) = internal::random_without_cast_overflow<SrcScalar,TgtScalar>::value();
+      }
+    }
+    Matrix<TgtScalar,4,4> n = m.template cast<TgtScalar>();
+    for (int i=0; i<m.rows(); ++i) {
+      for (int j=0; j<m.cols(); ++j) {
+        VERIFY_IS_APPROX(n(i, j), static_cast<TgtScalar>(m(i, j)));
+      }
     }
   }
-  Matrix<TgtScalar,4,4> n = m.template cast<TgtScalar>();
-  for (int i=0; i<m.rows(); ++i) {
-    for (int j=0; j<m.cols(); ++j) {
-      VERIFY_IS_APPROX(n(i, j), static_cast<TgtScalar>(m(i, j)));
+};
+
+template<typename SrcScalar, typename TgtScalar>
+struct casting_test<SrcScalar, TgtScalar, true> {
+  static void run() {
+    casting_test<SrcScalar, TgtScalar, false>::run();
+  }
+};
+
+template<typename SrcScalar, typename RealScalar>
+struct casting_test<SrcScalar, std::complex<RealScalar>, true> {
+  static void run() {
+    typedef std::complex<RealScalar> TgtScalar;
+    Matrix<SrcScalar,4,4> m;
+    for (int i=0; i<m.rows(); ++i) {
+      for (int j=0; j<m.cols(); ++j) {
+        m(i, j) = internal::random_without_cast_overflow<SrcScalar, TgtScalar>::value();
+      }
+    }
+    Matrix<TgtScalar,4,4> n = m.template cast<TgtScalar>();
+    for (int i=0; i<m.rows(); ++i) {
+      for (int j=0; j<m.cols(); ++j) {
+        VERIFY_IS_APPROX(n(i, j), static_cast<TgtScalar>(static_cast<RealScalar>(m(i, j))));
+      }
     }
   }
-}
+};
 
 template<typename SrcScalar, typename EnableIf = void>
 struct casting_test_runner {
   static void run() {
-    casting_test<SrcScalar, bool>();
-    casting_test<SrcScalar, int8_t>();
-    casting_test<SrcScalar, uint8_t>();
-    casting_test<SrcScalar, int16_t>();
-    casting_test<SrcScalar, uint16_t>();
-    casting_test<SrcScalar, int32_t>();
-    casting_test<SrcScalar, uint32_t>();
-    casting_test<SrcScalar, int64_t>();
-    casting_test<SrcScalar, uint64_t>();
-    casting_test<SrcScalar, half>();
-    casting_test<SrcScalar, bfloat16>();
-    casting_test<SrcScalar, float>();
-    casting_test<SrcScalar, double>();
-    casting_test<SrcScalar, std::complex<float>>();
-    casting_test<SrcScalar, std::complex<double>>();
+    casting_test<SrcScalar, bool>::run();
+    casting_test<SrcScalar, int8_t>::run();
+    casting_test<SrcScalar, uint8_t>::run();
+    casting_test<SrcScalar, int16_t>::run();
+    casting_test<SrcScalar, uint16_t>::run();
+    casting_test<SrcScalar, int32_t>::run();
+    casting_test<SrcScalar, uint32_t>::run();
+#if EIGEN_HAS_CXX11
+    casting_test<SrcScalar, int64_t>::run();
+    casting_test<SrcScalar, uint64_t>::run();
+#endif
+    casting_test<SrcScalar, half>::run();
+    casting_test<SrcScalar, bfloat16>::run();
+    casting_test<SrcScalar, float>::run();
+    casting_test<SrcScalar, double>::run();
+    casting_test<SrcScalar, std::complex<float> >::run();
+    casting_test<SrcScalar, std::complex<double> >::run();
   }
 };
 
@@ -238,10 +270,10 @@ struct casting_test_runner<SrcScalar, typename internal::enable_if<(NumTraits<Sr
 {
   static void run() {
     // Only a few casts from std::complex<T> are defined.
-    casting_test<SrcScalar, half>();
-    casting_test<SrcScalar, bfloat16>();
-    casting_test<SrcScalar, std::complex<float>>();
-    casting_test<SrcScalar, std::complex<double>>();
+    casting_test<SrcScalar, half>::run();
+    casting_test<SrcScalar, bfloat16>::run();
+    casting_test<SrcScalar, std::complex<float> >::run();
+    casting_test<SrcScalar, std::complex<double> >::run();
   }
 };
 
@@ -253,14 +285,16 @@ void casting_all() {
   casting_test_runner<uint16_t>::run();
   casting_test_runner<int32_t>::run();
   casting_test_runner<uint32_t>::run();
+#if EIGEN_HAS_CXX11
   casting_test_runner<int64_t>::run();
   casting_test_runner<uint64_t>::run();
+#endif
   casting_test_runner<half>::run();
   casting_test_runner<bfloat16>::run();
   casting_test_runner<float>::run();
   casting_test_runner<double>::run();
-  casting_test_runner<std::complex<float>>::run();
-  casting_test_runner<std::complex<double>>::run();
+  casting_test_runner<std::complex<float> >::run();
+  casting_test_runner<std::complex<double> >::run();
 }
 
 template <typename Scalar>
