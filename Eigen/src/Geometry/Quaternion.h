@@ -197,19 +197,24 @@ class QuaternionBase : public RotationBase<Derived, 3>
   #else
 
   template<typename NewScalarType>
-  EIGEN_DEVICE_FUNC inline 
+  EIGEN_DEVICE_FUNC inline
   typename internal::enable_if<internal::is_same<Scalar,NewScalarType>::value,const Derived&>::type cast() const
   {
     return derived();
   }
 
   template<typename NewScalarType>
-  EIGEN_DEVICE_FUNC inline 
+  EIGEN_DEVICE_FUNC inline
   typename internal::enable_if<!internal::is_same<Scalar,NewScalarType>::value,Quaternion<NewScalarType> >::type cast() const
   {
     return Quaternion<NewScalarType>(coeffs().template cast<NewScalarType>());
   }
   #endif
+
+  friend std::ostream& operator<<(std::ostream& s, const QuaternionBase<Derived>& q) {
+    s << q.x() << "i + " << q.y() << "j + " << q.z() << "k" << " + " << q.w();
+    return s;
+  }
 
 #ifdef EIGEN_QUATERNIONBASE_PLUGIN
 # include EIGEN_QUATERNIONBASE_PLUGIN

@@ -75,6 +75,11 @@ template<typename Scalar, int Options> void quaternion(void)
   q1.coeffs().setRandom();
   VERIFY_IS_APPROX(q1.coeffs(), (q1*q2).coeffs());
 
+  // Printing
+  std::ostringstream ss;
+  ss << q2;
+  VERIFY(ss.str() == "0i + 0j + 0k + 1");
+  
   // concatenation
   q1 *= q2;
 
