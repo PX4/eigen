@@ -117,10 +117,10 @@ struct bfloat16 : public bfloat16_impl::bfloat16_base {
   EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(unsigned long long) const {
     return static_cast<unsigned long long>(bfloat16_to_float(*this));
   }
-  EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(float) const {
+  EIGEN_DEVICE_FUNC operator float() const {
     return bfloat16_impl::bfloat16_to_float(*this);
   }
-  EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(double) const {
+  EIGEN_DEVICE_FUNC operator double() const {
     return static_cast<double>(bfloat16_impl::bfloat16_to_float(*this));
   }
   template<typename RealScalar>

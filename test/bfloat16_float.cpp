@@ -53,9 +53,9 @@ void test_conversion()
   VERIFY_IS_EQUAL(bfloat16(3.40e38f).value, 0x7f80);  // Becomes infinity.
 
   // Verify round-to-nearest-even behavior.
-  float val1 = static_cast<float>(bfloat16(__bfloat16_raw(0x3c00)));
-  float val2 = static_cast<float>(bfloat16(__bfloat16_raw(0x3c01)));
-  float val3 = static_cast<float>(bfloat16(__bfloat16_raw(0x3c02)));
+  float val1 = bfloat16(__bfloat16_raw(0x3c00));
+  float val2 = bfloat16(__bfloat16_raw(0x3c01));
+  float val3 = bfloat16(__bfloat16_raw(0x3c02));
   VERIFY_IS_EQUAL(bfloat16(0.5f * (val1 + val2)).value, 0x3c00);
   VERIFY_IS_EQUAL(bfloat16(0.5f * (val2 + val3)).value, 0x3c02);
 
