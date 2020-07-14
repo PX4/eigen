@@ -239,6 +239,12 @@ if(NOT MSVC)
     message(STATUS "Enabling FMA in tests/examples")
   endif()
 
+  option(EIGEN_TEST_AVX2 "Enable/Disable AVX2 in tests/examples" OFF)
+  if(EIGEN_TEST_AVX2)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mfma")
+    message(STATUS "Enabling AVX2 in tests/examples")
+  endif()
+
   option(EIGEN_TEST_AVX512 "Enable/Disable AVX512 in tests/examples" OFF)
   if(EIGEN_TEST_AVX512)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx512f -mfma")

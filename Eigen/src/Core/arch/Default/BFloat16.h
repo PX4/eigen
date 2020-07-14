@@ -23,6 +23,13 @@ limitations under the License.
 #define EIGEN_EXPLICIT_CAST(tgt_type) operator tgt_type()
 #endif
 
+#define BF16_PACKET_FUNCTION(PACKET_F, PACKET_BF16, METHOD)         \
+  template <>                                                       \
+  EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED  \
+  PACKET_BF16 METHOD<PACKET_BF16>(const PACKET_BF16& _x) {          \
+    return F32ToBf16(METHOD<PACKET_F>(Bf16ToF32(_x)));              \
+  }
+
 namespace Eigen {
 
 struct bfloat16;

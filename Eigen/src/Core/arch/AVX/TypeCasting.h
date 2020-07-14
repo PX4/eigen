@@ -76,10 +76,36 @@ struct type_casting_traits<float, Eigen::half> {
   };
 };
 
+template <>
+struct type_casting_traits<bfloat16, float> {
+  enum {
+    VectorizedCast = 1,
+    SrcCoeffRatio = 1,
+    TgtCoeffRatio = 1
+  };
+};
+
+template<> EIGEN_STRONG_INLINE Packet8f pcast<Packet8bf, Packet8f>(const Packet8bf& a) {
+  return Bf16ToF32(a);
+}
+
+template <>
+struct type_casting_traits<float, bfloat16> {
+  enum {
+    VectorizedCast = 1,
+    SrcCoeffRatio = 1,
+    TgtCoeffRatio = 1
+  };
+};
+
 #endif  // EIGEN_VECTORIZE_AVX512
 
 template<> EIGEN_STRONG_INLINE Packet8h pcast<Packet8f, Packet8h>(const Packet8f& a) {
   return float2half(a);
+}
+
+template<> EIGEN_STRONG_INLINE Packet8bf pcast<Packet8f, Packet8bf>(const Packet8f& a) {
+  return F32ToBf16(a);
 }
 
 } // end namespace internal

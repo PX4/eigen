@@ -58,15 +58,15 @@ pexp<Packet8f>(const Packet8f& _x) {
 // Hyperbolic Tangent function.
 template <>
 EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED Packet8f
-ptanh<Packet8f>(const Packet8f& x) {
-  return internal::generic_fast_tanh_float(x);
+ptanh<Packet8f>(const Packet8f& _x) {
+  return internal::generic_fast_tanh_float(_x);
 }
 
 // Exponential function for doubles.
 template <>
 EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED Packet4d
-pexp<Packet4d>(const Packet4d& x) {
-  return pexp_double(x);
+pexp<Packet4d>(const Packet4d& _x) {
+  return pexp_double(_x);
 }
 
 // Functions for sqrt.
@@ -96,13 +96,13 @@ psqrt<Packet8f>(const Packet8f& _x) {
 }
 #else
 template <> EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED
-Packet8f psqrt<Packet8f>(const Packet8f& x) {
-  return _mm256_sqrt_ps(x);
+Packet8f psqrt<Packet8f>(const Packet8f& _x) {
+  return _mm256_sqrt_ps(_x);
 }
 #endif
 template <> EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED
-Packet4d psqrt<Packet4d>(const Packet4d& x) {
-  return _mm256_sqrt_pd(x);
+Packet4d psqrt<Packet4d>(const Packet4d& _x) {
+  return _mm256_sqrt_pd(_x);
 }
 #if EIGEN_FAST_MATH
 
@@ -140,18 +140,27 @@ Packet8f prsqrt<Packet8f>(const Packet8f& _x) {
 
 #else
 template <> EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED
-Packet8f prsqrt<Packet8f>(const Packet8f& x) {
+Packet8f prsqrt<Packet8f>(const Packet8f& _x) {
   _EIGEN_DECLARE_CONST_Packet8f(one, 1.0f);
-  return _mm256_div_ps(p8f_one, _mm256_sqrt_ps(x));
+  return _mm256_div_ps(p8f_one, _mm256_sqrt_ps(_x));
 }
 #endif
 
 template <> EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED
-Packet4d prsqrt<Packet4d>(const Packet4d& x) {
+Packet4d prsqrt<Packet4d>(const Packet4d& _x) {
   _EIGEN_DECLARE_CONST_Packet4d(one, 1.0);
-  return _mm256_div_pd(p4d_one, _mm256_sqrt_pd(x));
+  return _mm256_div_pd(p4d_one, _mm256_sqrt_pd(_x));
 }
 
+BF16_PACKET_FUNCTION(Packet8f, Packet8bf, psin)
+BF16_PACKET_FUNCTION(Packet8f, Packet8bf, pcos)
+BF16_PACKET_FUNCTION(Packet8f, Packet8bf, plog)
+BF16_PACKET_FUNCTION(Packet8f, Packet8bf, plog1p)
+BF16_PACKET_FUNCTION(Packet8f, Packet8bf, pexpm1)
+BF16_PACKET_FUNCTION(Packet8f, Packet8bf, pexp)
+BF16_PACKET_FUNCTION(Packet8f, Packet8bf, ptanh)
+BF16_PACKET_FUNCTION(Packet8f, Packet8bf, psqrt)
+BF16_PACKET_FUNCTION(Packet8f, Packet8bf, prsqrt)
 
 }  // end namespace internal
 
