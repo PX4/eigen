@@ -326,19 +326,11 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC __bfloat16_raw raw_uint16_to_bfloat16(unsi
   return h;
 }
 
-union float32_bits {
-  unsigned int u;
-  float f;
-};
-
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC __bfloat16_raw float_to_bfloat16_rtne(float ff) {
 #if (defined(EIGEN_HAS_CUDA_BF16) && defined(EIGEN_HAS_HIP_BF16))
   // Nothing to do here
 #else
-  unsigned int input;
-  float32_bits f;
-  f.f = ff;
-  input = f.u;
+  unsigned int input = numext::as_uint(ff);
   __bfloat16_raw output;
 
   if (Eigen::numext::isnan EIGEN_NOT_A_MACRO(ff)) {
