@@ -31,7 +31,7 @@ float BinaryToFloat(uint32_t sign, uint32_t exponent, uint32_t high_mantissa,
 
 void test_truncate(float input, float expected_truncation, float expected_rounding){
   bfloat16 truncated = Eigen::bfloat16_impl::truncate_to_bfloat16(input);
-  bfloat16 rounded = Eigen::bfloat16_impl::float_to_bfloat16_rtne(input);
+  bfloat16 rounded = Eigen::bfloat16_impl::float_to_bfloat16_rtne<false>(input);
   if ((numext::isnan)(input)){
     VERIFY((numext::isnan)(static_cast<float>(truncated)) || (numext::isinf)(static_cast<float>(truncated)));
     VERIFY((numext::isnan)(static_cast<float>(rounded)) || (numext::isinf)(static_cast<float>(rounded)));
@@ -93,7 +93,7 @@ void test_conversion()
     } else {
       VERIFY_IS_EQUAL(bf_trunc.value, 0x0000);
     }
-    bfloat16 bf_round = Eigen::bfloat16_impl::float_to_bfloat16_rtne(denorm);
+    bfloat16 bf_round = Eigen::bfloat16_impl::float_to_bfloat16_rtne<false>(denorm);
     VERIFY_IS_EQUAL(static_cast<float>(bf_round), 0.0f);
     if (std::signbit(denorm)) {
       VERIFY_IS_EQUAL(bf_round.value, 0x8000);
