@@ -262,12 +262,6 @@ public:
     internal::transform_make_affine<(int(Mode)==Affine || int(Mode)==Isometry) ? Affine : AffineCompact>::run(m_matrix);
   }
 
-  EIGEN_DEVICE_FUNC inline Transform(const Transform& other)
-  {
-    check_template_params();
-    m_matrix = other.m_matrix;
-  }
-
   EIGEN_DEVICE_FUNC inline explicit Transform(const TranslationType& t)
   {
     check_template_params();
@@ -284,9 +278,6 @@ public:
     check_template_params();
     *this = r;
   }
-
-  EIGEN_DEVICE_FUNC inline Transform& operator=(const Transform& other)
-  { m_matrix = other.m_matrix; return *this; }
 
   typedef internal::transform_take_affine_part<Transform> take_affine_part;
 
