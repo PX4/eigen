@@ -446,9 +446,13 @@ struct unary_evaluator<Block<ArgType,BlockRows,BlockCols,InnerPanel>, IteratorBa
     {}
 
     inline Index nonZerosEstimate() const {
-      Index nnz = m_block.nonZeros();
-      if(nnz<0)
-        return m_argImpl.nonZerosEstimate() * m_block.size() / m_block.nestedExpression().size();
+      const Index nnz = m_block.nonZeros();
+      if(nnz < 0) {
+        // Scale the non-zero estimate for the underlying expression linearly with block size.
+        // Return zero if the underlying block is empty.
+        const Index nested_sz = m_block.nestedExpression().size();        
+        return nested_sz == 0 ? 0 : m_argImpl.nonZerosEstimate() * m_block.size() / nested_sz;
+      }
       return nnz;
     }
 
