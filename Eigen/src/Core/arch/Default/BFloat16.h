@@ -34,9 +34,8 @@ namespace Eigen {
 
 struct bfloat16;
 
-// explicit conversion operators are no available before C++11 so we first cast
-// bfloat16 to RealScalar rather than to std::complex<RealScalar> directly
-#if !EIGEN_HAS_CXX11
+// Since we allow implicit conversion of bfloat16 to float and double, we
+// need to make the cast to complex a bit more explicit
 namespace internal {
 template <typename RealScalar>
 struct cast_impl<bfloat16, std::complex<RealScalar> > {
@@ -46,7 +45,6 @@ struct cast_impl<bfloat16, std::complex<RealScalar> > {
   }
 };
 } // namespace internal
-#endif  // EIGEN_HAS_CXX11
 
 namespace bfloat16_impl {
 
