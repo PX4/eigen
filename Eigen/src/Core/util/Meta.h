@@ -681,10 +681,11 @@ bool not_equal_strict(const double& x,const double& y) { return std::not_equal_t
 #endif
 
 /** \internal extract the bits of the float \a x */
-inline unsigned int as_uint(float x)
+EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC unsigned int as_uint(float x)
 {
   unsigned int ret;
-  std::memcpy(&ret, &x, sizeof(float));
+  EIGEN_USING_STD(memcpy);
+  memcpy(&ret, &x, sizeof(float));
   return ret;
 }
 
