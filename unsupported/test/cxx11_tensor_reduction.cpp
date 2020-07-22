@@ -204,7 +204,7 @@ static void test_simple_reductions() {
           ++count;
         }
       }
-      VERIFY_IS_APPROX(result(i, j), sum / count);
+      VERIFY_IS_APPROX(result(i, j), sum / Scalar(count));
     }
   }
 
