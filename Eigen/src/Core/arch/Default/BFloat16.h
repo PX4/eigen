@@ -34,8 +34,9 @@ namespace Eigen {
 
 struct bfloat16;
 
-// Since we allow implicit conversion of bfloat16 to float and double, we
-// need to make the cast to complex a bit more explicit
+// explicit conversion operators are no available before C++11 so we first cast
+// bfloat16 to RealScalar rather than to std::complex<RealScalar> directly
+#if !EIGEN_HAS_CXX11
 namespace internal {
 template <typename RealScalar>
 struct cast_impl<bfloat16, std::complex<RealScalar> > {
@@ -45,6 +46,7 @@ struct cast_impl<bfloat16, std::complex<RealScalar> > {
   }
 };
 } // namespace internal
+#endif  // EIGEN_HAS_CXX11
 
 namespace bfloat16_impl {
 
@@ -129,10 +131,10 @@ struct bfloat16 : public bfloat16_impl::bfloat16_base {
   EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(unsigned long long) const {
     return static_cast<unsigned long long>(bfloat16_to_float(*this));
   }
-  EIGEN_DEVICE_FUNC operator float() const {
+  EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(float) const {
     return bfloat16_impl::bfloat16_to_float(*this);
   }
-  EIGEN_DEVICE_FUNC operator double() const {
+  EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(double) const {
     return static_cast<double>(bfloat16_impl::bfloat16_to_float(*this));
   }
   template<typename RealScalar>

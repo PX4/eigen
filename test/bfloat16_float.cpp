@@ -41,6 +41,19 @@ void test_truncate(float input, float expected_truncation, float expected_roundi
   VERIFY_IS_EQUAL(expected_rounding, static_cast<float>(rounded));
 }
 
+template<typename T>
+ void test_roundtrip() {
+  // Representable T round trip via bfloat16
+  VERIFY_IS_EQUAL(static_cast<T>(static_cast<bfloat16>(-std::numeric_limits<T>::infinity())), -std::numeric_limits<T>::infinity());
+  VERIFY_IS_EQUAL(static_cast<T>(static_cast<bfloat16>(std::numeric_limits<T>::infinity())), std::numeric_limits<T>::infinity());
+  VERIFY_IS_EQUAL(static_cast<T>(static_cast<bfloat16>(T(-1.0))), T(-1.0));
+  VERIFY_IS_EQUAL(static_cast<T>(static_cast<bfloat16>(T(-0.5))), T(-0.5));
+  VERIFY_IS_EQUAL(static_cast<T>(static_cast<bfloat16>(T(-0.0))), T(-0.0));
+  VERIFY_IS_EQUAL(static_cast<T>(static_cast<bfloat16>(T(1.0))), T(1.0));
+  VERIFY_IS_EQUAL(static_cast<T>(static_cast<bfloat16>(T(0.5))), T(0.5));
+  VERIFY_IS_EQUAL(static_cast<T>(static_cast<bfloat16>(T(0.0))), T(0.0));
+}
+
 void test_conversion()
 {
   using Eigen::bfloat16_impl::__bfloat16_raw;
@@ -53,9 +66,9 @@ void test_conversion()
   VERIFY_IS_EQUAL(bfloat16(3.40e38f).value, 0x7f80);  // Becomes infinity.
 
   // Verify round-to-nearest-even behavior.
-  float val1 = bfloat16(__bfloat16_raw(0x3c00));
-  float val2 = bfloat16(__bfloat16_raw(0x3c01));
-  float val3 = bfloat16(__bfloat16_raw(0x3c02));
+  float val1 = static_cast<float>(bfloat16(__bfloat16_raw(0x3c00)));
+  float val2 = static_cast<float>(bfloat16(__bfloat16_raw(0x3c01)));
+  float val3 = static_cast<float>(bfloat16(__bfloat16_raw(0x3c02)));
   VERIFY_IS_EQUAL(bfloat16(0.5f * (val1 + val2)).value, 0x3c00);
   VERIFY_IS_EQUAL(bfloat16(0.5f * (val2 + val3)).value, 0x3c02);
 
@@ -106,14 +119,10 @@ void test_conversion()
   VERIFY_IS_EQUAL(static_cast<float>(bfloat16()), 0.0f);
 
   // Representable floats round trip via bfloat16
-  VERIFY_IS_EQUAL(static_cast<float>(static_cast<bfloat16>(-std::numeric_limits<float>::infinity())), -std::numeric_limits<float>::infinity());
-  VERIFY_IS_EQUAL(static_cast<float>(static_cast<bfloat16>(std::numeric_limits<float>::infinity())), std::numeric_limits<float>::infinity());
-  VERIFY_IS_EQUAL(static_cast<float>(static_cast<bfloat16>(-1.0f)), -1.0f);
-  VERIFY_IS_EQUAL(static_cast<float>(static_cast<bfloat16>(-0.5f)), -0.5f);
-  VERIFY_IS_EQUAL(static_cast<float>(static_cast<bfloat16>(-0.0f)), -0.0f);
-  VERIFY_IS_EQUAL(static_cast<float>(static_cast<bfloat16>(1.0f)), 1.0f);
-  VERIFY_IS_EQUAL(static_cast<float>(static_cast<bfloat16>(0.5f)), 0.5f);
-  VERIFY_IS_EQUAL(static_cast<float>(static_cast<bfloat16>(0.0f)), 0.0f);
+  test_roundtrip<float>();
+  test_roundtrip<double>();
+  test_roundtrip<std::complex<float> >();
+  test_roundtrip<std::complex<double> >();
 
   // Truncate test
   test_truncate(
