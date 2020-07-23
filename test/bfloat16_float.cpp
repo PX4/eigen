@@ -84,9 +84,19 @@ void test_conversion()
   VERIFY_IS_EQUAL(bfloat16(false).value, 0x0000);
   VERIFY_IS_EQUAL(bfloat16(true).value, 0x3f80);
 
-  // Conversion to float.
+  // Conversion to bool
+  VERIFY_IS_EQUAL(static_cast<bool>(bfloat16(3)), true);
+  VERIFY_IS_EQUAL(static_cast<bool>(bfloat16(0.33333f)), true);
+  VERIFY_IS_EQUAL(bfloat16(-0.0), false);
+  VERIFY_IS_EQUAL(static_cast<bool>(bfloat16(0.0)), false);
+
+  // Explicit conversion to float.
   VERIFY_IS_EQUAL(static_cast<float>(bfloat16(__bfloat16_raw(0x0000))), 0.0f);
   VERIFY_IS_EQUAL(static_cast<float>(bfloat16(__bfloat16_raw(0x3f80))), 1.0f);
+
+  // Implicit conversion to float
+  VERIFY_IS_EQUAL(bfloat16(__bfloat16_raw(0x0000)), 0.0f);
+  VERIFY_IS_EQUAL(bfloat16(__bfloat16_raw(0x3f80)), 1.0f);
 
   // Zero representations
   VERIFY_IS_EQUAL(bfloat16(0.0f), bfloat16(0.0f));
@@ -101,6 +111,11 @@ void test_conversion()
        denorm = nextafterf(denorm, 1.0f)) {
     bfloat16 bf_trunc = Eigen::bfloat16_impl::truncate_to_bfloat16(denorm);
     VERIFY_IS_EQUAL(static_cast<float>(bf_trunc), 0.0f);
+
+    // Implicit conversion of denormls to bool is correct
+    VERIFY_IS_EQUAL(static_cast<bool>(bfloat16(denorm)), false);
+    VERIFY_IS_EQUAL(bfloat16(denorm), false);
+
     if (std::signbit(denorm)) {
       VERIFY_IS_EQUAL(bf_trunc.value, 0x8000);
     } else {
