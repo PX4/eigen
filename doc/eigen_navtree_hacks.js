@@ -5,6 +5,7 @@ function generate_autotoc() {
   if(headers.length > 1) {
     var toc = $("#side-nav").append('<div id="nav-toc" class="toc"><h3>Table of contents</h3></div>');
     toc = $("#nav-toc");
+    var footer  = $("#nav-path");
     var footerHeight = footer.height();
     toc = toc.append('<ul></ul>');
     toc = toc.find('ul');
