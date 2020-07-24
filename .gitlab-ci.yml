@@ -17,7 +17,6 @@ variables:
   BUILDDIR: builddir 
 
 .build-tests:
-  allow_failure: true
   stage: build
   image: fedora:31
   before_script:
