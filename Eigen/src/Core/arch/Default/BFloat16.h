@@ -79,7 +79,7 @@ struct bfloat16 : public bfloat16_impl::bfloat16_base {
   explicit EIGEN_DEVICE_FUNC bfloat16(const std::complex<RealScalar>& val)
       : bfloat16_impl::bfloat16_base(bfloat16_impl::float_to_bfloat16_rtne<false>(static_cast<float>(val.real()))) {}
 
-  EIGEN_DEVICE_FUNC operator float() const {
+  EIGEN_DEVICE_FUNC operator float() const {  // NOLINT: Allow implicit conversion to float, because it is lossless.
     return bfloat16_impl::bfloat16_to_float(*this);
   }
 
@@ -91,7 +91,7 @@ struct bfloat16 : public bfloat16_impl::bfloat16_base {
 #endif 
 
 };
-} // end namespace Eigen
+} // namespace Eigen
 
 namespace std {
 template<>
@@ -141,7 +141,7 @@ template<>
 struct numeric_limits<volatile Eigen::bfloat16> : numeric_limits<Eigen::bfloat16> {};
 template<>
 struct numeric_limits<const volatile Eigen::bfloat16> : numeric_limits<Eigen::bfloat16> {};
-} // end namespace std
+} // namespace std
 
 namespace Eigen {
 
@@ -588,7 +588,7 @@ EIGEN_ALWAYS_INLINE std::ostream& operator << (std::ostream& os, const bfloat16&
 }
 #endif
 
-} // end namespace bfloat16_impl
+} // namespace bfloat16_impl
 
 namespace internal {
 
@@ -607,7 +607,7 @@ struct random_default_impl<bfloat16, false, false>
 
 template<> struct is_arithmetic<bfloat16> { enum { value = true }; };
 
-} // end namespace internal
+} // namespace internal
 
 template<> struct NumTraits<Eigen::bfloat16>
     : GenericNumTraits<Eigen::bfloat16>
@@ -637,7 +637,7 @@ template<> struct NumTraits<Eigen::bfloat16>
   }
 };
 
-} // end namespace Eigen
+} // namespace Eigen
 
 namespace std {
 
@@ -650,7 +650,7 @@ struct hash<Eigen::bfloat16> {
 };
 #endif
 
-} // end namespace std
+} // namespace std
 
 
 namespace Eigen {
@@ -674,7 +674,7 @@ bool (isfinite)(const Eigen::bfloat16& h) {
   return (bfloat16_impl::isfinite)(h);
 }
 
-} // namespace Eigen
-}  // namespace numext
+} // namespace numext
+}  // namespace Eigen
 
 #endif // EIGEN_BFLOAT16_H
