@@ -137,7 +137,7 @@ struct packet_traits<float> : default_packet_traits
     HasBlend     = 0,
 
     HasDiv   = 1,
-    HasFloor = 1,
+    HasFloor = 0,
 
     HasSin  = EIGEN_FAST_MATH,
     HasCos  = EIGEN_FAST_MATH,
@@ -1397,6 +1397,9 @@ template<> EIGEN_STRONG_INLINE Packet2f pcmp_lt_or_nan<Packet2f>(const Packet2f&
 template<> EIGEN_STRONG_INLINE Packet4f pcmp_lt_or_nan<Packet4f>(const Packet4f& a, const Packet4f& b)
 { return vreinterpretq_f32_u32(vmvnq_u32(vcgeq_f32(a,b))); }
 
+// WARNING: this pfloor implementation makes sense for inputs that fit in
+// signed int32 integers (up to ~2.14e9), hence this is currently only used
+// by pexp and not exposed through HasFloor.
 template<> EIGEN_STRONG_INLINE Packet2f pfloor<Packet2f>(const Packet2f& a)
 {
   const Packet2f cst_1 = pset1<Packet2f>(1.0f);
@@ -3269,7 +3272,7 @@ template<> struct packet_traits<double>  : default_packet_traits
     HasBlend     = 0,
 
     HasDiv   = 1,
-    HasFloor = 1,
+    HasFloor = 0,
 
     HasSin  = 0,
     HasCos  = 0,
@@ -3329,6 +3332,9 @@ template<> EIGEN_STRONG_INLINE Packet2d pmin<Packet2d>(const Packet2d& a, const 
 
 template<> EIGEN_STRONG_INLINE Packet2d pmax<Packet2d>(const Packet2d& a, const Packet2d& b) { return vmaxq_f64(a,b); }
 
+// WARNING: this pfloor implementation makes sense for inputs that fit in
+// signed int64 integers (up to ~9.22e18), hence this is currently only used
+// by pexp and not exposed through HasFloor.
 template<> EIGEN_STRONG_INLINE Packet2d pfloor<Packet2d>(const Packet2d& a)
 {
   const Packet2d cst_1 = pset1<Packet2d>(1.0);
