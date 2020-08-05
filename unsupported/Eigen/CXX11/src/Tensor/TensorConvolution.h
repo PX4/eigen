@@ -578,7 +578,7 @@ struct GetKernelSize<Dynamic> {
 
 template <typename InputEvaluator, typename Index, typename InputDims,
           int StaticKernelSize>
-__global__ void EigenConvolutionKernel1D(
+__global__ __launch_bounds__(1024) void EigenConvolutionKernel1D(
     InputEvaluator eval,
     const internal::IndexMapper<Index, InputDims, 1, InputEvaluator::Layout>
         indexMapper,
@@ -630,7 +630,7 @@ __global__ void EigenConvolutionKernel1D(
 
 template <typename InputEvaluator, typename Index, typename InputDims,
           int StaticKernelSizeX, int StaticKernelSizeY>
-__global__ void EigenConvolutionKernel2D(
+__global__ __launch_bounds__(1024) void EigenConvolutionKernel2D(
     InputEvaluator eval,
     const internal::IndexMapper<Index, InputDims, 2, InputEvaluator::Layout>
         indexMapper,
@@ -701,7 +701,7 @@ __global__ void EigenConvolutionKernel2D(
 };
 
 template <typename InputEvaluator, typename Index, typename InputDims>
-__global__ void EigenConvolutionKernel3D(
+__global__ __launch_bounds__(1024) void EigenConvolutionKernel3D(
     InputEvaluator eval,
     const internal::IndexMapper<Index, InputDims, 3, InputEvaluator::Layout>
         indexMapper,
