@@ -38,6 +38,12 @@ template<> EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED Pack
 template<> EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED Packet4f ptanh<Packet4f>(const Packet4f& x)
 { return internal::generic_fast_tanh_float(x); }
 
+BF16_PACKET_FUNCTION(Packet4f, Packet4bf, psin)
+BF16_PACKET_FUNCTION(Packet4f, Packet4bf, pcos)
+BF16_PACKET_FUNCTION(Packet4f, Packet4bf, plog)
+BF16_PACKET_FUNCTION(Packet4f, Packet4bf, pexp)
+BF16_PACKET_FUNCTION(Packet4f, Packet4bf, ptanh)
+
 } // end namespace internal
 
 } // end namespace Eigen
