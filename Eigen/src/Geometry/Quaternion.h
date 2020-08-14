@@ -141,7 +141,7 @@ class QuaternionBase : public RotationBase<Derived, 3>
   template<class OtherDerived> EIGEN_DEVICE_FUNC Scalar angularDistance(const QuaternionBase<OtherDerived>& other) const;
 
   /** \returns an equivalent 3x3 rotation matrix */
-  EIGEN_DEVICE_FUNC Matrix3 toRotationMatrix() const;
+  EIGEN_DEVICE_FUNC inline Matrix3 toRotationMatrix() const;
 
   /** \returns the quaternion which transform \a a into \a b through a rotation */
   template<typename Derived1, typename Derived2>
