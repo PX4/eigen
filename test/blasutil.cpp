@@ -189,6 +189,7 @@ EIGEN_DECLARE_TEST(blasutil)
         CALL_SUBTEST_1(run_test<numext::int8_t>());
         CALL_SUBTEST_2(run_test<numext::int16_t>());
         CALL_SUBTEST_3(run_test<numext::int32_t>());
+
 // TODO: Replace this by a call to numext::int64_t as soon as we have a way to
 // detect the typedef for int64_t on all platforms
 #if EIGEN_HAS_CXX11
@@ -196,7 +197,8 @@ EIGEN_DECLARE_TEST(blasutil)
 #else
         CALL_SUBTEST_4(run_test<signed long>());
 #endif
-        CALL_SUBTEST_5(run_test<numext::float_t>());
-        CALL_SUBTEST_6(run_test<numext::double_t>());
+
+        CALL_SUBTEST_5(run_test<float_t>());
+        CALL_SUBTEST_6(run_test<double_t>());
     }
 }
