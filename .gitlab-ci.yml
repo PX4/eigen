@@ -13,78 +13,10 @@ stages:
   - doc
 
 variables:
-  CMAKE_GENERATOR: "Ninja"
-  BUILDDIR: builddir 
+  BUILDDIR: builddir
+  EIGEN_CI_CMAKE_GENEATOR: "Ninja"
+  EIGEN_CI_TESTSUITE_SIZE: 15
 
-.build-tests:
-  allow_failure: true
-  stage: build
-  image: fedora:31
-  before_script:
-    - dnf -y install gcc-c++-9.2.1 cmake make ninja-build
-  script:
-    - cmake -B ${BUILDDIR} -DEIGEN_TEST_CXX11=${EIGEN_TEST_CXX11}
-    - cmake --build ${BUILDDIR} --target buildtests
-  cache:
-    key: "build-cache-cxx11-${EIGEN_TEST_CXX11}"
-    paths:
-      - ${BUILDDIR}/
-    policy: push
-  artifacts:
-    name: "$CI_JOB_NAME-$CI_COMMIT_REF_NAME"
-    paths:
-      - ${BUILDDIR}/
-    expire_in: 5 days
-
-.run_tests:
-  allow_failure: true
-  stage: test
-  image: fedora:31
-  before_script:
-    - dnf -y install gcc-c++-9.2.1 cmake make ninja-build
-  script:
-    - cd ${BUILDDIR} && ctest --output-on-failure
-  cache:
-    key: "build-cache-cxx11-${EIGEN_TEST_CXX11}"
-    paths:
-      - ${BUILDDIR}/
-    policy: pull
-
-build-test-cxx11-on:
-  extends: .build-tests
-  variables:
-    EIGEN_TEST_CXX11: "ON"
-
-build-test-cxx11-off:
-  extends: .build-tests
-  variables:
-    EIGEN_TEST_CXX11: "OFF"
-
-run-tests-cxx11-on:
-  extends: .run_tests
-  variables:
-    EIGEN_TEST_CXX11: "ON"
-  needs: ["build-test-cxx11-on"]
-
-run-tests-cxx11-off:
-  extends: .run_tests
-  variables:
-    EIGEN_TEST_CXX11: "OFF"
-  needs: ["build-test-cxx11-off"]
-
-build-doc:
-  image: fedora:31
-  only:
-    - schedules
-  stage: doc
-  before_script:
-    - dnf -y install gcc-c++-9.2.1 cmake make doxygen doxygen-latex
-  script:
-    - cmake -G "Unix Makefiles" -B ${BUILDDIR} -DCMAKE_BUILD_TYPE=Release
-    - cmake --build ${BUILDDIR} --target doc
-  artifacts:
-    name: "$CI_JOB_NAME-$CI_JOB_ID"
-    paths:
-      - ${BUILDDIR}/doc/html
-    expire_in: 2 days
-  needs: []
+include:
+  - "/ci/build-tests.gitlab-ci.yml"
+  - "/ci/run-tests.gitlab-ci.yml"

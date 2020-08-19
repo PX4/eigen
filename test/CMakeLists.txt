@@ -443,16 +443,11 @@ if (EIGEN_TEST_HIP)
 	message(FATAL_ERROR "HIP_PLATFORM = nvcc is not supported within Eigen")
       else ()
 	message(FATAL_ERROR "Unknown HIP_PLATFORM = ${HIP_PLATFORM}")
-      endif()
-      
+      endif() 
     endif()
-    
   else ()
-
     message(FATAL_ERROR "EIGEN_TEST_HIP is ON, but the specified HIP_PATH (${HIP_PATH}) does not exist")
-    
   endif()
-    
 endif()
 
 option(EIGEN_TEST_BUILD_DOCUMENTATION "Test building the doxygen documentation" OFF)

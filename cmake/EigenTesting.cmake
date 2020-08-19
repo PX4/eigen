@@ -648,3 +648,63 @@ macro(ei_test_get_compilerver_from_cxx_version_string)
   ei_test1_get_compilerver_from_cxx_version_string("g++-mp-4.4 (GCC) 4.4.6" "g++" "4.4.6")
   ei_test1_get_compilerver_from_cxx_version_string("g++-mp-4.4 (GCC) 2011" "g++" "4.4")
 endmacro()
+
+# Split all tests listed in EIGEN_TESTS_LIST into num_splits many targets
+# named buildtestspartN with N = { 0, ..., num_splits-1}.
+#
+# The intention behind the existance of this macro is the size of Eigen's
+# testsuite. Together with the relativly big compile-times building all tests
+# can take a substantial amount of time depending on the available hardware.
+# 
+# The last buildtestspartN target will build possible remaining tests.
+#
+# An example:
+#
+#   EIGEN_TESTS_LIST= [ test1, test2, test3, test4, test5, test6, test7 ]
+#
+# A call to ei_split_testsuite(3) creates the following targets with dependencies
+#
+#   Target                      Dependencies
+#   ------                      ------------
+#   buildtestspart0             test1, test2
+#   buildtestspart1             test3, test4
+#   buildtestspart2             test5, test6, test7
+#
+macro(ei_split_testsuite num_splits)
+  get_property(EIGEN_TESTS_LIST GLOBAL PROPERTY EIGEN_TESTS_LIST)
+
+  # Translate EIGEN_TESTS_LIST into a CMake list
+  string(REGEX REPLACE "\n" " " EIGEN_TESTS_LIST "${EIGEN_TESTS_LIST}")
+  set(EIGEN_TESTS_LIST "${EIGEN_TESTS_LIST}")
+  separate_arguments(EIGEN_TESTS_LIST)
+
+  set(eigen_test_count "0")
+  foreach(t IN ITEMS ${EIGEN_TESTS_LIST})
+    math(EXPR eigen_test_count "${eigen_test_count}+1")
+  endforeach()
+
+  # Get number of tests per target
+  math(EXPR num_tests_per_target "${eigen_test_count}/${num_splits} - ${eigen_test_count}/${num_splits} % 1")
+
+  set(test_idx "0")
+  math(EXPR target_bound "${num_splits}-1")
+  foreach(part RANGE "0" "${target_bound}")
+    # Create target
+    set(current_target "buildtestspart${part}")
+    add_custom_target("${current_target}")
+    math(EXPR upper_bound "${test_idx} + ${num_tests_per_target} - 1")
+    foreach(test_idx RANGE "${test_idx}" "${upper_bound}")
+      list(GET EIGEN_TESTS_LIST "${test_idx}" curr_test)
+      add_dependencies("${current_target}" "${curr_test}")
+    endforeach()
+    math(EXPR test_idx "${test_idx} + ${num_tests_per_target}")
+  endforeach()
+  
+  # Handle the possibly remaining tests
+  math(EXPR test_idx "${num_splits} * ${num_tests_per_target}")
+  math(EXPR target_bound "${eigen_test_count} - 1")
+  foreach(test_idx RANGE "${test_idx}" "${target_bound}")
+    list(GET EIGEN_TESTS_LIST "${test_idx}" curr_test)
+    add_dependencies("${current_target}" "${curr_test}")
+  endforeach()
+endmacro(ei_split_testsuite num_splits)

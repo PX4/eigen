@@ -1,0 +1,128 @@
+.run_tests:
+  allow_failure: true
+  stage: test
+  image: ubuntu:18.04
+  before_script:
+    - apt-get update -y
+    - apt-get install -y --no-install-recommends software-properties-common
+    - add-apt-repository -y  ppa:ubuntu-toolchain-r/test
+    - apt-get update
+    - apt-get install --no-install-recommends -y ${EIGEN_CI_CXX_COMPILER} ${EIGEN_CI_CC_COMPILER} cmake ninja-build xsltproc
+  script:
+    - echo "cd ${BUILDDIR} && ctest --output-on-failure --no-compress-output --build-no-clean -T test"
+    - cd ${BUILDDIR} && ctest --output-on-failure --no-compress-output --build-no-clean -T test
+  after_script:
+    - apt-get update -y
+    - apt-get install --no-install-recommends -y xsltproc
+    - cd ${BUILDDIR}
+    - xsltproc ../ci/CTest2JUnit.xsl Testing/`head -n 1 < Testing/TAG`/Test.xml > "JUnitTestResults_$CI_JOB_ID.xml"
+  artifacts:
+    reports:
+      junit:
+        - ${BUILDDIR}/JUnitTestResults_$CI_JOB_ID.xml
+    expire_in: 5 days
+
+########################## Nightly running jobs ################################
+# GCC 4.8
+run-tests-g++-4.8-cxx11-on:
+  only:
+    - schedules
+  extends: .run_tests
+  variables:
+    EIGEN_CI_CXX_COMPILER: g++-4.8
+    EIGEN_CI_CC_COMPILER: gcc-4.8
+  needs: [ "build-tests-g++-4.8-cxx11-on" ]
+  tags:
+    - eigen-runner
+    - x86
+    - linux
+
+run-tests-g++-4.8-cxx11-off:
+  only:
+    - schedules
+  extends: .run_tests
+  variables:
+    EIGEN_CI_CXX_COMPILER: g++-4.8
+    EIGEN_CI_CC_COMPILER: gcc-4.8
+  needs: [ "build-tests-g++-4.8-cxx11-off" ]
+  tags:
+    - eigen-runner
+    - x86
+    - linux
+
+# Clang 10
+run-tests-clang++-10-cxx11-on:
+  only:
+    - schedules
+  extends: .run_tests
+  variables:
+    EIGEN_CI_CXX_COMPILER: clang++-10
+    EIGEN_CI_CC_COMPILER: clang-10
+  needs: [ "build-tests-clang++-10-cxx11-on" ]
+  tags:
+    - eigen-runner
+    - x86
+    - linux
+
+run-tests-clang++-10-cxx11-off:
+  only:
+    - schedules
+  extends: .run_tests
+  variables:
+    EIGEN_CI_CXX_COMPILER: clang++-10
+    EIGEN_CI_CC_COMPILER: clang-10
+  needs: [ "build-tests-clang++-10-cxx11-off" ]
+  tags:
+    - eigen-runner
+    - x86
+    - linux
+
+# GCC 10
+run-tests-g++-10-cxx11-on:
+  only:
+    - schedules
+  extends: .run_tests
+  variables:
+    EIGEN_CI_CXX_COMPILER: g++-10
+    EIGEN_CI_CC_COMPILER: gcc-10
+  needs: [ "build-tests-g++-10-cxx11-on" ]
+  tags:
+    - eigen-runner
+    - x86
+    - linux
+
+run-tests-g++-10-cxx11-off:
+  only:
+    - schedules
+  extends: .run_tests
+  variables:
+    EIGEN_CI_CXX_COMPILER: g++-10
+    EIGEN_CI_CC_COMPILER: gcc-10
+  needs: [ "build-tests-g++-10-cxx11-off" ]
+  tags:
+    - eigen-runner
+    - x86
+    - linux
+
+########################### Merge request jobs #################################
+
+# GCC 10
+run-tests-g++-9-cxx11-on-mr:
+  only:
+    - merge_requests
+  extends: .run_tests
+  variables:
+    EIGEN_CI_CXX_COMPILER: g++-9
+    EIGEN_CI_CC_COMPILER: gcc-9
+  dependencies:
+    - build-tests-g++-9-cxx11-on-mr
+
+run-tests-g++-9-cxx11-off-mr:
+  only:
+    - merge_requests
+  extends: .run_tests
+  variables:
+    EIGEN_CI_CXX_COMPILER: g++-9
+    EIGEN_CI_CC_COMPILER: gcc-9
+  dependencies:
+    - build-tests-g++-9-cxx11-off-mr
