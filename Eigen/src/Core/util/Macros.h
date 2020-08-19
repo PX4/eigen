@@ -440,7 +440,26 @@
     // analogous to EIGEN_CUDA_ARCH, but for HIP
     #define EIGEN_HIP_DEVICE_COMPILE __HIP_DEVICE_COMPILE__
   #endif
+
+  // For HIP (ROCm 3.5 and higher), we need to explicitly set the launch_bounds attribute
+  // value to 1024. The compiler assigns a default value of 256 when the attribute is not
+  // specified. This results in failures on the HIP platform, for cases when a GPU kernel
+  // without an explicit launch_bounds attribute is called with a threads_per_block value
+  // greater than 256.
+  //
+  // This is a regression in functioanlity and is expected to be fixed within the next
+  // couple of ROCm releases (compiler will go back to using 1024 value as the default)
+  //
+  // In the meantime, we will use a "only enabled for HIP" macro to set the launch_bounds
+  // attribute.
+
+  #define EIGEN_HIP_LAUNCH_BOUNDS_1024 __launch_bounds__(1024)
+
 #endif
+
+#if !defined(EIGEN_HIP_LAUNCH_BOUNDS_1024)
+#define EIGEN_HIP_LAUNCH_BOUNDS_1024
+#endif // !defined(EIGEN_HIP_LAUNCH_BOUNDS_1024)
 
 // Unify CUDA/HIPCC
 

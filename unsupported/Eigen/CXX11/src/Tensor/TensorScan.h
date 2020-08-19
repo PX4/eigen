@@ -334,7 +334,7 @@ struct ScanLauncher<Self, Reducer, ThreadPoolDevice, Vectorize> {
 // parallel, but it would be better to use a parallel scan algorithm and
 // optimize memory access.
 template <typename Self, typename Reducer>
-__global__ __launch_bounds__(1024) void ScanKernel(Self self, Index total_size, typename Self::CoeffReturnType* data) {
+__global__ EIGEN_HIP_LAUNCH_BOUNDS_1024 void ScanKernel(Self self, Index total_size, typename Self::CoeffReturnType* data) {
   // Compute offset as in the CPU version
   Index val = threadIdx.x + blockIdx.x * blockDim.x;
   Index offset = (val / self.stride()) * self.stride() * self.size() + val % self.stride();
