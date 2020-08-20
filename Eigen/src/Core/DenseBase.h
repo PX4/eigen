@@ -530,16 +530,16 @@ template<typename Derived> class DenseBase
     static const RandomReturnType Random();
 
     template<typename ThenDerived,typename ElseDerived>
-    const Select<Derived,ThenDerived,ElseDerived>
+    inline EIGEN_DEVICE_FUNC const Select<Derived,ThenDerived,ElseDerived>
     select(const DenseBase<ThenDerived>& thenMatrix,
            const DenseBase<ElseDerived>& elseMatrix) const;
 
     template<typename ThenDerived>
-    inline const Select<Derived,ThenDerived, typename ThenDerived::ConstantReturnType>
+    inline EIGEN_DEVICE_FUNC const Select<Derived,ThenDerived, typename ThenDerived::ConstantReturnType>
     select(const DenseBase<ThenDerived>& thenMatrix, const typename ThenDerived::Scalar& elseScalar) const;
 
     template<typename ElseDerived>
-    inline const Select<Derived, typename ElseDerived::ConstantReturnType, ElseDerived >
+    inline EIGEN_DEVICE_FUNC const Select<Derived, typename ElseDerived::ConstantReturnType, ElseDerived >
     select(const typename ElseDerived::Scalar& thenScalar, const DenseBase<ElseDerived>& elseMatrix) const;
 
     template<int p> RealScalar lpNorm() const;

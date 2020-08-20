@@ -44,7 +44,7 @@ struct linspaced_op_impl<Scalar,/*IsInteger*/false>
 {
   typedef typename NumTraits<Scalar>::Real RealScalar;
 
-  linspaced_op_impl(const Scalar& low, const Scalar& high, Index num_steps) :
+  EIGEN_DEVICE_FUNC linspaced_op_impl(const Scalar& low, const Scalar& high, Index num_steps) :
     m_low(low), m_high(high), m_size1(num_steps==1 ? 1 : num_steps-1), m_step(num_steps==1 ? Scalar() : Scalar((high-low)/RealScalar(num_steps-1))),
     m_flip(numext::abs(high)<numext::abs(low))
   {}
@@ -90,7 +90,7 @@ struct linspaced_op_impl<Scalar,/*IsInteger*/false>
 template <typename Scalar>
 struct linspaced_op_impl<Scalar,/*IsInteger*/true>
 {
-  linspaced_op_impl(const Scalar& low, const Scalar& high, Index num_steps) :
+  EIGEN_DEVICE_FUNC linspaced_op_impl(const Scalar& low, const Scalar& high, Index num_steps) :
     m_low(low),
     m_multiplier((high-low)/convert_index<Scalar>(num_steps<=1 ? 1 : num_steps-1)),
     m_divisor(convert_index<Scalar>((high>=low?num_steps:-num_steps)+(high-low))/((numext::abs(high-low)+1)==0?1:(numext::abs(high-low)+1))),
@@ -129,7 +129,7 @@ template <typename Scalar> struct functor_traits< linspaced_op<Scalar> >
 };
 template <typename Scalar> struct linspaced_op
 {
-  linspaced_op(const Scalar& low, const Scalar& high, Index num_steps)
+  EIGEN_DEVICE_FUNC linspaced_op(const Scalar& low, const Scalar& high, Index num_steps)
     : impl((num_steps==1 ? high : low),high,num_steps)
   {}
 
