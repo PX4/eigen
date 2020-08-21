@@ -208,7 +208,6 @@ struct runner<Scalar,PacketType,true,false>
 {
   static void run() {
     runall<Scalar,PacketType>::run();
-    runall<Scalar,Scalar>::run();
   }
 };
 

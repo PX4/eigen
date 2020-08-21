@@ -612,7 +612,8 @@ Packet psqrt(const Packet& a) { EIGEN_USING_STD_MATH(sqrt); return sqrt(a); }
 /** \internal \returns the reciprocal square-root of \a a (coeff-wise) */
 template<typename Packet> EIGEN_DECLARE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS
 Packet prsqrt(const Packet& a) {
-  return pdiv(pset1<Packet>(1), psqrt(a));
+  typedef typename internal::unpacket_traits<Packet>::type Scalar;
+  return pdiv(pset1<Packet>(Scalar(1)), psqrt(a));
 }
 
 /** \internal \returns the rounded value of \a a (coeff-wise) */

@@ -707,6 +707,62 @@ void packetmath_real() {
   }
 }
 
+#define CAST_CHECK_CWISE1_IF(COND, REFOP, POP, SCALAR, REFTYPE) if(COND) { \
+  test::packet_helper<COND,Packet> h; \
+  for (int i=0; i<PacketSize; ++i) \
+    ref[i] = SCALAR(REFOP(static_cast<REFTYPE>(data1[i]))); \
+  h.store(data2, POP(h.load(data1))); \
+  VERIFY(test::areApprox(ref, data2, PacketSize) && #POP); \
+}
+
+template <>
+void packetmath_real<bfloat16, typename internal::packet_traits<bfloat16>::type>(){
+  typedef internal::packet_traits<bfloat16> PacketTraits;
+  typedef internal::packet_traits<bfloat16>::type Packet;
+
+  const int PacketSize = internal::unpacket_traits<Packet>::size;
+  const int size = PacketSize * 4;
+  EIGEN_ALIGN_MAX bfloat16 data1[PacketSize * 4];
+  EIGEN_ALIGN_MAX bfloat16 data2[PacketSize * 4];
+  EIGEN_ALIGN_MAX bfloat16 ref[PacketSize * 4];
+
+  for (int i = 0; i < size; ++i) {
+    data1[i] = bfloat16(internal::random<float>(0, 1) * std::pow(float(10), internal::random<float>(-6, 6)));
+    data2[i] = bfloat16(internal::random<float>(0, 1) * std::pow(float(10), internal::random<float>(-6, 6)));
+    data1[i] = bfloat16(0);
+  }
+
+  if (internal::random<float>(0, 1) < 0.1f) data1[internal::random<int>(0, PacketSize)] = bfloat16(0);
+
+  CAST_CHECK_CWISE1_IF(PacketTraits::HasLog, std::log, internal::plog, bfloat16, float);
+  CAST_CHECK_CWISE1_IF(PacketTraits::HasRsqrt, float(1) / std::sqrt, internal::prsqrt, bfloat16, float);
+
+  for (int i = 0; i < size; ++i) {
+    data1[i] = bfloat16(internal::random<float>(-1, 1) * std::pow(float(10), internal::random<float>(-3, 3)));
+    data2[i] = bfloat16(internal::random<float>(-1, 1) * std::pow(float(10), internal::random<float>(-3, 3)));
+  }
+  CAST_CHECK_CWISE1_IF(PacketTraits::HasSin, std::sin, internal::psin, bfloat16, float);
+  CAST_CHECK_CWISE1_IF(PacketTraits::HasCos, std::cos, internal::pcos, bfloat16, float);
+  CAST_CHECK_CWISE1_IF(PacketTraits::HasTan, std::tan, internal::ptan, bfloat16, float);
+
+  CAST_CHECK_CWISE1_IF(PacketTraits::HasRound, numext::round, internal::pround, bfloat16, float);
+  CAST_CHECK_CWISE1_IF(PacketTraits::HasCeil, numext::ceil, internal::pceil, bfloat16, float);
+  CAST_CHECK_CWISE1_IF(PacketTraits::HasFloor, numext::floor, internal::pfloor, bfloat16, float);
+
+  for (int i = 0; i < size; ++i) {
+    data1[i] = bfloat16(-1.5 + i);
+    data2[i] = bfloat16(-1.5 + i);
+  }
+  CAST_CHECK_CWISE1_IF(PacketTraits::HasRound, numext::round, internal::pround, bfloat16, float);
+
+  for (int i = 0; i < size; ++i) {
+    data1[i] = bfloat16(internal::random<float>(-87, 88));
+    data2[i] = bfloat16(internal::random<float>(-87, 88));
+  }
+  CAST_CHECK_CWISE1_IF(PacketTraits::HasExp, std::exp, internal::pexp, bfloat16, float);
+
+}
+
 template <typename Scalar, typename Packet>
 void packetmath_notcomplex() {
   typedef internal::packet_traits<Scalar> PacketTraits;
@@ -750,6 +806,47 @@ void packetmath_notcomplex() {
     //   for (unsigned int i=0; i<sizeof(Scalar); ++i) data1_bits[k*sizeof(Scalar)+i] = 0xff;
     // }
 
+    // predux_any
+    for (unsigned int i = 0; i < PacketSize * sizeof(Scalar); ++i) data1_bits[i] = 0x0;
+    VERIFY((!internal::predux_any(internal::pload<Packet>(data1))) && "internal::predux_any(0000)");
+    for (int k = 0; k < PacketSize; ++k) {
+      for (unsigned int i = 0; i < sizeof(Scalar); ++i) data1_bits[k * sizeof(Scalar) + i] = 0xff;
+      VERIFY(internal::predux_any(internal::pload<Packet>(data1)) && "internal::predux_any(0101)");
+      for (unsigned int i = 0; i < sizeof(Scalar); ++i) data1_bits[k * sizeof(Scalar) + i] = 0x00;
+    }
+  }
+}
+
+template <>
+void packetmath_notcomplex<bfloat16, typename internal::packet_traits<bfloat16>::type>(){
+  typedef bfloat16 Scalar;
+  typedef internal::packet_traits<bfloat16>::type Packet;
+  typedef internal::packet_traits<Scalar> PacketTraits;
+  const int PacketSize = internal::unpacket_traits<Packet>::size;
+
+  EIGEN_ALIGN_MAX Scalar data1[PacketSize * 4];
+  EIGEN_ALIGN_MAX Scalar data2[PacketSize * 4];
+  EIGEN_ALIGN_MAX Scalar ref[PacketSize * 4];
+  Array<Scalar, Dynamic, 1>::Map(data1, PacketSize * 4).setRandom();
+
+  ref[0] = data1[0];
+  for (int i = 0; i < PacketSize; ++i) ref[0] = (std::min)(ref[0], data1[i]);
+  VERIFY(internal::isApprox(ref[0], internal::predux_min(internal::pload<Packet>(data1))) && "internal::predux_min");
+
+  VERIFY((!PacketTraits::Vectorizable) || PacketTraits::HasMin);
+  VERIFY((!PacketTraits::Vectorizable) || PacketTraits::HasMax);
+
+  CHECK_CWISE2_IF(PacketTraits::HasMin, (std::min), internal::pmin);
+  CHECK_CWISE2_IF(PacketTraits::HasMax, (std::max), internal::pmax);
+  CHECK_CWISE1(numext::abs, internal::pabs);
+  CHECK_CWISE2_IF(PacketTraits::HasAbsDiff, REF_ABS_DIFF, internal::pabsdiff);
+
+  ref[0] = data1[0];
+  for (int i = 0; i < PacketSize; ++i) ref[0] = (std::max)(ref[0], data1[i]);
+  VERIFY(internal::isApprox(ref[0], internal::predux_max(internal::pload<Packet>(data1))) && "internal::predux_max");
+
+  {
+    unsigned char* data1_bits = reinterpret_cast<unsigned char*>(data1);
     // predux_any
     for (unsigned int i = 0; i < PacketSize * sizeof(Scalar); ++i) data1_bits[i] = 0x0;
     VERIFY((!internal::predux_any(internal::pload<Packet>(data1))) && "internal::predux_any(0000)");
@@ -819,7 +916,7 @@ void packetmath_scatter_gather() {
   typedef typename NumTraits<Scalar>::Real RealScalar;
   const int PacketSize = internal::unpacket_traits<Packet>::size;
   EIGEN_ALIGN_MAX Scalar data1[PacketSize];
-  RealScalar refvalue = 0;
+  RealScalar refvalue = RealScalar(0);
   for (int i = 0; i < PacketSize; ++i) {
     data1[i] = internal::random<Scalar>() / RealScalar(PacketSize);
   }
@@ -900,7 +997,7 @@ EIGEN_DECLARE_TEST(packetmath) {
     CALL_SUBTEST_12(test::runner<std::complex<double> >::run());
     CALL_SUBTEST_13((packetmath<half, internal::packet_traits<half>::type>()));
     CALL_SUBTEST_14((packetmath<bool, internal::packet_traits<bool>::type>()));
-    CALL_SUBTEST_15((packetmath<bfloat16, internal::packet_traits<bfloat16>::type>()));
+    CALL_SUBTEST_15(test::runner<bfloat16>::run());
     g_first_pass = false;
   }
 }
