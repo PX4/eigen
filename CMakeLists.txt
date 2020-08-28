@@ -1,6 +1,7 @@
-project(Eigen3)
-
+# cmake_minimum_require must be the first command of the file
 cmake_minimum_required(VERSION 3.5.0)
+
+project(Eigen3)
 
 # guard against in-source builds
 
