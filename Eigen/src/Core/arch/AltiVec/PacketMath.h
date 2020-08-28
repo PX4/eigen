@@ -773,6 +773,8 @@ template<> EIGEN_STRONG_INLINE Packet16uc padd<Packet16uc>(const Packet16uc& a, 
 
 template<> EIGEN_STRONG_INLINE Packet4f   psub<Packet4f>  (const Packet4f&   a, const Packet4f&   b) { return a - b; }
 template<> EIGEN_STRONG_INLINE Packet4i   psub<Packet4i>  (const Packet4i&   a, const Packet4i&   b) { return a - b; }
+template<> EIGEN_STRONG_INLINE Packet8s   psub<Packet8s>  (const Packet8s&   a, const Packet8s&   b) { return a - b; }
+template<> EIGEN_STRONG_INLINE Packet8us  psub<Packet8us> (const Packet8us&  a, const Packet8us&  b) { return a - b; }
 template<> EIGEN_STRONG_INLINE Packet16c  psub<Packet16c> (const Packet16c&  a, const Packet16c&  b) { return a - b; }
 template<> EIGEN_STRONG_INLINE Packet16uc psub<Packet16uc>(const Packet16uc& a, const Packet16uc& b) { return a - b; }
 
@@ -784,6 +786,8 @@ template<> EIGEN_STRONG_INLINE Packet4i pconj(const Packet4i& a) { return a; }
 
 template<> EIGEN_STRONG_INLINE Packet4f   pmul<Packet4f>  (const Packet4f&   a, const Packet4f&   b) { return vec_madd(a,b, p4f_MZERO); }
 template<> EIGEN_STRONG_INLINE Packet4i   pmul<Packet4i>  (const Packet4i&   a, const Packet4i&   b) { return a * b; }
+template<> EIGEN_STRONG_INLINE Packet8s   pmul<Packet8s>  (const Packet8s&   a, const Packet8s&   b) { return vec_mul(a,b); }
+template<> EIGEN_STRONG_INLINE Packet8us  pmul<Packet8us> (const Packet8us&  a, const Packet8us&  b) { return vec_mul(a,b); }
 template<> EIGEN_STRONG_INLINE Packet16c  pmul<Packet16c> (const Packet16c&  a, const Packet16c&  b) { return vec_mul(a,b); }
 template<> EIGEN_STRONG_INLINE Packet16uc pmul<Packet16uc>(const Packet16uc& a, const Packet16uc& b) { return vec_mul(a,b); }
 
@@ -814,6 +818,8 @@ template<> EIGEN_STRONG_INLINE Packet4i pdiv<Packet4i>(const Packet4i& /*a*/, co
 // for some weird raisons, it has to be overloaded for packet of integers
 template<> EIGEN_STRONG_INLINE Packet4f pmadd(const Packet4f& a, const Packet4f& b, const Packet4f& c) { return vec_madd(a,b,c); }
 template<> EIGEN_STRONG_INLINE Packet4i pmadd(const Packet4i& a, const Packet4i& b, const Packet4i& c) { return a*b + c; }
+template<> EIGEN_STRONG_INLINE Packet8s pmadd(const Packet8s& a, const Packet8s& b, const Packet8s& c) { return vec_madd(a,b,c); }
+template<> EIGEN_STRONG_INLINE Packet8us pmadd(const Packet8us& a, const Packet8us& b, const Packet8us& c) { return vec_madd(a,b,c); }
 
 template<> EIGEN_STRONG_INLINE Packet4f pmin<Packet4f>(const Packet4f& a, const Packet4f& b)
 {
