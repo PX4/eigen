@@ -37,8 +37,8 @@ typedef __vector unsigned int            Packet4ui;
 typedef __vector __bool int              Packet4bi;
 typedef __vector short int               Packet8s;
 typedef __vector unsigned short int      Packet8us;
-typedef __vector int8_t                  Packet16c;
-typedef __vector uint8_t                 Packet16uc;
+typedef __vector signed char             Packet16c;
+typedef __vector unsigned char           Packet16uc;
 typedef eigen_packet_wrapper<__vector unsigned short int,0> Packet8bf;
 
 // We don't want to write the same code all the time, but we need to reuse the constants
@@ -290,7 +290,7 @@ struct packet_traits<unsigned short int> : default_packet_traits {
 };
 
 template <>
-struct packet_traits<int8_t> : default_packet_traits {
+struct packet_traits<signed char> : default_packet_traits {
   typedef Packet16c type;
   typedef Packet16c half;
   enum {
@@ -308,7 +308,7 @@ struct packet_traits<int8_t> : default_packet_traits {
 };
 
 template <>
-struct packet_traits<uint8_t> : default_packet_traits {
+struct packet_traits<unsigned char> : default_packet_traits {
   typedef Packet16uc type;
   typedef Packet16uc half;
   enum {
@@ -353,13 +353,13 @@ template<> struct unpacket_traits<Packet8us>
 
 template<> struct unpacket_traits<Packet16c>
 {
-  typedef int8_t type;
+  typedef signed char type;
   typedef Packet16c  half;
   enum {size=16, alignment=Aligned16, vectorizable=true, masked_load_available=false, masked_store_available=false};
 };
 template<> struct unpacket_traits<Packet16uc>
 {
-  typedef uint8_t type;
+  typedef unsigned char type;
   typedef Packet16uc  half;
   enum {size=16, alignment=Aligned16, vectorizable=true, masked_load_available=false, masked_store_available=false};
 };
@@ -374,7 +374,7 @@ inline std::ostream & operator <<(std::ostream & s, const Packet16c & v)
 {
   union {
     Packet16c   v;
-    int8_t n[16];
+    signed char n[16];
   } vt;
   vt.v = v;
   for (int i=0; i< 16; i++)
@@ -386,7 +386,7 @@ inline std::ostream & operator <<(std::ostream & s, const Packet16uc & v)
 {
   union {
     Packet16uc   v;
-    uint8_t n[16];
+    unsigned char n[16];
   } vt;
   vt.v = v;
   for (int i=0; i< 16; i++)
@@ -462,12 +462,12 @@ template<> EIGEN_STRONG_INLINE Packet8us pload<Packet8us>(const unsigned short i
   return pload_common<Packet8us>(from);
 }
 
-template<> EIGEN_STRONG_INLINE Packet16c pload<Packet16c>(const int8_t*     from)
+template<> EIGEN_STRONG_INLINE Packet16c pload<Packet16c>(const signed char*     from)
 {
   return pload_common<Packet16c>(from);
 }
 
-template<> EIGEN_STRONG_INLINE Packet16uc pload<Packet16uc>(const uint8_t*     from)
+template<> EIGEN_STRONG_INLINE Packet16uc pload<Packet16uc>(const unsigned char*     from)
 {
   return pload_common<Packet16uc>(from);
 }
@@ -515,12 +515,12 @@ template<> EIGEN_STRONG_INLINE void pstore<bfloat16>(bfloat16*       to, const P
   pstore_common<Packet8us>(reinterpret_cast<unsigned short int*>(to), from);
 }
 
-template<> EIGEN_STRONG_INLINE void pstore<int8_t>(int8_t*       to, const Packet16c& from)
+template<> EIGEN_STRONG_INLINE void pstore<signed char>(signed char*       to, const Packet16c& from)
 {
   pstore_common<Packet16c>(to, from);
 }
 
-template<> EIGEN_STRONG_INLINE void pstore<uint8_t>(uint8_t*       to, const Packet16uc& from)
+template<> EIGEN_STRONG_INLINE void pstore<unsigned char>(unsigned char*       to, const Packet16uc& from)
 {
   pstore_common<Packet16uc>(to, from);
 }
@@ -562,11 +562,11 @@ template<> EIGEN_STRONG_INLINE Packet8us pset1<Packet8us>(const unsigned short i
   return pset1_size8<Packet8us>(from);
 }
 
-template<> EIGEN_STRONG_INLINE Packet16c pset1<Packet16c>(const int8_t&    from)   {
+template<> EIGEN_STRONG_INLINE Packet16c pset1<Packet16c>(const signed char&    from)   {
   return pset1_size16<Packet16c>(from);
 }
 
-template<> EIGEN_STRONG_INLINE Packet16uc pset1<Packet16uc>(const uint8_t&    from)   {
+template<> EIGEN_STRONG_INLINE Packet16uc pset1<Packet16uc>(const unsigned char&    from)   {
   return pset1_size16<Packet16uc>(from);
 }
 
@@ -669,12 +669,12 @@ template<typename Packet> EIGEN_DEVICE_FUNC inline Packet pgather_size16(const _
 }
 
 
-template<> EIGEN_DEVICE_FUNC inline Packet16c pgather<int8_t, Packet16c>(const int8_t* from, Index stride)
+template<> EIGEN_DEVICE_FUNC inline Packet16c pgather<signed char, Packet16c>(const signed char* from, Index stride)
 {
   return pgather_size16<Packet16c>(from, stride);
 }
 
-template<> EIGEN_DEVICE_FUNC inline Packet16uc pgather<uint8_t, Packet16uc>(const uint8_t* from, Index stride)
+template<> EIGEN_DEVICE_FUNC inline Packet16uc pgather<unsigned char, Packet16uc>(const unsigned char* from, Index stride)
 {
   return pgather_size16<Packet16uc>(from, stride);
 }
@@ -746,12 +746,12 @@ template<typename Packet> EIGEN_DEVICE_FUNC inline void pscatter_size16(__UNPACK
   to[15*stride] = a[15];
 }
 
-template<> EIGEN_DEVICE_FUNC inline void pscatter<int8_t, Packet16c>(int8_t* to, const Packet16c& from, Index stride)
+template<> EIGEN_DEVICE_FUNC inline void pscatter<signed char, Packet16c>(signed char* to, const Packet16c& from, Index stride)
 {
   pscatter_size16<Packet16c>(to, from, stride);
 }
 
-template<> EIGEN_DEVICE_FUNC inline void pscatter<uint8_t, Packet16uc>(uint8_t* to, const Packet16uc& from, Index stride)
+template<> EIGEN_DEVICE_FUNC inline void pscatter<unsigned char, Packet16uc>(unsigned char* to, const Packet16uc& from, Index stride)
 {
   pscatter_size16<Packet16uc>(to, from, stride);
 }
@@ -760,8 +760,8 @@ template<> EIGEN_STRONG_INLINE Packet4f   plset<Packet4f>(const float&     a) { 
 template<> EIGEN_STRONG_INLINE Packet4i   plset<Packet4i>(const int&       a) { return pset1<Packet4i>(a) + p4i_COUNTDOWN;  }
 template<> EIGEN_STRONG_INLINE Packet8s   plset<Packet8s>(const short int& a) { return pset1<Packet8s>(a) + p8s_COUNTDOWN; }
 template<> EIGEN_STRONG_INLINE Packet8us  plset<Packet8us>(const unsigned short int& a) { return pset1<Packet8us>(a) + p8us_COUNTDOWN; }
-template<> EIGEN_STRONG_INLINE Packet16c  plset<Packet16c>(const int8_t& a)   { return pset1<Packet16c>(a) + p16c_COUNTDOWN; }
-template<> EIGEN_STRONG_INLINE Packet16uc plset<Packet16uc>(const uint8_t& a)   { return pset1<Packet16uc>(a) + p16uc_COUNTDOWN; }
+template<> EIGEN_STRONG_INLINE Packet16c  plset<Packet16c>(const signed char& a)   { return pset1<Packet16c>(a) + p16c_COUNTDOWN; }
+template<> EIGEN_STRONG_INLINE Packet16uc plset<Packet16uc>(const unsigned char& a)   { return pset1<Packet16uc>(a) + p16uc_COUNTDOWN; }
 
 template<> EIGEN_STRONG_INLINE Packet4f   padd<Packet4f>  (const Packet4f&   a, const Packet4f&   b) { return a + b; }
 template<> EIGEN_STRONG_INLINE Packet4i   padd<Packet4i>  (const Packet4i&   a, const Packet4i&   b) { return a + b; }
@@ -859,6 +859,11 @@ template<> EIGEN_STRONG_INLINE Packet16uc pmax<Packet16uc>(const Packet16uc& a, 
 template<> EIGEN_STRONG_INLINE Packet4f pcmp_le(const Packet4f& a, const Packet4f& b) { return reinterpret_cast<Packet4f>(vec_cmple(a,b)); }
 template<> EIGEN_STRONG_INLINE Packet4f pcmp_lt(const Packet4f& a, const Packet4f& b) { return reinterpret_cast<Packet4f>(vec_cmplt(a,b)); }
 template<> EIGEN_STRONG_INLINE Packet4f pcmp_eq(const Packet4f& a, const Packet4f& b) { return reinterpret_cast<Packet4f>(vec_cmpeq(a,b)); }
+template<> EIGEN_STRONG_INLINE Packet16c pcmp_eq(const Packet16c& a, const Packet16c& b) { return reinterpret_cast<Packet16c>(vec_cmpeq(a,b)); }
+template<> EIGEN_STRONG_INLINE Packet16uc pcmp_eq(const Packet16uc& a, const Packet16uc& b) { return reinterpret_cast<Packet16uc>(vec_cmpeq(a,b)); }
+
+template<> EIGEN_STRONG_INLINE Packet8s pcmp_eq(const Packet8s& a, const Packet8s& b) { return reinterpret_cast<Packet8s>(vec_cmpeq(a,b)); }
+template<> EIGEN_STRONG_INLINE Packet8us pcmp_eq(const Packet8us& a, const Packet8us& b) { return reinterpret_cast<Packet8us>(vec_cmpeq(a,b)); }
 
 template<> EIGEN_STRONG_INLINE Packet4f pcmp_lt_or_nan(const Packet4f& a, const Packet4f& b) {
   Packet4f c = reinterpret_cast<Packet4f>(vec_cmpge(a,b));
@@ -946,11 +951,11 @@ template<> EIGEN_STRONG_INLINE Packet8bf ploadu<Packet8bf>(const bfloat16* from)
 {
   return ploadu_common<Packet8us>(reinterpret_cast<const unsigned short int*>(from));
 }
-template<> EIGEN_STRONG_INLINE Packet16c ploadu<Packet16c>(const int8_t* from)
+template<> EIGEN_STRONG_INLINE Packet16c ploadu<Packet16c>(const signed char* from)
 {
   return ploadu_common<Packet16c>(from);
 }
-template<> EIGEN_STRONG_INLINE Packet16uc ploadu<Packet16uc>(const uint8_t* from)
+template<> EIGEN_STRONG_INLINE Packet16uc ploadu<Packet16uc>(const unsigned char* from)
 {
   return ploadu_common<Packet16uc>(from);
 }
@@ -1008,7 +1013,7 @@ template<> EIGEN_STRONG_INLINE Packet8bf ploadquad<Packet8bf>(const bfloat16*   
   return ploadquad<Packet8us>(reinterpret_cast<const unsigned short int*>(from));
 }
 
-template<> EIGEN_STRONG_INLINE Packet16c ploaddup<Packet16c>(const int8_t*     from)
+template<> EIGEN_STRONG_INLINE Packet16c ploaddup<Packet16c>(const signed char*     from)
 {
   Packet16c p;
   if((std::ptrdiff_t(from) % 16) == 0)  p = pload<Packet16c>(from);
@@ -1016,7 +1021,7 @@ template<> EIGEN_STRONG_INLINE Packet16c ploaddup<Packet16c>(const int8_t*     f
   return vec_perm(p, p, p16uc_DUPLICATE8_HI);
 }
 
-template<> EIGEN_STRONG_INLINE Packet16uc ploaddup<Packet16uc>(const uint8_t*     from)
+template<> EIGEN_STRONG_INLINE Packet16uc ploaddup<Packet16uc>(const unsigned char*     from)
 {
   Packet16uc p;
   if((std::ptrdiff_t(from) % 16) == 0)  p = pload<Packet16uc>(from);
@@ -1065,11 +1070,11 @@ template<> EIGEN_STRONG_INLINE void pstoreu<bfloat16>(bfloat16*      to, const P
 {
   pstoreu_common<Packet8us>(reinterpret_cast<unsigned short int*>(to), from);
 }
-template<> EIGEN_STRONG_INLINE void pstoreu<int8_t>(int8_t*      to, const Packet16c& from)
+template<> EIGEN_STRONG_INLINE void pstoreu<signed char>(signed char*      to, const Packet16c& from)
 {
   pstoreu_common<Packet16c>(to, from);
 }
-template<> EIGEN_STRONG_INLINE void pstoreu<uint8_t>(uint8_t*      to, const Packet16uc& from)
+template<> EIGEN_STRONG_INLINE void pstoreu<unsigned char>(unsigned char*      to, const Packet16uc& from)
 {
   pstoreu_common<Packet16uc>(to, from);
 }
@@ -1094,12 +1099,12 @@ template<> EIGEN_STRONG_INLINE unsigned short int pfirst<Packet8us>(const Packet
   return pfirst_common<Packet8us>(a);
 }
 
-template<> EIGEN_STRONG_INLINE int8_t pfirst<Packet16c>(const Packet16c& a)
+template<> EIGEN_STRONG_INLINE signed char pfirst<Packet16c>(const Packet16c& a)
 {
   return pfirst_common<Packet16c>(a);
 }
 
-template<> EIGEN_STRONG_INLINE uint8_t pfirst<Packet16uc>(const Packet16uc& a)
+template<> EIGEN_STRONG_INLINE unsigned char pfirst<Packet16uc>(const Packet16uc& a)
 {
   return pfirst_common<Packet16uc>(a);
 }
@@ -1405,12 +1410,12 @@ template<typename Packet> EIGEN_STRONG_INLINE __UNPACK_TYPE__(Packet) predux_siz
 		                  + predux(third_quarter) + predux(fourth_quarter));
 }
 
-template<> EIGEN_STRONG_INLINE int8_t predux<Packet16c>(const Packet16c& a)
+template<> EIGEN_STRONG_INLINE signed char predux<Packet16c>(const Packet16c& a)
 {
   return predux_size16<Packet16c>(a);
 }
 
-template<> EIGEN_STRONG_INLINE uint8_t predux<Packet16uc>(const Packet16uc& a)
+template<> EIGEN_STRONG_INLINE unsigned char predux<Packet16uc>(const Packet16uc& a)
 {
   return predux_size16<Packet16uc>(a);
 }
@@ -1462,7 +1467,7 @@ template<> EIGEN_STRONG_INLINE bfloat16 predux_mul<Packet8bf>(const Packet8bf& a
 }
 
 
-template<> EIGEN_STRONG_INLINE int8_t predux_mul<Packet16c>(const Packet16c& a)
+template<> EIGEN_STRONG_INLINE signed char predux_mul<Packet16c>(const Packet16c& a)
 {
   Packet16c pair, quad, octo, result;
 
@@ -1474,7 +1479,7 @@ template<> EIGEN_STRONG_INLINE int8_t predux_mul<Packet16c>(const Packet16c& a)
   return pfirst(result);
 }
 
-template<> EIGEN_STRONG_INLINE uint8_t predux_mul<Packet16uc>(const Packet16uc& a)
+template<> EIGEN_STRONG_INLINE unsigned char predux_mul<Packet16uc>(const Packet16uc& a)
 {
   Packet16uc pair, quad, octo, result;
 
@@ -1545,7 +1550,7 @@ template<> EIGEN_STRONG_INLINE unsigned short int predux_min<Packet8us>(const Pa
   return pfirst(octo);
 }
 
-template<> EIGEN_STRONG_INLINE int8_t predux_min<Packet16c>(const Packet16c& a)
+template<> EIGEN_STRONG_INLINE signed char predux_min<Packet16c>(const Packet16c& a)
 {
   Packet16c pair, quad, octo, result;
 
@@ -1557,7 +1562,7 @@ template<> EIGEN_STRONG_INLINE int8_t predux_min<Packet16c>(const Packet16c& a)
   return pfirst(result);
 }
 
-template<> EIGEN_STRONG_INLINE uint8_t predux_min<Packet16uc>(const Packet16uc& a)
+template<> EIGEN_STRONG_INLINE unsigned char predux_min<Packet16uc>(const Packet16uc& a)
 {
   Packet16uc pair, quad, octo, result;
 
@@ -1625,7 +1630,7 @@ template<> EIGEN_STRONG_INLINE unsigned short int predux_max<Packet8us>(const Pa
   return pfirst(octo);
 }
 
-template<> EIGEN_STRONG_INLINE int8_t predux_max<Packet16c>(const Packet16c& a)
+template<> EIGEN_STRONG_INLINE signed char predux_max<Packet16c>(const Packet16c& a)
 {
   Packet16c pair, quad, octo, result;
 
@@ -1637,7 +1642,7 @@ template<> EIGEN_STRONG_INLINE int8_t predux_max<Packet16c>(const Packet16c& a)
   return pfirst(result);
 }
 
-template<> EIGEN_STRONG_INLINE uint8_t predux_max<Packet16uc>(const Packet16uc& a)
+template<> EIGEN_STRONG_INLINE unsigned char predux_max<Packet16uc>(const Packet16uc& a)
 {
   Packet16uc pair, quad, octo, result;
 
