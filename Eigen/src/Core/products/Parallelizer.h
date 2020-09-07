@@ -22,7 +22,7 @@ namespace internal {
 inline void manage_multi_threading(Action action, int* v)
 {
   static int m_maxThreads = -1;
-  EIGEN_UNUSED_VARIABLE(m_maxThreads);
+  EIGEN_UNUSED_VARIABLE(m_maxThreads)
 
   if(action==SetAction)
   {

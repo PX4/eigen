@@ -972,7 +972,7 @@ template<typename T>
 EIGEN_DEVICE_FUNC
 EIGEN_ALWAYS_INLINE T mini(const T& x, const T& y)
 {
-  EIGEN_USING_STD_MATH(min);
+  EIGEN_USING_STD_MATH(min)
   return min EIGEN_NOT_A_MACRO (x,y);
 }
 
@@ -980,7 +980,7 @@ template<typename T>
 EIGEN_DEVICE_FUNC
 EIGEN_ALWAYS_INLINE T maxi(const T& x, const T& y)
 {
-  EIGEN_USING_STD_MATH(max);
+  EIGEN_USING_STD_MATH(max)
   return max EIGEN_NOT_A_MACRO (x,y);
 }
 #else
@@ -1291,7 +1291,7 @@ template<typename T>
 EIGEN_DEVICE_FUNC
 T (floor)(const T& x)
 {
-  EIGEN_USING_STD_MATH(floor);
+  EIGEN_USING_STD_MATH(floor)
   return floor(x);
 }
 

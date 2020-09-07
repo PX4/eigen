@@ -688,7 +688,7 @@ bool not_equal_strict(const double& x,const double& y) { return std::not_equal_t
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC unsigned int as_uint(float x)
 {
   unsigned int ret;
-  EIGEN_USING_STD(memcpy);
+  EIGEN_USING_STD(memcpy)
   memcpy(&ret, &x, sizeof(float));
   return ret;
 }

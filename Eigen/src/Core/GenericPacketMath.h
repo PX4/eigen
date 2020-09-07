@@ -273,7 +273,7 @@ EIGEN_DEVICE_FUNC inline Packet pfrexp(const Packet& a, Packet& exponent) {
   */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
 pldexp(const Packet &a, const Packet &exponent) {
-  EIGEN_USING_STD_MATH(ldexp);
+  EIGEN_USING_STD_MATH(ldexp)
   return ldexp(a, static_cast<int>(exponent));
 }
 
@@ -282,12 +282,12 @@ template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
 pzero(const Packet& /*a*/) { Packet b; memset((void*)&b, 0, sizeof(b)); return b;}
 
 template<> EIGEN_DEVICE_FUNC inline float pzero<float>(const float& a) {
-  EIGEN_UNUSED_VARIABLE(a);
+  EIGEN_UNUSED_VARIABLE(a)
   return 0.f;
 }
 
 template<> EIGEN_DEVICE_FUNC inline double pzero<double>(const double& a) {
-  EIGEN_UNUSED_VARIABLE(a);
+  EIGEN_UNUSED_VARIABLE(a)
   return 0.;
 }
 
