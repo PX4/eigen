@@ -3580,8 +3580,8 @@ template<> struct packet_traits<double>  : default_packet_traits
     HasSin  = 0,
     HasCos  = 0,
     HasLog  = 0,
-    HasExp  = 0,
-    HasSqrt = 0,
+    HasExp  = 1,
+    HasSqrt = 1,
     HasTanh = 0,
     HasErf  = 0
   };
@@ -3749,6 +3749,38 @@ ptranspose(PacketBlock<Packet2d, 2>& kernel)
 
 template<> EIGEN_DEVICE_FUNC inline Packet2d pselect( const Packet2d& mask, const Packet2d& a, const Packet2d& b)
 { return vbslq_f64(vreinterpretq_u64_f64(mask), a, b); }
+
+template<> EIGEN_STRONG_INLINE Packet2d pldexp<Packet2d>(const Packet2d& a, const Packet2d& exponent)
+{ return pldexp_double(a, exponent); }
+
+#if EIGEN_FAST_MATH
+
+// Functions for sqrt support packet2d.
+// The EIGEN_FAST_MATH version uses the vrsqrte_f64 approximation and one step
+// of Newton's method, at a cost of 1-2 bits of precision as opposed to the
+// exact solution. It does not handle +inf, or denormalized numbers correctly.
+// The main advantage of this approach is not just speed, but also the fact that
+// it can be inlined and pipelined with other computations, further reducing its
+// effective latency. This is similar to Quake3's fast inverse square root.
+// For more details see: http://www.beyond3d.com/content/articles/8/
+template<> EIGEN_STRONG_INLINE Packet2d psqrt(const Packet2d& _x){
+  Packet2d half = vmulq_n_f64(_x, 0.5);
+  Packet2ul denormal_mask = vandq_u64(vcgeq_f64(_x, vdupq_n_f64(0.0)),
+                                      vcltq_f64(_x, pset1<Packet2d>((std::numeric_limits<double>::min)())));
+  // Compute approximate reciprocal sqrt.
+  Packet2d x = vrsqrteq_f64(_x);
+  // Do a single step of Newton's iteration. 
+  //the number 1.5f was set reference to Quake3's fast inverse square root
+  x = vmulq_f64(x, psub(pset1<Packet2d>(1.5), pmul(half, pmul(x, x))));
+  // Do one more Newton's iteration to get more accurate result.
+  x = vmulq_f64(x, psub(pset1<Packet2d>(1.5), pmul(half, pmul(x, x))));
+  // Flush results for denormals to zero.
+  return vreinterpretq_f64_u64(vbicq_u64(vreinterpretq_u64_f64(pmul(_x, x)), denormal_mask));
+}
+
+#else 
+template<> EIGEN_STRONG_INLINE Packet2d psqrt(const Packet2d& _x){ return vsqrt_f64(_x); }
+#endif
 
 #endif // EIGEN_ARCH_ARM64
 

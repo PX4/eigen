@@ -39,6 +39,16 @@ pldexp_float(Packet a, Packet exponent)
   return pmul(a, preinterpret<Packet>(plogical_shift_left<23>(ei)));
 }
 
+template<typename Packet> EIGEN_STRONG_INLINE Packet
+pldexp_double(Packet a, Packet exponent)
+{
+  typedef typename unpacket_traits<Packet>::integer_packet PacketI;
+  const Packet cst_1023 = pset1<Packet>(1023.0);
+  // return a * 2^exponent
+  PacketI ei = pcast<Packet,PacketI>(padd(exponent, cst_1023));
+  return pmul(a, preinterpret<Packet>(plogical_shift_left<52>(ei)));
+}
+
 // Natural logarithm
 // Computes log(x) as log(2^e * m) = C*e + log(m), where the constant C =log(2)
 // and m is in the range [sqrt(1/2),sqrt(2)). In this range, the logarithm can

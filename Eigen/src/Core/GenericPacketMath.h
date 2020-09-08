@@ -742,6 +742,12 @@ pfrexp_float(const Packet& a, Packet& exponent);
 template<typename Packet> EIGEN_STRONG_INLINE Packet
 pldexp_float(Packet a, Packet exponent);
 
+/** Default implementation of pldexp for double.
+  * It is expected to be called by implementers of template<> pldexp.
+  */
+template<typename Packet> EIGEN_STRONG_INLINE Packet
+pldexp_double(Packet a, Packet exponent);
+
 } // end namespace internal
 
 } // end namespace Eigen
