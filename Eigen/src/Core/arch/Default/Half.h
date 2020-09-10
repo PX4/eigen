@@ -472,7 +472,9 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC __half_raw float_to_half_rtne(float ff) {
       unsigned int mant_odd = (f.u >> 13) & 1; // resulting mantissa is odd
 
       // update exponent, rounding bias part 1
-      f.u += ((unsigned int)(15 - 127) << 23) + 0xfff;
+      // Equivalent to `f.u += ((unsigned int)(15 - 127) << 23) + 0xfff`, but
+      // without arithmetic overflow.
+      f.u += 0xc8000fffU;
       // rounding bias part 2
       f.u += mant_odd;
       // take the bits!
