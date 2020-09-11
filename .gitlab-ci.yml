@@ -1,7 +1,7 @@
 # This file is part of Eigen, a lightweight C++ template library
 # for linear algebra.
 #
-# Copyright (c) 2020, Arm Limited and Contributors
+# Copyright (C) 2020 Arm Ltd. and Contributors
 #
 # This Source Code Form is subject to the terms of the Mozilla
 # Public License v. 2.0. If a copy of the MPL was not distributed
@@ -10,13 +10,11 @@
 stages:
   - build
   - test
-  - doc
 
 variables:
   BUILDDIR: builddir
   EIGEN_CI_CMAKE_GENEATOR: "Ninja"
-  EIGEN_CI_TESTSUITE_SIZE: 15
 
 include:
-  - "/ci/build-tests.gitlab-ci.yml"
-  - "/ci/run-tests.gitlab-ci.yml"
+  - "/ci/build.gitlab-ci.yml"
+  - "/ci/test.gitlab-ci.yml"
