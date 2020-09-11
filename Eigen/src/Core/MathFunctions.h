@@ -407,7 +407,7 @@ inline NewType cast(const OldType& x)
     {
       EIGEN_STATIC_ASSERT((!NumTraits<Scalar>::IsComplex), NUMERIC_TYPE_MUST_BE_REAL)
       EIGEN_USING_STD_MATH(round);
-      return round(x);
+      return Scalar(round(x));
     }
   };
 #else
