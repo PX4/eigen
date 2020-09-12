@@ -10,6 +10,10 @@
 #ifndef EIGEN_STABLENORM_H
 #define EIGEN_STABLENORM_H
 
+#if EIGEN_HAS_CXX11_ATOMIC
+#include <atomic>
+#endif
+
 namespace Eigen { 
 
 namespace internal {
@@ -124,10 +128,29 @@ blueNorm_impl(const EigenBase<Derived>& _vec)
   using std::sqrt;
   using std::abs;
   const Derived& vec(_vec.derived());
-  static bool initialized = false;
+
+#if EIGEN_HAS_CXX11_ATOMIC
+  enum {
+    kNotInitialized = 0,
+    kInitializing = 1,
+    kInitialized = 2
+  };
+  static std::atomic<uint8_t> initialized{kNotInitialized};
+#else
+  // Note: This is not theadsafe without C++11.
+  const bool kNotInitialized = false;
+  const bool kInitialized = true;
+  static bool initialized = kNotInitialized;
+#endif
   static RealScalar b1, b2, s1m, s2m, rbig, relerr;
-  if(!initialized)
+
+  while (initialized != kInitialized)
   {
+#if EIGEN_HAS_CXX11_ATOMIC
+    // Checking again to see if another thread has already initialized the constants.
+    uint8_t val = kNotInitialized;
+    if (initialized.compare_exchange_strong(val, kInitializing) && val != kInitialized) {
+#endif
     int ibeta, it, iemin, iemax, iexp;
     RealScalar eps;
     // This program calculates the machine-dependent constants
@@ -156,7 +179,10 @@ blueNorm_impl(const EigenBase<Derived>& _vec)
 
     eps     = RealScalar(pow(double(ibeta), 1-it));
     relerr  = sqrt(eps);                                            // tolerance for neglecting asml
-    initialized = true;
+    initialized = kInitialized;
+#if EIGEN_HAS_CXX11_ATOMIC
+    }
+#endif
   }
   Index n = vec.size();
   RealScalar ab2 = b2 / RealScalar(n);
