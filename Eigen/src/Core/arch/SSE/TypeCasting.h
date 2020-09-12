@@ -69,6 +69,14 @@ template<> EIGEN_STRONG_INLINE Packet2d pcast<Packet4f, Packet2d>(const Packet4f
   return _mm_cvtps_pd(a);
 }
 
+template<> EIGEN_STRONG_INLINE Packet2l pcast<Packet2d, Packet2l>(const Packet2d& a) {
+  return _mm_set_epi64x(int64_t(a[1]), int64_t(a[0]));
+  }
+
+template<> EIGEN_STRONG_INLINE Packet2d pcast<Packet2l, Packet2d>(const Packet2l& a) {
+  return _mm_set_pd(double(_mm_cvtsi128_si64(_mm_unpackhi_epi64(a, a))), double(_mm_cvtsi128_si64(a)));
+}
+
 template<> EIGEN_STRONG_INLINE Packet4i preinterpret<Packet4i,Packet4f>(const Packet4f& a) {
   return _mm_castps_si128(a);
 }
@@ -77,6 +85,13 @@ template<> EIGEN_STRONG_INLINE Packet4f preinterpret<Packet4f,Packet4i>(const Pa
   return _mm_castsi128_ps(a);
 }
 
+template<> EIGEN_STRONG_INLINE Packet2l preinterpret<Packet2l,Packet2d>(const Packet2d& a) {
+  return _mm_castpd_si128(a);
+}
+
+template<> EIGEN_STRONG_INLINE Packet2d preinterpret<Packet2d, Packet2l>(const Packet2l& a) {
+  return _mm_castsi128_pd(a);
+}
 
 // Disable the following code since it's broken on too many platforms / compilers.
 //#elif defined(EIGEN_VECTORIZE_SSE) && (!EIGEN_ARCH_x86_64) && (!EIGEN_COMP_MSVC)

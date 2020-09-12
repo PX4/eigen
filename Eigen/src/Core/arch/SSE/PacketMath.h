@@ -45,6 +45,7 @@ typedef __m128d Packet2d;
 
 typedef eigen_packet_wrapper<__m128i, 0> Packet4i;
 typedef eigen_packet_wrapper<__m128i, 1> Packet16b;
+typedef eigen_packet_wrapper<__m128i, 2> Packet2l;
 
 template<> struct is_arithmetic<__m128>  { enum { value = true }; };
 template<> struct is_arithmetic<__m128i> { enum { value = true }; };
@@ -192,6 +193,7 @@ template<> struct unpacket_traits<Packet4f> {
 template<> struct unpacket_traits<Packet2d> {
   typedef double    type;
   typedef Packet2d  half;
+  typedef Packet2l  integer_packet;
   enum {size=2, alignment=Aligned16, vectorizable=true, masked_load_available=false, masked_store_available=false};
 };
 template<> struct unpacket_traits<Packet4i> {
@@ -483,6 +485,9 @@ template<> EIGEN_STRONG_INLINE Packet4i pandnot<Packet4i>(const Packet4i& a, con
 template<int N> EIGEN_STRONG_INLINE Packet4i parithmetic_shift_right(Packet4i a) { return _mm_srai_epi32(a,N); }
 template<int N> EIGEN_STRONG_INLINE Packet4i plogical_shift_right(Packet4i a) { return _mm_srli_epi32(a,N); }
 template<int N> EIGEN_STRONG_INLINE Packet4i plogical_shift_left(Packet4i a) { return _mm_slli_epi32(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet2l plogical_shift_right(Packet2l a) { return _mm_srli_epi64(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet2l plogical_shift_left(Packet2l a) { return _mm_slli_epi64(a,N); }
+
 
 #ifdef EIGEN_VECTORIZE_SSE4_1
 template<> EIGEN_STRONG_INLINE Packet4f pround<Packet4f>(const Packet4f& a)
@@ -753,12 +758,7 @@ template<> EIGEN_STRONG_INLINE Packet4f pldexp<Packet4f>(const Packet4f& a, cons
 }
 
 template<> EIGEN_STRONG_INLINE Packet2d pldexp<Packet2d>(const Packet2d& a, const Packet2d& exponent) {
-  const Packet4i cst_1023_0 = _mm_setr_epi32(1023, 1023, 0, 0);
-  Packet4i emm0 = _mm_cvttpd_epi32(exponent);
-  emm0 = padd(emm0, cst_1023_0);
-  emm0 = _mm_slli_epi32(emm0, 20);
-  emm0 = _mm_shuffle_epi32(emm0, _MM_SHUFFLE(1,2,0,3));
-  return pmul(a, Packet2d(_mm_castsi128_pd(emm0)));
+  return pldexp_double(a,exponent);
 }
 
 // with AVX, the default implementations based on pload1 are faster
