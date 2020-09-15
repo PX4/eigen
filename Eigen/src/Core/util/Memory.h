@@ -83,6 +83,7 @@ inline void throw_std_bad_alloc()
     new int[huge];
     #else
     void* unused = ::operator new(huge);
+    EIGEN_UNUSED_VARIABLE(unused);
     #endif
   #endif
 }
