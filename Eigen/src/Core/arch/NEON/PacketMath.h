@@ -3579,7 +3579,7 @@ template<> struct packet_traits<double>  : default_packet_traits
 
     HasSin  = 0,
     HasCos  = 0,
-    HasLog  = 0,
+    HasLog  = 1,
     HasExp  = 1,
     HasSqrt = 1,
     HasTanh = 0,
@@ -3752,6 +3752,12 @@ template<> EIGEN_DEVICE_FUNC inline Packet2d pselect( const Packet2d& mask, cons
 
 template<> EIGEN_STRONG_INLINE Packet2d pldexp<Packet2d>(const Packet2d& a, const Packet2d& exponent)
 { return pldexp_double(a, exponent); }
+
+template<> EIGEN_STRONG_INLINE Packet2d pfrexp<Packet2d>(const Packet2d& a, Packet2d& exponent)
+{ return pfrexp_double(a,exponent); }
+
+template<> EIGEN_STRONG_INLINE Packet2d pset1frombits<Packet2d>(unsigned long from)
+{ return vreinterpretq_f64_u64(vdupq_n_u64(from)); }
 
 #if EIGEN_FAST_MATH
 

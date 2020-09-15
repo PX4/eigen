@@ -132,6 +132,7 @@ struct packet_traits<double> : default_packet_traits {
 
     HasCmp  = 1,
     HasDiv  = 1,
+    HasLog  = 1,
     HasExp  = 1,
     HasSqrt = 1,
     HasRsqrt = 1,
@@ -227,6 +228,7 @@ template<> EIGEN_STRONG_INLINE Packet4i pset1<Packet4i>(const int&    from) { re
 template<> EIGEN_STRONG_INLINE Packet16b pset1<Packet16b>(const bool&    from) { return _mm_set1_epi8(static_cast<char>(from)); }
 
 template<> EIGEN_STRONG_INLINE Packet4f pset1frombits<Packet4f>(unsigned int from) { return _mm_castsi128_ps(pset1<Packet4i>(from)); }
+template<> EIGEN_STRONG_INLINE Packet2d pset1frombits<Packet2d>(unsigned long  from) { return _mm_castsi128_pd(_mm_set1_epi64x(from)); }
 
 template<> EIGEN_STRONG_INLINE Packet4f pzero(const Packet4f& /*a*/) { return _mm_setzero_ps(); }
 template<> EIGEN_STRONG_INLINE Packet2d pzero(const Packet2d& /*a*/) { return _mm_setzero_pd(); }
@@ -751,6 +753,10 @@ template<> EIGEN_STRONG_INLINE Packet4i pabs(const Packet4i& a)
 
 template<> EIGEN_STRONG_INLINE Packet4f pfrexp<Packet4f>(const Packet4f& a, Packet4f& exponent) {
   return pfrexp_float(a,exponent);
+}
+
+template<> EIGEN_STRONG_INLINE Packet2d pfrexp<Packet2d>(const Packet2d& a, Packet2d& exponent) {
+  return pfrexp_double(a,exponent);
 }
 
 template<> EIGEN_STRONG_INLINE Packet4f pldexp<Packet4f>(const Packet4f& a, const Packet4f& exponent) {

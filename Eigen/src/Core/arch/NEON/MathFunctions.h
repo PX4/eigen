@@ -51,6 +51,9 @@ BF16_PACKET_FUNCTION(Packet4f, Packet4bf, ptanh)
 template<> EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED Packet2d pexp<Packet2d>(const Packet2d& x)
 { return pexp_double(x); }
 
+template<> EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED Packet2d plog<Packet2d>(const Packet2d& x)
+{ return plog_double(x); }
+
 #endif
 
 } // end namespace internal

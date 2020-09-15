@@ -25,6 +25,11 @@ Packet4f plog<Packet4f>(const Packet4f& _x) {
 }
 
 template<> EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED
+Packet2d plog<Packet2d>(const Packet2d& _x) {
+  return plog_double(_x);
+}
+
+template<> EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED
 Packet4f plog1p<Packet4f>(const Packet4f& _x) {
   return generic_plog1p(_x);
 }

@@ -21,6 +21,9 @@ template<typename Packet> EIGEN_STRONG_INLINE Packet
 pfrexp_float(const Packet& a, Packet& exponent);
 
 template<typename Packet> EIGEN_STRONG_INLINE Packet
+pfrexp_double(const Packet& a, Packet& exponent);
+
+template<typename Packet> EIGEN_STRONG_INLINE Packet
 pldexp_float(Packet a, Packet exponent);
 
 /** \internal \returns log(x) for single precision float */
@@ -28,6 +31,12 @@ template <typename Packet>
 EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS
 EIGEN_UNUSED
 Packet plog_float(const Packet _x);
+
+/** \internal \returns log(x) for single precision float */
+template <typename Packet>
+EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS
+EIGEN_UNUSED
+Packet plog_double(const Packet _x);
 
 /** \internal \returns log(1 + x) */
 template<typename Packet>
