@@ -256,7 +256,7 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC bfloat16 operator / (const bfloat16& a, In
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC __bfloat16_raw truncate_to_bfloat16(const float v) {
   __bfloat16_raw output;
   if (Eigen::numext::isnan EIGEN_NOT_A_MACRO(v)) {
-    output.value = 0x7FC0;
+    output.value = std::signbit(v) ? 0xFFC0: 0x7FC0;
     return output;
   } else if (std::fabs(v) < std::numeric_limits<float>::min EIGEN_NOT_A_MACRO()) {
     // Flush denormal to +/- 0.
@@ -293,7 +293,7 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC __bfloat16_raw float_to_bfloat16_rtne<fals
     //
     // qNaN magic: All exponent bits set + most significant bit of fraction
     // set.
-    output.value = 0x7fc0;
+    output.value = std::signbit(ff) ? 0xFFC0: 0x7FC0;
   } else if (std::fabs(ff) < std::numeric_limits<float>::min EIGEN_NOT_A_MACRO()) {
     // Flush denormal to +/- 0.0
     output.value = std::signbit(ff) ? 0x8000 : 0;

@@ -230,6 +230,17 @@ void test_conversion()
   VERIFY((numext::isnan)(bfloat16(__bfloat16_raw(0xffc0))));
   VERIFY((numext::isinf)(bfloat16(__bfloat16_raw(0x7f80))));
   VERIFY((numext::isnan)(bfloat16(__bfloat16_raw(0x7fc0))));
+
+  VERIFY_IS_EQUAL(bfloat16(BinaryToFloat(0x0, 0xff, 0x40, 0x0)).value, 0x7fc0);
+  VERIFY_IS_EQUAL(bfloat16(BinaryToFloat(0x1, 0xff, 0x40, 0x0)).value, 0xffc0);
+  VERIFY_IS_EQUAL(Eigen::bfloat16_impl::truncate_to_bfloat16(
+                      BinaryToFloat(0x0, 0xff, 0x40, 0x0))
+                      .value,
+                  0x7fc0);
+  VERIFY_IS_EQUAL(Eigen::bfloat16_impl::truncate_to_bfloat16(
+                      BinaryToFloat(0x1, 0xff, 0x40, 0x0))
+                      .value,
+                  0xffc0);
 }
 
 void test_numtraits()
