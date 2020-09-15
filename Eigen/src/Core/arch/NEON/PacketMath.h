@@ -1010,17 +1010,8 @@ template<> EIGEN_STRONG_INLINE Packet2ul pdiv<Packet2ul>(const Packet2ul& /*a*/,
   return pset1<Packet2ul>(0ULL);
 }
 
-// Clang/ARM wrongly advertises __ARM_FEATURE_FMA even when it's not available,
-// then implements a slow software scalar fallback calling fmaf()!
-// Filed LLVM bug:
-//     https://llvm.org/bugs/show_bug.cgi?id=27216
-#if (defined __ARM_FEATURE_FMA) && !(EIGEN_COMP_CLANG && EIGEN_ARCH_ARM)
-// See bug 936.
-// FMA is available on VFPv4 i.e. when compiling with -mfpu=neon-vfpv4.
-// FMA is a true fused multiply-add i.e. only 1 rounding at the end, no intermediate rounding.
-// MLA is not fused i.e. does 2 roundings.
-// In addition to giving better accuracy, FMA also gives better performance here on a Krait (Nexus 4):
-// MLA: 10 GFlop/s ; FMA: 12 GFlops/s.
+
+#ifdef __ARM_FEATURE_FMA
 template<> EIGEN_STRONG_INLINE Packet4f pmadd(const Packet4f& a, const Packet4f& b, const Packet4f& c)
 { return vfmaq_f32(c,a,b); }
 template<> EIGEN_STRONG_INLINE Packet2f pmadd(const Packet2f& a, const Packet2f& b, const Packet2f& c)
@@ -1028,25 +1019,7 @@ template<> EIGEN_STRONG_INLINE Packet2f pmadd(const Packet2f& a, const Packet2f&
 #else
 template<> EIGEN_STRONG_INLINE Packet4f pmadd(const Packet4f& a, const Packet4f& b, const Packet4f& c)
 {
-#if EIGEN_COMP_CLANG && EIGEN_ARCH_ARM
-  // Clang/ARM will replace VMLA by VMUL+VADD at least for some values of -mcpu,
-  // at least -mcpu=cortex-a8 and -mcpu=cortex-a7. Since the former is the default on
-  // -march=armv7-a, that is a very common case.
-  // See e.g. this thread:
-  //     http://lists.llvm.org/pipermail/llvm-dev/2013-December/068806.html
-  // Filed LLVM bug:
-  //     https://llvm.org/bugs/show_bug.cgi?id=27219
-  Packet4f r = c;
-  asm volatile(
-    "vmla.f32 %q[r], %q[a], %q[b]"
-    : [r] "+w" (r)
-    : [a] "w" (a),
-      [b] "w" (b)
-    : );
-  return r;
-#else
   return vmlaq_f32(c,a,b);
-#endif
 }
 template<> EIGEN_STRONG_INLINE Packet2f pmadd(const Packet2f& a, const Packet2f& b, const Packet2f& c)
 {
