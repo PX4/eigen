@@ -173,6 +173,8 @@ struct compute_inverse_size4<Architecture::NEON, float, MatrixType, ResultType>
   }
 };
 
+#if EIGEN_ARCH_ARM64 && !EIGEN_APPLE_DOUBLE_NEON_BUG
+
 // same algorithm as above, except that each operand is split into
 // halves for two registers to hold.
 template <typename MatrixType, typename ResultType>
@@ -362,6 +364,9 @@ struct compute_inverse_size4<Architecture::NEON, double, MatrixType, ResultType>
     pstoret<double, Packet2d, ResultAlignment>(res + 3 * res_stride + 2, pmul(shuffle(iD2, iD1, 0), d2));
   }
 };
+
+#endif  // EIGEN_ARCH_ARM64 && !EIGEN_APPLE_DOUBLE_NEON_BUG
+
 } // namespace internal
 } // namespace Eigen
 #endif
