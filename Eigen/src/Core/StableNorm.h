@@ -157,9 +157,9 @@ blueNorm_impl(const EigenBase<Derived>& _vec)
 
   for(Index j=0; j<vec.outerSize(); ++j)
   {
-    for(typename Derived::InnerIterator it(vec, j); it; ++it)
+    for(typename Derived::InnerIterator iter(vec, j); iter; ++iter)
     {
-      RealScalar ax = abs(it.value());
+      RealScalar ax = abs(iter.value());
       if(ax > ab2)     abig += numext::abs2(ax*s2m);
       else if(ax < b1) asml += numext::abs2(ax*s1m);
       else             amed += numext::abs2(ax);
