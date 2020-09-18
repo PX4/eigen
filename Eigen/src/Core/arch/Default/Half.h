@@ -67,8 +67,8 @@ namespace half_impl {
 #if !defined(EIGEN_HAS_GPU_FP16)
 // Make our own __half_raw definition that is similar to CUDA's.
 struct __half_raw {
-  EIGEN_DEVICE_FUNC __half_raw() : x(0) {}
-  explicit EIGEN_DEVICE_FUNC __half_raw(unsigned short raw) : x(raw) {}
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR __half_raw() : x(0) {}
+  explicit EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR __half_raw(unsigned short raw) : x(raw) {}
   unsigned short x;
 };
 #elif defined(EIGEN_HAS_HIP_FP16)
@@ -85,20 +85,20 @@ typedef cl::sycl::half __half_raw;
 
 #endif
 
-EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC __half_raw raw_uint16_to_half(unsigned short x);
+EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR __half_raw raw_uint16_to_half(unsigned short x);
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC __half_raw float_to_half_rtne(float ff);
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC float half_to_float(__half_raw h);
 
 struct half_base : public __half_raw {
-  EIGEN_DEVICE_FUNC half_base() {}
-  EIGEN_DEVICE_FUNC half_base(const __half_raw& h) : __half_raw(h) {}
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR half_base() {}
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR half_base(const __half_raw& h) : __half_raw(h) {}
 
 #if defined(EIGEN_HAS_GPU_FP16)
  #if defined(EIGEN_HAS_HIP_FP16)
-  EIGEN_DEVICE_FUNC half_base(const __half& h) { x = __half_as_ushort(h); }
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR half_base(const __half& h) { x = __half_as_ushort(h); }
  #elif defined(EIGEN_HAS_CUDA_FP16)
   #if (defined(EIGEN_CUDA_SDK_VER) && EIGEN_CUDA_SDK_VER >= 90000)
-  EIGEN_DEVICE_FUNC half_base(const __half& h) : __half_raw(*(__half_raw*)&h) {}
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR half_base(const __half& h) : __half_raw(*(__half_raw*)&h) {}
   #endif
  #endif
 #endif
@@ -125,22 +125,22 @@ struct half : public half_impl::half_base {
   #endif
 #endif
 
-  EIGEN_DEVICE_FUNC half() {}
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR half() {}
 
-  EIGEN_DEVICE_FUNC half(const __half_raw& h) : half_impl::half_base(h) {}
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR half(const __half_raw& h) : half_impl::half_base(h) {}
 
 #if defined(EIGEN_HAS_GPU_FP16)
  #if defined(EIGEN_HAS_HIP_FP16)
-  EIGEN_DEVICE_FUNC half(const __half& h) : half_impl::half_base(h) {}
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR half(const __half& h) : half_impl::half_base(h) {}
  #elif defined(EIGEN_HAS_CUDA_FP16)
   #if defined(EIGEN_CUDA_SDK_VER) && EIGEN_CUDA_SDK_VER >= 90000
-  EIGEN_DEVICE_FUNC half(const __half& h) : half_impl::half_base(h) {}
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR half(const __half& h) : half_impl::half_base(h) {}
   #endif
  #endif
 #endif
 
 
-  explicit EIGEN_DEVICE_FUNC half(bool b)
+  explicit EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR half(bool b)
       : half_impl::half_base(half_impl::raw_uint16_to_half(b ? 0x3c00 : 0)) {}
   template<class T>
   explicit EIGEN_DEVICE_FUNC half(const T& val)
@@ -417,10 +417,8 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half operator / (const half& a, Index b) {
 // these in hardware. If we need more performance on older/other CPUs, they are
 // also possible to vectorize directly.
 
-EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC __half_raw raw_uint16_to_half(unsigned short x) {
-  __half_raw h;
-  h.x = x;
-  return h;
+EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR __half_raw raw_uint16_to_half(unsigned short x) {
+  return __half_raw(x);
 }
 
 union float32_bits {
@@ -666,20 +664,22 @@ template<> struct NumTraits<Eigen::half>
     RequireInitialization = false
   };
 
-  EIGEN_DEVICE_FUNC static EIGEN_STRONG_INLINE Eigen::half epsilon() {
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR static EIGEN_STRONG_INLINE Eigen::half epsilon() {
     return half_impl::raw_uint16_to_half(0x0800);
   }
-  EIGEN_DEVICE_FUNC static EIGEN_STRONG_INLINE Eigen::half dummy_precision() { return Eigen::half(1e-2f); }
-  EIGEN_DEVICE_FUNC static EIGEN_STRONG_INLINE Eigen::half highest() {
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR static EIGEN_STRONG_INLINE Eigen::half dummy_precision() {
+    return half_impl::raw_uint16_to_half(0x211f); //  Eigen::half(1e-2f);
+  }
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR static EIGEN_STRONG_INLINE Eigen::half highest() {
     return half_impl::raw_uint16_to_half(0x7bff);
   }
-  EIGEN_DEVICE_FUNC static EIGEN_STRONG_INLINE Eigen::half lowest() {
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR static EIGEN_STRONG_INLINE Eigen::half lowest() {
     return half_impl::raw_uint16_to_half(0xfbff);
   }
-  EIGEN_DEVICE_FUNC static EIGEN_STRONG_INLINE Eigen::half infinity() {
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR static EIGEN_STRONG_INLINE Eigen::half infinity() {
     return half_impl::raw_uint16_to_half(0x7c00);
   }
-  EIGEN_DEVICE_FUNC static EIGEN_STRONG_INLINE Eigen::half quiet_NaN() {
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR static EIGEN_STRONG_INLINE Eigen::half quiet_NaN() {
     return half_impl::raw_uint16_to_half(0x7c01);
   }
 };

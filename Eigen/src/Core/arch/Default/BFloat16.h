@@ -31,12 +31,12 @@ namespace bfloat16_impl {
 
 // Make our own __bfloat16_raw definition.
 struct __bfloat16_raw {
-  EIGEN_DEVICE_FUNC __bfloat16_raw() : value(0) {}
-  explicit EIGEN_DEVICE_FUNC __bfloat16_raw(unsigned short raw) : value(raw) {}
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR __bfloat16_raw() : value(0) {}
+  explicit EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR __bfloat16_raw(unsigned short raw) : value(raw) {}
   unsigned short value;
 };
 
-EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC __bfloat16_raw raw_uint16_to_bfloat16(unsigned short value);
+EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR __bfloat16_raw raw_uint16_to_bfloat16(unsigned short value);
 template <bool AssumeArgumentIsNormalOrInfinityOrZero>
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC __bfloat16_raw float_to_bfloat16_rtne(float ff);
 // Forward declarations of template specializations, to avoid Visual C++ 2019 errors, saying:
@@ -48,8 +48,8 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC __bfloat16_raw float_to_bfloat16_rtne<true
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC float bfloat16_to_float(__bfloat16_raw h);
 
 struct bfloat16_base : public __bfloat16_raw {
-  EIGEN_DEVICE_FUNC bfloat16_base() {}
-  EIGEN_DEVICE_FUNC bfloat16_base(const __bfloat16_raw& h) : __bfloat16_raw(h) {}
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR bfloat16_base() {}
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR bfloat16_base(const __bfloat16_raw& h) : __bfloat16_raw(h) {}
 };
 
 } // namespace bfloat16_impl
@@ -59,15 +59,15 @@ struct bfloat16 : public bfloat16_impl::bfloat16_base {
 
   typedef bfloat16_impl::__bfloat16_raw __bfloat16_raw;
 
-  EIGEN_DEVICE_FUNC bfloat16() {}
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR bfloat16() {}
 
-  EIGEN_DEVICE_FUNC bfloat16(const __bfloat16_raw& h) : bfloat16_impl::bfloat16_base(h) {}
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR bfloat16(const __bfloat16_raw& h) : bfloat16_impl::bfloat16_base(h) {}
 
-  explicit EIGEN_DEVICE_FUNC bfloat16(bool b)
+  explicit EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR bfloat16(bool b)
       : bfloat16_impl::bfloat16_base(bfloat16_impl::raw_uint16_to_bfloat16(b ? 0x3f80 : 0)) {}
 
   template<class T>
-  explicit EIGEN_DEVICE_FUNC bfloat16(const T& val)
+  explicit EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR bfloat16(const T& val)
       : bfloat16_impl::bfloat16_base(bfloat16_impl::float_to_bfloat16_rtne<internal::is_integral<T>::value>(static_cast<float>(val))) {}
   
   explicit EIGEN_DEVICE_FUNC bfloat16(float f)
@@ -76,7 +76,7 @@ struct bfloat16 : public bfloat16_impl::bfloat16_base {
   // Following the convention of numpy, converting between complex and
   // float will lead to loss of imag value.
   template<typename RealScalar>
-  explicit EIGEN_DEVICE_FUNC bfloat16(const std::complex<RealScalar>& val)
+  explicit EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR bfloat16(const std::complex<RealScalar>& val)
       : bfloat16_impl::bfloat16_base(bfloat16_impl::float_to_bfloat16_rtne<false>(static_cast<float>(val.real()))) {}
 
   EIGEN_DEVICE_FUNC operator float() const {  // NOLINT: Allow implicit conversion to float, because it is lossless.
@@ -272,10 +272,8 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC __bfloat16_raw truncate_to_bfloat16(const 
   return output;
 }
 
-EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC __bfloat16_raw raw_uint16_to_bfloat16(unsigned short value) {
-  __bfloat16_raw h;
-  h.value = value;
-  return h;
+EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR __bfloat16_raw raw_uint16_to_bfloat16(unsigned short value) {
+  return __bfloat16_raw(value);
 }
 
 // float_to_bfloat16_rtne template specialization that does not make any
@@ -619,20 +617,23 @@ template<> struct NumTraits<Eigen::bfloat16>
     RequireInitialization = false
   };
 
-  EIGEN_DEVICE_FUNC static EIGEN_STRONG_INLINE Eigen::bfloat16 epsilon() {
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR static EIGEN_STRONG_INLINE Eigen::bfloat16 epsilon() {
     return bfloat16_impl::raw_uint16_to_bfloat16(0x3c00);
   }
-  EIGEN_DEVICE_FUNC static EIGEN_STRONG_INLINE Eigen::bfloat16 dummy_precision() { return Eigen::bfloat16(5e-2f); }
-  EIGEN_DEVICE_FUNC static EIGEN_STRONG_INLINE Eigen::bfloat16 highest() {
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR static EIGEN_STRONG_INLINE Eigen::bfloat16 dummy_precision() {
+    return bfloat16_impl::raw_uint16_to_bfloat16(0x3D4D);  // bfloat16(5e-2f);
+
+  }
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR static EIGEN_STRONG_INLINE Eigen::bfloat16 highest() {
     return bfloat16_impl::raw_uint16_to_bfloat16(0x7F7F);
   }
-  EIGEN_DEVICE_FUNC static EIGEN_STRONG_INLINE Eigen::bfloat16 lowest() {
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR static EIGEN_STRONG_INLINE Eigen::bfloat16 lowest() {
     return bfloat16_impl::raw_uint16_to_bfloat16(0xFF7F);
   }
-  EIGEN_DEVICE_FUNC static EIGEN_STRONG_INLINE Eigen::bfloat16 infinity() {
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR static EIGEN_STRONG_INLINE Eigen::bfloat16 infinity() {
     return bfloat16_impl::raw_uint16_to_bfloat16(0x7f80);
   }
-  EIGEN_DEVICE_FUNC static EIGEN_STRONG_INLINE Eigen::bfloat16 quiet_NaN() {
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR static EIGEN_STRONG_INLINE Eigen::bfloat16 quiet_NaN() {
     return bfloat16_impl::raw_uint16_to_bfloat16(0x7fc0);
   }
 };

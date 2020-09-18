@@ -696,6 +696,12 @@
 
 #endif // EIGEN_HAS_CONSTEXPR
 
+#if EIGEN_HAS_CONSTEXPR
+#define EIGEN_CONSTEXPR constexpr
+#else
+#define EIGEN_CONSTEXPR
+#endif
+
 // Does the compiler support C++11 math?
 // Let's be conservative and enable the default C++11 implementation only if we are sure it exists
 #ifndef EIGEN_HAS_CXX11_MATH
