@@ -3642,6 +3642,9 @@ template<> EIGEN_STRONG_INLINE Packet2d pcmp_le(const Packet2d& a, const Packet2
 template<> EIGEN_STRONG_INLINE Packet2d pcmp_lt(const Packet2d& a, const Packet2d& b)
 { return vreinterpretq_f64_u64(vcltq_f64(a,b)); }
 
+template<> EIGEN_STRONG_INLINE Packet2d pcmp_lt_or_nan(const Packet2d& a, const Packet2d& b)
+{ return vreinterpret_f32_u32(vmvnq_u64(vcgeq_f64(a,b))); }
+
 template<> EIGEN_STRONG_INLINE Packet2d pcmp_eq(const Packet2d& a, const Packet2d& b)
 { return vreinterpretq_f64_u64(vceqq_f64(a,b)); }
 
