@@ -3732,7 +3732,7 @@ template<> EIGEN_STRONG_INLINE Packet2d pldexp<Packet2d>(const Packet2d& a, cons
 template<> EIGEN_STRONG_INLINE Packet2d pfrexp<Packet2d>(const Packet2d& a, Packet2d& exponent)
 { return pfrexp_double(a,exponent); }
 
-template<> EIGEN_STRONG_INLINE Packet2d pset1frombits<Packet2d>(unsigned long from)
+template<> EIGEN_STRONG_INLINE Packet2d pset1frombits<Packet2d>(uint64_t from)
 { return vreinterpretq_f64_u64(vdupq_n_u64(from)); }
 
 #if EIGEN_FAST_MATH

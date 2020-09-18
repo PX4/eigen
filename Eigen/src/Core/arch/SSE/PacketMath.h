@@ -228,7 +228,7 @@ template<> EIGEN_STRONG_INLINE Packet4i pset1<Packet4i>(const int&    from) { re
 template<> EIGEN_STRONG_INLINE Packet16b pset1<Packet16b>(const bool&    from) { return _mm_set1_epi8(static_cast<char>(from)); }
 
 template<> EIGEN_STRONG_INLINE Packet4f pset1frombits<Packet4f>(unsigned int from) { return _mm_castsi128_ps(pset1<Packet4i>(from)); }
-template<> EIGEN_STRONG_INLINE Packet2d pset1frombits<Packet2d>(unsigned long  from) { return _mm_castsi128_pd(_mm_set1_epi64x(from)); }
+template<> EIGEN_STRONG_INLINE Packet2d pset1frombits<Packet2d>(uint64_t from) { return _mm_castsi128_pd(_mm_set1_epi64x(from)); }
 
 template<> EIGEN_STRONG_INLINE Packet4f pzero(const Packet4f& /*a*/) { return _mm_setzero_ps(); }
 template<> EIGEN_STRONG_INLINE Packet2d pzero(const Packet2d& /*a*/) { return _mm_setzero_pd(); }
