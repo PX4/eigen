@@ -71,10 +71,21 @@ template<> EIGEN_STRONG_INLINE Packet2d pcast<Packet4f, Packet2d>(const Packet4f
 
 template<> EIGEN_STRONG_INLINE Packet2l pcast<Packet2d, Packet2l>(const Packet2d& a) {
   return _mm_set_epi64x(int64_t(a[1]), int64_t(a[0]));
-  }
+}
 
-template<> EIGEN_STRONG_INLINE Packet2d pcast<Packet2l, Packet2d>(const Packet2l& a) {
-  return _mm_set_pd(double(_mm_cvtsi128_si64(_mm_unpackhi_epi64(a, a))), double(_mm_cvtsi128_si64(a)));
+template <>
+EIGEN_STRONG_INLINE Packet2d pcast<Packet2l, Packet2d>(const Packet2l& a) {
+#ifdef EIGEN_VECTORIZE_SSE4_1
+  int64_t a0 = _mm_extract_epi64(a, 0);
+  int64_t a1 = _mm_extract_epi64(a, 1);
+#elif EIGEN_ARCH_x86_64
+  int64_t a0 = _mm_cvtsi128_si64(a);
+  int64_t a1 = _mm_cvtsi128_si64(_mm_unpackhi_epi64(a, a));
+#else
+  int64_t a0 = a.m_val[0];
+  int64_t a1 = a.m_val[1];
+#endif
+  return _mm_set_pd(static_cast<double>(a1), static_cast<double>(a0));
 }
 
 template<> EIGEN_STRONG_INLINE Packet4i preinterpret<Packet4i,Packet4f>(const Packet4f& a) {
