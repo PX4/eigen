@@ -17,10 +17,11 @@ include(CheckCXXSourceCompiles)
 
 # a little test program for c++ math functions.
 # notice the std:: is required on some platforms such as QNX
+# notice the (void) is required if -Wall (-Wunused-value) is added to CMAKE_CXX_FLAG
 
 set(find_standard_math_library_test_program
 "#include<cmath>
-int main() { std::sin(0.0); std::log(0.0f); }")
+int main() { (void)std::sin(0.0); (void)std::log(0.0f); }")
 
 # first try compiling/linking the test program without any linker flags
 
