@@ -70,7 +70,16 @@ template<> EIGEN_STRONG_INLINE Packet2d pcast<Packet4f, Packet2d>(const Packet4f
 }
 
 template<> EIGEN_STRONG_INLINE Packet2l pcast<Packet2d, Packet2l>(const Packet2d& a) {
+  // using a[1]/a[0] to get high/low 64 bit from __m128d is faster than _mm_cvtsd_f64() ,but 
+  // it will trigger the bug report at https://gitlab.com/libeigen/eigen/-/issues/1997 since the 
+  // a[index] ops was not supported by MSVC compiler(supported by gcc).
+#if EIGEN_COMP_MSVC
+  return _mm_set_epi64x(int64_t(_mm_cvtsd_f64(_mm_unpackhi_pd(a,a))), int64_t(_mm_cvtsd_f64(a)));
+#elif ((defined EIGEN_VECTORIZE_AVX) && (EIGEN_COMP_GNUC_STRICT || EIGEN_COMP_MINGW) && (__GXX_ABI_VERSION < 1004)) || EIGEN_OS_QNX
+  return _mm_set_epi64x(int64_t(a.m_val[1]), int64_t(a.m_val[0]));
+#else
   return _mm_set_epi64x(int64_t(a[1]), int64_t(a[0]));
+#endif
 }
 
 template <>
