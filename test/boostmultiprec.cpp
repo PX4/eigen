@@ -78,7 +78,7 @@ typedef mp::number<mp::cpp_dec_float<100>, mp::et_on> Real;
 
 namespace Eigen {
   template<> struct NumTraits<Real> : GenericNumTraits<Real> {
-    static EIGEN_CONSTEXPR inline Real dummy_precision() { return 1e-50; }
+    static inline Real dummy_precision() { return 1e-50; }
   };
 
   template<typename T1,typename T2,typename T3,typename T4,typename T5>
