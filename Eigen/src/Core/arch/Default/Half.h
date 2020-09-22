@@ -44,6 +44,18 @@
 
 #include <sstream>
 
+
+#if defined(EIGEN_HAS_GPU_FP16)
+// When compiling with GPU support, the "__half_raw" base class as well as
+// some other routines are defined in the GPU compiler header files
+// (cuda_fp16.h, hip_fp16.h), and they are not tagged constexpr
+// As a consequence, we get compile failures when compiling Eigen with
+// GPU support. Hence the need to disable EIGEN_CONSTEXPR when building
+// Eigen with GPU support
+  #pragma push_macro("EIGEN_CONSTEXPR")
+  #define EIGEN_CONSTEXPR
+#endif
+
 namespace Eigen {
 
 struct half;
@@ -418,7 +430,19 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half operator / (const half& a, Index b) {
 // also possible to vectorize directly.
 
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR __half_raw raw_uint16_to_half(unsigned short x) {
+  // We cannot simply do a "return __half_raw(x)" here, because __half_raw is union type
+  // in the hip_fp16 header file, and that will trigger a compile error
+  // On the other hand, having anythion but a return statement also triggers a compile error
+  // because this is constexpr function.
+  // Fortunately, since we need to disable EIGEN_CONSTEXPR for GPU anyway, we can get out
+  // of this catch22 by having separate bodies for GPU / non GPU
+#if defined(EIGEN_HAS_GPU_FP16)
+   __half_raw h;
+   h.x = x;
+  return h;
+#else
   return __half_raw(x);
+#endif
 }
 
 union float32_bits {
@@ -685,6 +709,10 @@ template<> struct NumTraits<Eigen::half>
 };
 
 } // end namespace Eigen
+
+#if defined(EIGEN_HAS_GPU_FP16)
+  #pragma pop_macro("EIGEN_CONSTEXPR")
+#endif
 
 // C-like standard mathematical functions and trancendentals.
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC Eigen::half fabsh(const Eigen::half& a) {
