@@ -255,7 +255,9 @@ class ThreadPoolTempl : public Eigen::ThreadPoolInterface {
 #ifndef EIGEN_THREAD_LOCAL
     std::unique_ptr<PerThread> new_pt(new PerThread());
     per_thread_map_mutex_.lock();
-    eigen_plain_assert(per_thread_map_.emplace(GlobalThreadIdHash(), std::move(new_pt)).second);
+    bool insertOK = per_thread_map_.emplace(GlobalThreadIdHash(), std::move(new_pt)).second;
+    eigen_plain_assert(insertOK);
+    EIGEN_UNUSED_VARIABLE(insertOK);
     per_thread_map_mutex_.unlock();
     init_barrier_->Notify();
     init_barrier_->Wait();
