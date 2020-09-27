@@ -82,21 +82,6 @@ template<> EIGEN_STRONG_INLINE Packet2l pcast<Packet2d, Packet2l>(const Packet2d
 #endif
 }
 
-template <>
-EIGEN_STRONG_INLINE Packet2d pcast<Packet2l, Packet2d>(const Packet2l& a) {
-#ifdef EIGEN_VECTORIZE_SSE4_1
-  int64_t a0 = _mm_extract_epi64(a, 0);
-  int64_t a1 = _mm_extract_epi64(a, 1);
-#elif EIGEN_ARCH_x86_64
-  int64_t a0 = _mm_cvtsi128_si64(a);
-  int64_t a1 = _mm_cvtsi128_si64(_mm_unpackhi_epi64(a, a));
-#else
-  int64_t a0 = a.m_val[0];
-  int64_t a1 = a.m_val[1];
-#endif
-  return _mm_set_pd(static_cast<double>(a1), static_cast<double>(a0));
-}
-
 template<> EIGEN_STRONG_INLINE Packet4i preinterpret<Packet4i,Packet4f>(const Packet4f& a) {
   return _mm_castps_si128(a);
 }
@@ -111,6 +96,28 @@ template<> EIGEN_STRONG_INLINE Packet2l preinterpret<Packet2l,Packet2d>(const Pa
 
 template<> EIGEN_STRONG_INLINE Packet2d preinterpret<Packet2d, Packet2l>(const Packet2l& a) {
   return _mm_castsi128_pd(a);
+}
+
+template <>
+EIGEN_STRONG_INLINE Packet2d pcast<Packet2l, Packet2d>(const Packet2l& a) {
+#ifdef EIGEN_VECTORIZE_AVX512DQ
+  // AVX512DQ finally provides an instruction for this
+  return _mm_cvtepi64_pd(a);
+#else
+  // Before AVX512, there is no packed epi64 to double cast instruction
+  // The idea is to convert upper and lower half separately, via bit-twiddling
+  // then add them together, but remove the offsets
+  Packet2d upper = preinterpret<Packet2d>(plogical_shift_right<32>(a));
+  Packet2d lower = pand(pset1frombits<Packet2d>(0xffffffffUL), preinterpret<Packet2d>(a));
+  // upper = 2**(53+32) + ((a >> 32) + 0x80000000)
+  upper = pxor(pset1frombits<Packet2d>(0x4530000080000000UL), upper); // exponent of 52+32, and xor the upper bit of 32bit mantissa
+  // lower = 2**53 + (a & 0xffffffff)
+  lower = pxor(pset1frombits<Packet2d>(0x4330000000000000UL), lower); // exponent of 52
+  // adding upper+lower would be 2**84+2**63+2**52 too big. Create the negative of that:
+  Packet2d offset = pset1frombits<Packet2d>(0xC530000080100000UL);
+  // add everything together, start with the bigger numbers, since the 2**84 will cancel out, giving an exact result
+  return padd(padd(offset, upper), lower);
+#endif
 }
 
 // Disable the following code since it's broken on too many platforms / compilers.
