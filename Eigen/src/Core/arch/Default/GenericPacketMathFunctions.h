@@ -34,7 +34,7 @@ pfrexp_double(const Packet& a, Packet& exponent) {
   typedef typename unpacket_traits<Packet>::integer_packet PacketI;
   const Packet cst_1022d = pset1<Packet>(1022.0);
   const Packet cst_half = pset1<Packet>(0.5);
-  const Packet cst_inv_mant_mask  = pset1frombits<Packet>(~0x7ff0000000000000u);
+  const Packet cst_inv_mant_mask  = pset1frombits<Packet>(static_cast<uint64_t>(~0x7ff0000000000000ull));
   exponent = psub(pcast<PacketI,Packet>(plogical_shift_right<52>(preinterpret<PacketI>(a))), cst_1022d);
   return por(pand(a, cst_inv_mant_mask), cst_half);
 }
@@ -172,9 +172,9 @@ Packet plog_double(const Packet _x)
   const Packet cst_1              = pset1<Packet>(1.0);
   const Packet cst_half           = pset1<Packet>(0.5);
   // The smallest non denormalized float number.
-  const Packet cst_min_norm_pos   = pset1frombits<Packet>( 0x0010000000000000u);
-  const Packet cst_minus_inf      = pset1frombits<Packet>( 0xfff0000000000000u);
-  const Packet cst_pos_inf        = pset1frombits<Packet>( 0x7ff0000000000000u);
+  const Packet cst_min_norm_pos   = pset1frombits<Packet>( static_cast<uint64_t>(0x0010000000000000ull));
+  const Packet cst_minus_inf      = pset1frombits<Packet>( static_cast<uint64_t>(0xfff0000000000000ull));
+  const Packet cst_pos_inf        = pset1frombits<Packet>( static_cast<uint64_t>(0x7ff0000000000000ull));
 
  // Polynomial Coefficients for log(1+x) = x - x**2/2 + x**3 P(x)/Q(x)
  //                             1/sqrt(2) <= x < sqrt(2)
