@@ -108,13 +108,13 @@ EIGEN_STRONG_INLINE Packet2d pcast<Packet2l, Packet2d>(const Packet2l& a) {
   // The idea is to convert upper and lower half separately, via bit-twiddling
   // then add them together, but remove the offsets
   Packet2d upper = preinterpret<Packet2d>(plogical_shift_right<32>(a));
-  Packet2d lower = pand(pset1frombits<Packet2d>(0xffffffffUL), preinterpret<Packet2d>(a));
+  Packet2d lower = pand(pset1frombits<Packet2d>(static_cast<uint64_t>(0xffffffffULL)), preinterpret<Packet2d>(a));
   // upper = 2**(53+32) + ((a >> 32) + 0x80000000)
-  upper = pxor(pset1frombits<Packet2d>(0x4530000080000000UL), upper); // exponent of 52+32, and xor the upper bit of 32bit mantissa
+  upper = pxor(pset1frombits<Packet2d>(static_cast<uint64_t>(0x4530000080000000ULL)), upper); // exponent of 52+32, and xor the upper bit of 32bit mantissa
   // lower = 2**53 + (a & 0xffffffff)
-  lower = pxor(pset1frombits<Packet2d>(0x4330000000000000UL), lower); // exponent of 52
+  lower = pxor(pset1frombits<Packet2d>(static_cast<uint64_t>(0x4330000000000000ULL)), lower); // exponent of 52
   // adding upper+lower would be 2**84+2**63+2**52 too big. Create the negative of that:
-  Packet2d offset = pset1frombits<Packet2d>(0xC530000080100000UL);
+  Packet2d offset = pset1frombits<Packet2d>(static_cast<uint64_t>(0xC530000080100000ULL));
   // add everything together, start with the bigger numbers, since the 2**84 will cancel out, giving an exact result
   return padd(padd(offset, upper), lower);
 #endif
