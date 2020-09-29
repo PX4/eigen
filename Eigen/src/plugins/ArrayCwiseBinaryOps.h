@@ -131,39 +131,39 @@ const CwiseBinaryOp<internal::scalar_pow_op<Scalar,T>,Derived,Constant<T> > pow(
 
 
 // TODO code generating macros could be moved to Macros.h and could include generation of documentation
-#define EIGEN_MAKE_CWISE_COMP_OP(OP_NAME, OP, COMPARATOR) \
+#define EIGEN_MAKE_CWISE_COMP_OP(OP, COMPARATOR) \
 template<typename OtherDerived> \
-EIGEN_DEVICE_FUNC friend EIGEN_STRONG_INLINE const CwiseBinaryOp<internal::scalar_cmp_op<Scalar, typename OtherDerived::Scalar, internal::cmp_ ## COMPARATOR>, const Derived, const OtherDerived> \
-OP_NAME(const EIGEN_CURRENT_STORAGE_BASE_CLASS<Derived>& lhs, const EIGEN_CURRENT_STORAGE_BASE_CLASS<OtherDerived>& rhs) \
+EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const CwiseBinaryOp<internal::scalar_cmp_op<Scalar, typename OtherDerived::Scalar, internal::cmp_ ## COMPARATOR>, const Derived, const OtherDerived> \
+OP(const EIGEN_CURRENT_STORAGE_BASE_CLASS<OtherDerived> &other) const \
 { \
-  return CwiseBinaryOp<internal::scalar_cmp_op<Scalar, typename OtherDerived::Scalar, internal::cmp_ ## COMPARATOR>, const Derived, const OtherDerived>(lhs.derived(), rhs.derived()); \
+  return CwiseBinaryOp<internal::scalar_cmp_op<Scalar, typename OtherDerived::Scalar, internal::cmp_ ## COMPARATOR>, const Derived, const OtherDerived>(derived(), other.derived()); \
 }\
 typedef CwiseBinaryOp<internal::scalar_cmp_op<Scalar,Scalar, internal::cmp_ ## COMPARATOR>, const Derived, const CwiseNullaryOp<internal::scalar_constant_op<Scalar>, PlainObject> > Cmp ## COMPARATOR ## ReturnType; \
 typedef CwiseBinaryOp<internal::scalar_cmp_op<Scalar,Scalar, internal::cmp_ ## COMPARATOR>, const CwiseNullaryOp<internal::scalar_constant_op<Scalar>, PlainObject>, const Derived > RCmp ## COMPARATOR ## ReturnType; \
-EIGEN_DEVICE_FUNC friend EIGEN_STRONG_INLINE const Cmp ## COMPARATOR ## ReturnType \
-OP_NAME(const EIGEN_CURRENT_STORAGE_BASE_CLASS<Derived>& lhs, const Scalar& rhs) { \
-  return lhs OP Derived::PlainObject::Constant(lhs.rows(), lhs.cols(), rhs); \
+EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Cmp ## COMPARATOR ## ReturnType \
+OP(const Scalar& s) const { \
+  return this->OP(Derived::PlainObject::Constant(rows(), cols(), s)); \
 } \
 EIGEN_DEVICE_FUNC friend EIGEN_STRONG_INLINE const RCmp ## COMPARATOR ## ReturnType \
-OP_NAME(const Scalar& lhs, const EIGEN_CURRENT_STORAGE_BASE_CLASS<Derived>& rhs) { \
-  return Derived::PlainObject::Constant(rhs.rows(), rhs.cols(), lhs) OP rhs; \
+OP(const Scalar& s, const EIGEN_CURRENT_STORAGE_BASE_CLASS<Derived>& d) { \
+  return Derived::PlainObject::Constant(d.rows(), d.cols(), s).OP(d); \
 }
 
-#define EIGEN_MAKE_CWISE_COMP_R_OP(OP_NAME, R_OP, RCOMPARATOR) \
+#define EIGEN_MAKE_CWISE_COMP_R_OP(OP, R_OP, RCOMPARATOR) \
 template<typename OtherDerived> \
 EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const CwiseBinaryOp<internal::scalar_cmp_op<typename OtherDerived::Scalar, Scalar, internal::cmp_##RCOMPARATOR>, const OtherDerived, const Derived> \
-OP_NAME(const EIGEN_CURRENT_STORAGE_BASE_CLASS<OtherDerived> &other) const \
+OP(const EIGEN_CURRENT_STORAGE_BASE_CLASS<OtherDerived> &other) const \
 { \
   return CwiseBinaryOp<internal::scalar_cmp_op<typename OtherDerived::Scalar, Scalar, internal::cmp_##RCOMPARATOR>, const OtherDerived, const Derived>(other.derived(), derived()); \
 } \
 EIGEN_DEVICE_FUNC \
 inline const RCmp ## RCOMPARATOR ## ReturnType \
-OP_NAME(const Scalar& s) const { \
-  return Derived::PlainObject::Constant(rows(), cols(), s) R_OP *this; \
+OP(const Scalar& s) const { \
+  return Derived::PlainObject::Constant(rows(), cols(), s).R_OP(*this); \
 } \
 friend inline const Cmp ## RCOMPARATOR ## ReturnType \
-OP_NAME(const Scalar& s, const Derived& d) { \
-  return d R_OP Derived::PlainObject::Constant(d.rows(), d.cols(), s); \
+OP(const Scalar& s, const Derived& d) { \
+  return d.R_OP(Derived::PlainObject::Constant(d.rows(), d.cols(), s)); \
 }
 
 
@@ -175,7 +175,7 @@ OP_NAME(const Scalar& s, const Derived& d) { \
   *
   * \sa all(), any(), operator>(), operator<=()
   */
-EIGEN_MAKE_CWISE_COMP_OP(operator<, <, LT)
+EIGEN_MAKE_CWISE_COMP_OP(operator<, LT)
 
 /** \returns an expression of the coefficient-wise \<= operator of *this and \a other
   *
@@ -184,7 +184,7 @@ EIGEN_MAKE_CWISE_COMP_OP(operator<, <, LT)
   *
   * \sa all(), any(), operator>=(), operator<()
   */
-EIGEN_MAKE_CWISE_COMP_OP(operator<=, <=, LE)
+EIGEN_MAKE_CWISE_COMP_OP(operator<=, LE)
 
 /** \returns an expression of the coefficient-wise \> operator of *this and \a other
   *
@@ -193,7 +193,7 @@ EIGEN_MAKE_CWISE_COMP_OP(operator<=, <=, LE)
   *
   * \sa all(), any(), operator>=(), operator<()
   */
-EIGEN_MAKE_CWISE_COMP_R_OP(operator>, <, LT)
+EIGEN_MAKE_CWISE_COMP_R_OP(operator>, operator<, LT)
 
 /** \returns an expression of the coefficient-wise \>= operator of *this and \a other
   *
@@ -202,7 +202,7 @@ EIGEN_MAKE_CWISE_COMP_R_OP(operator>, <, LT)
   *
   * \sa all(), any(), operator>(), operator<=()
   */
-EIGEN_MAKE_CWISE_COMP_R_OP(operator>=, <=, LE)
+EIGEN_MAKE_CWISE_COMP_R_OP(operator>=, operator<=, LE)
 
 /** \returns an expression of the coefficient-wise == operator of *this and \a other
   *
@@ -216,7 +216,7 @@ EIGEN_MAKE_CWISE_COMP_R_OP(operator>=, <=, LE)
   *
   * \sa all(), any(), isApprox(), isMuchSmallerThan()
   */
-EIGEN_MAKE_CWISE_COMP_OP(operator==, ==, EQ)
+EIGEN_MAKE_CWISE_COMP_OP(operator==, EQ)
 
 /** \returns an expression of the coefficient-wise != operator of *this and \a other
   *
@@ -230,7 +230,7 @@ EIGEN_MAKE_CWISE_COMP_OP(operator==, ==, EQ)
   *
   * \sa all(), any(), isApprox(), isMuchSmallerThan()
   */
-EIGEN_MAKE_CWISE_COMP_OP(operator!=, !=, NEQ)
+EIGEN_MAKE_CWISE_COMP_OP(operator!=, NEQ)
 
 
 #undef EIGEN_MAKE_CWISE_COMP_OP
