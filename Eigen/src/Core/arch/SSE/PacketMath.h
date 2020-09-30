@@ -45,11 +45,11 @@ typedef __m128d Packet2d;
 
 typedef eigen_packet_wrapper<__m128i, 0> Packet4i;
 typedef eigen_packet_wrapper<__m128i, 1> Packet16b;
-typedef eigen_packet_wrapper<__m128i, 2> Packet2l;
 
 template<> struct is_arithmetic<__m128>  { enum { value = true }; };
 template<> struct is_arithmetic<__m128i> { enum { value = true }; };
 template<> struct is_arithmetic<__m128d> { enum { value = true }; };
+template<> struct is_arithmetic<Packet4i>  { enum { value = true }; };
 template<> struct is_arithmetic<Packet16b>  { enum { value = true }; };
 
 #define EIGEN_SSE_SHUFFLE_MASK(p,q,r,s) ((s)<<6|(r)<<4|(q)<<2|(p))
@@ -194,7 +194,6 @@ template<> struct unpacket_traits<Packet4f> {
 template<> struct unpacket_traits<Packet2d> {
   typedef double    type;
   typedef Packet2d  half;
-  typedef Packet2l  integer_packet;
   enum {size=2, alignment=Aligned16, vectorizable=true, masked_load_available=false, masked_store_available=false};
 };
 template<> struct unpacket_traits<Packet4i> {
@@ -487,9 +486,6 @@ template<> EIGEN_STRONG_INLINE Packet4i pandnot<Packet4i>(const Packet4i& a, con
 template<int N> EIGEN_STRONG_INLINE Packet4i parithmetic_shift_right(Packet4i a) { return _mm_srai_epi32(a,N); }
 template<int N> EIGEN_STRONG_INLINE Packet4i plogical_shift_right(Packet4i a) { return _mm_srli_epi32(a,N); }
 template<int N> EIGEN_STRONG_INLINE Packet4i plogical_shift_left(Packet4i a) { return _mm_slli_epi32(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet2l plogical_shift_right(Packet2l a) { return _mm_srli_epi64(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet2l plogical_shift_left(Packet2l a) { return _mm_slli_epi64(a,N); }
-
 
 #ifdef EIGEN_VECTORIZE_SSE4_1
 template<> EIGEN_STRONG_INLINE Packet4f pround<Packet4f>(const Packet4f& a)
@@ -756,15 +752,29 @@ template<> EIGEN_STRONG_INLINE Packet4f pfrexp<Packet4f>(const Packet4f& a, Pack
 }
 
 template<> EIGEN_STRONG_INLINE Packet2d pfrexp<Packet2d>(const Packet2d& a, Packet2d& exponent) {
-  return pfrexp_double(a,exponent);
+  const Packet2d cst_1022d = pset1<Packet2d>(1022.0);
+  const Packet2d cst_half = pset1<Packet2d>(0.5);
+  const Packet2d cst_inv_mant_mask  = pset1frombits<Packet2d>(static_cast<uint64_t>(~0x7ff0000000000000ull));
+  __m128i a_expo = _mm_srli_epi64(_mm_castpd_si128(a), 52);
+  exponent = psub(_mm_cvtepi32_pd(vec4i_swizzle1(a_expo, 0, 2, 1, 3)), cst_1022d);
+  return por(pand(a, cst_inv_mant_mask), cst_half);
 }
 
 template<> EIGEN_STRONG_INLINE Packet4f pldexp<Packet4f>(const Packet4f& a, const Packet4f& exponent) {
   return pldexp_float(a,exponent);
 }
 
+// We specialize pldexp here, since the generic implementation uses Packet2l, which is not well
+// supported by SSE, and has more range than is needed for exponents.
 template<> EIGEN_STRONG_INLINE Packet2d pldexp<Packet2d>(const Packet2d& a, const Packet2d& exponent) {
-  return pldexp_double(a,exponent);
+  const Packet2d cst_1023 = pset1<Packet2d>(1023.0);
+  // Add exponent offset.
+  __m64 ei = _mm_cvtpd_pi32(padd(exponent, cst_1023));
+  // Convert to exponents to int64 and swizzle to the low-order 32 bits.
+  __m128i el = _mm_set_epi64(_mm_setzero_si64(), ei);
+  el = vec4i_swizzle1(el, 0, 3, 1, 3);
+  // return a * 2^exponent
+  return pmul(a, _mm_castsi128_pd(_mm_slli_epi64(el, 52)));
 }
 
 // with AVX, the default implementations based on pload1 are faster

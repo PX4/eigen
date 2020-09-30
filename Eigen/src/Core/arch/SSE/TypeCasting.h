@@ -69,55 +69,12 @@ template<> EIGEN_STRONG_INLINE Packet2d pcast<Packet4f, Packet2d>(const Packet4f
   return _mm_cvtps_pd(a);
 }
 
-template<> EIGEN_STRONG_INLINE Packet2l pcast<Packet2d, Packet2l>(const Packet2d& a) {
-  // using a[1]/a[0] to get high/low 64 bit from __m128d is faster than _mm_cvtsd_f64() ,but 
-  // it will trigger the bug report at https://gitlab.com/libeigen/eigen/-/issues/1997 since the 
-  // a[index] ops was not supported by MSVC compiler(supported by gcc).
-#if EIGEN_COMP_MSVC
-  return _mm_set_epi64x(int64_t(_mm_cvtsd_f64(_mm_unpackhi_pd(a,a))), int64_t(_mm_cvtsd_f64(a)));
-#elif ((defined EIGEN_VECTORIZE_AVX) && (EIGEN_COMP_GNUC_STRICT || EIGEN_COMP_MINGW) && (__GXX_ABI_VERSION < 1004)) || EIGEN_OS_QNX
-  return _mm_set_epi64x(int64_t(a.m_val[1]), int64_t(a.m_val[0]));
-#else
-  return _mm_set_epi64x(int64_t(a[1]), int64_t(a[0]));
-#endif
-}
-
 template<> EIGEN_STRONG_INLINE Packet4i preinterpret<Packet4i,Packet4f>(const Packet4f& a) {
   return _mm_castps_si128(a);
 }
 
 template<> EIGEN_STRONG_INLINE Packet4f preinterpret<Packet4f,Packet4i>(const Packet4i& a) {
   return _mm_castsi128_ps(a);
-}
-
-template<> EIGEN_STRONG_INLINE Packet2l preinterpret<Packet2l,Packet2d>(const Packet2d& a) {
-  return _mm_castpd_si128(a);
-}
-
-template<> EIGEN_STRONG_INLINE Packet2d preinterpret<Packet2d, Packet2l>(const Packet2l& a) {
-  return _mm_castsi128_pd(a);
-}
-
-template <>
-EIGEN_STRONG_INLINE Packet2d pcast<Packet2l, Packet2d>(const Packet2l& a) {
-#ifdef EIGEN_VECTORIZE_AVX512DQ
-  // AVX512DQ finally provides an instruction for this
-  return _mm_cvtepi64_pd(a);
-#else
-  // Before AVX512, there is no packed epi64 to double cast instruction
-  // The idea is to convert upper and lower half separately, via bit-twiddling
-  // then add them together, but remove the offsets
-  Packet2d upper = preinterpret<Packet2d>(plogical_shift_right<32>(a));
-  Packet2d lower = pand(pset1frombits<Packet2d>(static_cast<uint64_t>(0xffffffffULL)), preinterpret<Packet2d>(a));
-  // upper = 2**(53+32) + ((a >> 32) + 0x80000000)
-  upper = pxor(pset1frombits<Packet2d>(static_cast<uint64_t>(0x4530000080000000ULL)), upper); // exponent of 52+32, and xor the upper bit of 32bit mantissa
-  // lower = 2**53 + (a & 0xffffffff)
-  lower = pxor(pset1frombits<Packet2d>(static_cast<uint64_t>(0x4330000000000000ULL)), lower); // exponent of 52
-  // adding upper+lower would be 2**84+2**63+2**52 too big. Create the negative of that:
-  Packet2d offset = pset1frombits<Packet2d>(static_cast<uint64_t>(0xC530000080100000ULL));
-  // add everything together, start with the bigger numbers, since the 2**84 will cancel out, giving an exact result
-  return padd(padd(offset, upper), lower);
-#endif
 }
 
 // Disable the following code since it's broken on too many platforms / compilers.
