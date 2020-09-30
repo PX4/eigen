@@ -47,7 +47,7 @@ template<typename BoxType> void alignedbox(const BoxType& _box)
   BoxType b0(dim);
   BoxType b1(VectorType::Random(dim),VectorType::Random(dim));
   BoxType b2;
-  
+
   kill_extra_precision(b1);
   kill_extra_precision(p0);
   kill_extra_precision(p1);
@@ -69,7 +69,7 @@ template<typename BoxType> void alignedbox(const BoxType& _box)
   BoxType box2(VectorType::Random(dim));
   box2.extend(VectorType::Random(dim));
 
-  VERIFY(box1.intersects(box2) == !box1.intersection(box2).isEmpty()); 
+  VERIFY(box1.intersects(box2) == !box1.intersection(box2).isEmpty());
 
   // alignment -- make sure there is no memory alignment assertion
   BoxType *bp0 = new BoxType(dim);
@@ -150,11 +150,9 @@ template<typename BoxType> void alignedboxTranslatable(const BoxType& _box)
   VERIFY_IS_APPROX((c.min)(), UnitX * Scalar(9));
   VERIFY_IS_APPROX((c.max)(), Ones * Scalar(18) + UnitX * Scalar(9));
 
-  // test for roundoff errors
-  IsometryTransform identity = IsometryTransform::Identity();
-  BoxType transformedC;
-  transformedC.extend(c.transformed(identity));
-  VERIFY(transformedC.contains(c));
+  // Check identity transform within numerical precision.
+  BoxType transformedC = c.transformed(IsometryTransform::Identity());
+  VERIFY_IS_APPROX(transformedC, c);
 
   for (size_t i = 0; i < 10; ++i)
   {
@@ -335,10 +333,6 @@ template<typename BoxType, typename Rotation> void alignedboxNonIntegralRotatabl
   const Index dim = _box.dim();
   const VectorType Zero = VectorType::Zero();
   const VectorType Ones = VectorType::Ones();
-  const VectorType UnitX = VectorType::UnitX();
-  const VectorType UnitY = VectorType::UnitY();
-  // this is vector (0, 0, -1, -1, -1, ...), i.e. with zeros at first and second dimensions
-  const VectorType UnitZ = Ones - UnitX - UnitY;
 
   VectorType minPoint = -2 * Ones;
   minPoint[1] = 1;
@@ -365,7 +359,7 @@ template<typename BoxType, typename Rotation> void alignedboxNonIntegralRotatabl
   cornerBR = tf2 * cornerBR;
   cornerTL = tf2 * cornerTL;
   cornerTR = tf2 * cornerTR;
-  
+
   VectorType minCorner = Ones * Scalar(-2);
   VectorType maxCorner = Zero;
   minCorner[0] = (min)((min)(cornerBL[0], cornerBR[0]), (min)(cornerTL[0], cornerTR[0]));
@@ -471,7 +465,7 @@ template<typename BoxType, typename Rotation> void alignedboxNonIntegralRotatabl
 template<typename BoxType>
 void alignedboxCastTests(const BoxType& _box)
 {
-  // casting  
+  // casting
   typedef typename BoxType::Scalar Scalar;
   typedef Matrix<Scalar, BoxType::AmbientDimAtCompileTime, 1> VectorType;
 

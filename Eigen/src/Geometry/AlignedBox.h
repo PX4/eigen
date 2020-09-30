@@ -46,7 +46,7 @@
 #ifndef EIGEN_ALIGNEDBOX_H
 #define EIGEN_ALIGNEDBOX_H
 
-namespace Eigen { 
+namespace Eigen {
 
 /** \geometry_module \ingroup Geometry_Module
   *
@@ -267,7 +267,7 @@ EIGEN_MAKE_ALIGNED_OPERATOR_NEW_IF_VECTORIZABLE_FIXED_SIZE(_Scalar,_AmbientDim)
   {return AlignedBox(m_min.cwiseMax(b.m_min), m_max.cwiseMin(b.m_max)); }
 
   /** Returns an AlignedBox that is the union of \a b and \c *this.
-   * \note Merging with an empty box may result in a box bigger than \c *this. 
+   * \note Merging with an empty box may result in a box bigger than \c *this.
    * \sa extend(const AlignedBox&) */
   EIGEN_DEVICE_FUNC inline AlignedBox merged(const AlignedBox& b) const
   { return AlignedBox(m_min.cwiseMin(b.m_min), m_max.cwiseMax(b.m_max)); }
@@ -338,8 +338,8 @@ EIGEN_MAKE_ALIGNED_OPERATOR_NEW_IF_VECTORIZABLE_FIXED_SIZE(_Scalar,_AmbientDim)
   template<int Mode, int Options>
   EIGEN_DEVICE_FUNC inline void transform(const Transform<Scalar, AmbientDimAtCompileTime, Mode, Options>& transform)
   {
-    // Projective transform is not (yet) supported
-    EIGEN_STATIC_ASSERT(Mode != Projective, THIS_METHOD_IS_ONLY_FOR_SPECIFIC_TRANSFORMATIONS);
+    // Only Affine and Isometry transforms are currently supported.
+    EIGEN_STATIC_ASSERT(Mode == Affine || Mode == AffineCompact || Mode == Isometry, THIS_METHOD_IS_ONLY_FOR_SPECIFIC_TRANSFORMATIONS);
 
     // Method adapted from FCL src/shape/geometric_shapes_utility.cpp#computeBV<AABB, Box>(...)
     // https://github.com/flexible-collision-library/fcl/blob/fcl-0.4/src/shape/geometric_shapes_utility.cpp#L292
