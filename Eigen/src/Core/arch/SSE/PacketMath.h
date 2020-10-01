@@ -769,12 +769,11 @@ template<> EIGEN_STRONG_INLINE Packet4f pldexp<Packet4f>(const Packet4f& a, cons
 template<> EIGEN_STRONG_INLINE Packet2d pldexp<Packet2d>(const Packet2d& a, const Packet2d& exponent) {
   const Packet2d cst_1023 = pset1<Packet2d>(1023.0);
   // Add exponent offset.
-  __m64 ei = _mm_cvtpd_pi32(padd(exponent, cst_1023));
+  Packet4i ei = _mm_cvtpd_epi32(padd(exponent, cst_1023));
   // Convert to exponents to int64 and swizzle to the low-order 32 bits.
-  __m128i el = _mm_set_epi64(_mm_setzero_si64(), ei);
-  el = vec4i_swizzle1(el, 0, 3, 1, 3);
+  ei = vec4i_swizzle1(ei, 0, 3, 1, 3);
   // return a * 2^exponent
-  return pmul(a, _mm_castsi128_pd(_mm_slli_epi64(el, 52)));
+  return pmul(a, _mm_castsi128_pd(_mm_slli_epi64(ei, 52)));
 }
 
 // with AVX, the default implementations based on pload1 are faster
