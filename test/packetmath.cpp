@@ -783,6 +783,15 @@ void packetmath_notcomplex() {
 
   CHECK_CWISE2_IF(PacketTraits::HasMin, (std::min), internal::pmin);
   CHECK_CWISE2_IF(PacketTraits::HasMax, (std::max), internal::pmax);
+#if EIGEN_HAS_CXX11_MATH
+  using std::fmin;
+  using std::fmax;
+#else
+  using ::fmin;
+  using ::fmax;
+#endif
+  CHECK_CWISE2_IF(PacketTraits::HasMin, fmin, internal::pfmin);
+  CHECK_CWISE2_IF(PacketTraits::HasMax, fmax, internal::pfmax);
   CHECK_CWISE1(numext::abs, internal::pabs);
   CHECK_CWISE2_IF(PacketTraits::HasAbsDiff, REF_ABS_DIFF, internal::pabsdiff);
 
@@ -815,6 +824,17 @@ void packetmath_notcomplex() {
       for (unsigned int i = 0; i < sizeof(Scalar); ++i) data1_bits[k * sizeof(Scalar) + i] = 0x00;
     }
   }
+
+  for (int i = 0; i < PacketSize; ++i) {
+    data1[i] = internal::random<bool>() ? std::numeric_limits<Scalar>::quiet_NaN() : Scalar(0);
+    data1[i + PacketSize] = internal::random<bool>() ? std::numeric_limits<Scalar>::quiet_NaN() : Scalar(0);
+  }
+  // Test NaN propagation for pmin and pmax. It should be equivalent to std::min.
+  CHECK_CWISE2_IF(PacketTraits::HasMin, (std::min), internal::pmin);
+  CHECK_CWISE2_IF(PacketTraits::HasMax, (std::max), internal::pmax);
+  // Test NaN propagation for pfmin and pfmax. It should be equivalent to std::fmin.
+  CHECK_CWISE2_IF(PacketTraits::HasMin, fmin, internal::pfmin);
+  CHECK_CWISE2_IF(PacketTraits::HasMax, fmax, internal::pfmax);
 }
 
 template <>
