@@ -136,7 +136,9 @@ EIGEN_DONT_INLINE void triangular_solve_matrix<Scalar,Index,OnTheLeft,Mode,Conju
               }
               else
               {
-                Scalar b = (other(i,j) *= a);
+                Scalar& otherij = other(i,j);
+                otherij *= a;
+                Scalar b = otherij;
                 typename OtherMapper::LinearMapper r = other.getLinearMapper(s,j);
                 typename TriMapper::LinearMapper l = tri.getLinearMapper(s,i);
                 for (Index i3=0;i3<rs;++i3)
