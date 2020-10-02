@@ -37,8 +37,8 @@ struct compute_inverse_size4<Architecture::NEON, float, MatrixType, ResultType>
   // interleave m and n when interleave == true
   static Packet4f shuffle(const Packet4f &m, const Packet4f &n, int mask, bool interleave = false)
   {
-    float *a = (float *)&m;
-    float *b = (float *)&n;
+    const float *a = (const float *)&m;
+    const float *b = (const float *)&n;
     if (!interleave)
     {
       Packet4f res = {*(a + (mask & 3)), *(a + ((mask >> 2) & 3)), *(b + ((mask >> 4) & 3)), *(b + ((mask >> 6) & 3))};
@@ -194,8 +194,8 @@ struct compute_inverse_size4<Architecture::NEON, double, MatrixType, ResultType>
   // fuctionally equivalent to _mm_shuffle_pd in SSE (i.e. shuffle(m, n, mask) equals _mm_shuffle_pd(m,n,mask))
   static Packet2d shuffle(const Packet2d &m, const Packet2d &n, int mask)
   {
-    double *a = (double *)&m;
-    double *b = (double *)&n;
+    const double *a = (const double *)&m;
+    const double *b = (const double *)&n;
     Packet2d res = {*(a + (mask & 1)), *(b + ((mask >> 1) & 1))};
     return res;
   }
