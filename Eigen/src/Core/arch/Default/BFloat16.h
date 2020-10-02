@@ -485,10 +485,12 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC float bfloat16_to_float(__bfloat16_raw h) 
 // --- standard functions ---
 
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC bool (isinf)(const bfloat16& a) {
-  return std::isinf EIGEN_NOT_A_MACRO(float(a));
+  EIGEN_USING_STD(isinf);
+  return (isinf)(float(a));
 }
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC bool (isnan)(const bfloat16& a) {
-  return std::isnan EIGEN_NOT_A_MACRO(float(a));
+  EIGEN_USING_STD(isnan);
+  return (isnan)(float(a));
 }
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC bool (isfinite)(const bfloat16& a) {
   return !(isinf EIGEN_NOT_A_MACRO (a)) && !(isnan EIGEN_NOT_A_MACRO (a));
