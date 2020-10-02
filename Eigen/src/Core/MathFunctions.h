@@ -1199,17 +1199,15 @@ EIGEN_ALWAYS_INLINE double absdiff(const double& x, const double& y)
 {
   return fabs(x - y);
 }
+
+#if !defined(EIGEN_GPUCC)
+// HIP and CUDA do not support long double.
 template<>
 EIGEN_DEVICE_FUNC
-EIGEN_ALWAYS_INLINE long double absdiff(const long double& x, const long double& y)
-{
-#if defined(EIGEN_HIPCC)
-  // no "fabsl" on HIP yet
-  return (x > y) ? x : y;
-#else
+EIGEN_ALWAYS_INLINE long double absdiff(const long double& x, const long double& y) {
   return fabsl(x - y);
-#endif
 }
+#endif
 
 template<typename Scalar>
 EIGEN_DEVICE_FUNC
