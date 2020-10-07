@@ -763,6 +763,20 @@ void packetmath_real<bfloat16, typename internal::packet_traits<bfloat16>::type>
 
 }
 
+template <typename Scalar>
+Scalar propagate_nan_max(const Scalar& a, const Scalar& b) {
+  if ((std::isnan)(a)) return a;
+  if ((std::isnan)(b)) return b;
+  return (std::max)(a,b);
+}
+
+template <typename Scalar>
+Scalar propagate_nan_min(const Scalar& a, const Scalar& b) {
+  if ((std::isnan)(a)) return a;
+  if ((std::isnan)(b)) return b;
+  return (std::min)(a,b);
+}
+
 template <typename Scalar, typename Packet>
 void packetmath_notcomplex() {
   typedef internal::packet_traits<Scalar> PacketTraits;
@@ -829,12 +843,12 @@ void packetmath_notcomplex() {
     data1[i] = internal::random<bool>() ? std::numeric_limits<Scalar>::quiet_NaN() : Scalar(0);
     data1[i + PacketSize] = internal::random<bool>() ? std::numeric_limits<Scalar>::quiet_NaN() : Scalar(0);
   }
-  // Test NaN propagation for pmin and pmax. It should be equivalent to std::min.
-  CHECK_CWISE2_IF(PacketTraits::HasMin, (std::min), internal::pmin);
-  CHECK_CWISE2_IF(PacketTraits::HasMax, (std::max), internal::pmax);
   // Test NaN propagation for pfmin and pfmax. It should be equivalent to std::fmin.
+  // Note: NaN propagation is implementation defined for pmin/pmax, so we do not test it here.
   CHECK_CWISE2_IF(PacketTraits::HasMin, fmin, internal::pfmin);
   CHECK_CWISE2_IF(PacketTraits::HasMax, fmax, internal::pfmax);
+  CHECK_CWISE2_IF(PacketTraits::HasMin, propagate_nan_min, internal::pfmin_nan);
+  CHECK_CWISE2_IF(PacketTraits::HasMax, propagate_nan_max, internal::pfmax_nan);
 }
 
 template <>

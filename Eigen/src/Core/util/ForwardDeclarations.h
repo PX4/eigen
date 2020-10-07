@@ -180,8 +180,8 @@ template<typename LhsScalar, typename RhsScalar, bool ConjLhs=false, bool ConjRh
 template<typename LhsScalar,typename RhsScalar=LhsScalar> struct scalar_sum_op;
 template<typename LhsScalar,typename RhsScalar=LhsScalar> struct scalar_difference_op;
 template<typename LhsScalar,typename RhsScalar=LhsScalar> struct scalar_conj_product_op;
-template<typename LhsScalar,typename RhsScalar=LhsScalar> struct scalar_min_op;
-template<typename LhsScalar,typename RhsScalar=LhsScalar> struct scalar_max_op;
+template<typename LhsScalar,typename RhsScalar=LhsScalar, int NaNPropagation=PropagateFast> struct scalar_min_op;
+template<typename LhsScalar,typename RhsScalar=LhsScalar, int NaNPropagation=PropagateFast> struct scalar_max_op;
 template<typename Scalar> struct scalar_opposite_op;
 template<typename Scalar> struct scalar_conjugate_op;
 template<typename Scalar> struct scalar_real_op;

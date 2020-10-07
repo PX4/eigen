@@ -303,40 +303,79 @@ template <typename Scalar>
 void test_minmax_nan_propagation_templ() {
   for (int size = 1; size < 17; ++size) {
     const Scalar kNan = std::numeric_limits<Scalar>::quiet_NaN();
+    const Scalar kZero(0);
     Tensor<Scalar, 1> vec_nan(size);
     Tensor<Scalar, 1> vec_zero(size);
-    Tensor<Scalar, 1> vec_res(size);
     vec_nan.setConstant(kNan);
     vec_zero.setZero();
-    vec_res.setZero();
 
-    // Test that we propagate NaNs in the tensor when applying the
-    // cwiseMax(scalar) operator, which is used for the Relu operator.
-    vec_res = vec_nan.cwiseMax(Scalar(0));
-    for (int i = 0; i < size; ++i) {
-      VERIFY((numext::isnan)(vec_res(i)));
-    }
+    auto verify_all_nan = [&](const Tensor<Scalar, 1>& v) {
+      for (int i = 0; i < size; ++i) {
+        VERIFY((numext::isnan)(v(i)));
+      }
+    };
 
-    // Test that NaNs do not propagate if we reverse the arguments.
-    vec_res = vec_zero.cwiseMax(kNan);
-    for (int i = 0; i < size; ++i) {
-      VERIFY_IS_EQUAL(vec_res(i), Scalar(0));
-    }
+    auto verify_all_zero = [&](const Tensor<Scalar, 1>& v) {
+      for (int i = 0; i < size; ++i) {
+        VERIFY_IS_EQUAL(v(i), Scalar(0));
+      }
+    };
 
-    // Test that we propagate NaNs in the tensor when applying the
-    // cwiseMin(scalar) operator.
-    vec_res.setZero();
-    vec_res = vec_nan.cwiseMin(Scalar(0));
-    for (int i = 0; i < size; ++i) {
-      VERIFY((numext::isnan)(vec_res(i)));
-    }
+    // Test NaN propagating max.
+    // max(nan, nan) = nan
+    // max(nan, 0) = nan
+    // max(0, nan) = nan
+    // max(0, 0) = 0
+    verify_all_nan(vec_nan.template cwiseMax<PropagateNaN>(kNan));
+    verify_all_nan(vec_nan.template cwiseMax<PropagateNaN>(vec_nan));
+    verify_all_nan(vec_nan.template cwiseMax<PropagateNaN>(kZero));
+    verify_all_nan(vec_nan.template cwiseMax<PropagateNaN>(vec_zero));
+    verify_all_nan(vec_zero.template cwiseMax<PropagateNaN>(kNan));
+    verify_all_nan(vec_zero.template cwiseMax<PropagateNaN>(vec_nan));
+    verify_all_zero(vec_zero.template cwiseMax<PropagateNaN>(kZero));
+    verify_all_zero(vec_zero.template cwiseMax<PropagateNaN>(vec_zero));
 
+    // Test number propagating max.
+    // max(nan, nan) = nan
+    // max(nan, 0) = 0
+    // max(0, nan) = 0
+    // max(0, 0) = 0
+    verify_all_nan(vec_nan.template cwiseMax<PropagateNumbers>(kNan));
+    verify_all_nan(vec_nan.template cwiseMax<PropagateNumbers>(vec_nan));
+    verify_all_zero(vec_nan.template cwiseMax<PropagateNumbers>(kZero));
+    verify_all_zero(vec_nan.template cwiseMax<PropagateNumbers>(vec_zero));
+    verify_all_zero(vec_zero.template cwiseMax<PropagateNumbers>(kNan));
+    verify_all_zero(vec_zero.template cwiseMax<PropagateNumbers>(vec_nan));
+    verify_all_zero(vec_zero.template cwiseMax<PropagateNumbers>(kZero));
+    verify_all_zero(vec_zero.template cwiseMax<PropagateNumbers>(vec_zero));
 
-    // Test that NaNs do not propagate if we reverse the arguments.
-    vec_res = vec_zero.cwiseMin(kNan);
-    for (int i = 0; i < size; ++i) {
-      VERIFY_IS_EQUAL(vec_res(i), Scalar(0));
-    }
+    // Test NaN propagating min.
+    // min(nan, nan) = nan
+    // min(nan, 0) = nan
+    // min(0, nan) = nan
+    // min(0, 0) = 0
+    verify_all_nan(vec_nan.template cwiseMin<PropagateNaN>(kNan));
+    verify_all_nan(vec_nan.template cwiseMin<PropagateNaN>(vec_nan));
+    verify_all_nan(vec_nan.template cwiseMin<PropagateNaN>(kZero));
+    verify_all_nan(vec_nan.template cwiseMin<PropagateNaN>(vec_zero));
+    verify_all_nan(vec_zero.template cwiseMin<PropagateNaN>(kNan));
+    verify_all_nan(vec_zero.template cwiseMin<PropagateNaN>(vec_nan));
+    verify_all_zero(vec_zero.template cwiseMin<PropagateNaN>(kZero));
+    verify_all_zero(vec_zero.template cwiseMin<PropagateNaN>(vec_zero));
+
+    // Test number propagating min.
+    // min(nan, nan) = nan
+    // min(nan, 0) = 0
+    // min(0, nan) = 0
+    // min(0, 0) = 0
+    verify_all_nan(vec_nan.template cwiseMin<PropagateNumbers>(kNan));
+    verify_all_nan(vec_nan.template cwiseMin<PropagateNumbers>(vec_nan));
+    verify_all_zero(vec_nan.template cwiseMin<PropagateNumbers>(kZero));
+    verify_all_zero(vec_nan.template cwiseMin<PropagateNumbers>(vec_zero));
+    verify_all_zero(vec_zero.template cwiseMin<PropagateNumbers>(kNan));
+    verify_all_zero(vec_zero.template cwiseMin<PropagateNumbers>(vec_nan));
+    verify_all_zero(vec_zero.template cwiseMin<PropagateNumbers>(kZero));
+    verify_all_zero(vec_zero.template cwiseMin<PropagateNumbers>(vec_zero));
   }
 }
 

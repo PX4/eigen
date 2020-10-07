@@ -134,21 +134,39 @@ struct functor_traits<scalar_conj_product_op<LhsScalar,RhsScalar> > {
   *
   * \sa class CwiseBinaryOp, MatrixBase::cwiseMin, class VectorwiseOp, MatrixBase::minCoeff()
   */
-template<typename LhsScalar,typename RhsScalar>
+template<typename LhsScalar,typename RhsScalar, int NaNPropagation>
 struct scalar_min_op : binary_op_base<LhsScalar,RhsScalar>
 {
   typedef typename ScalarBinaryOpTraits<LhsScalar,RhsScalar,scalar_min_op>::ReturnType result_type;
   EIGEN_EMPTY_STRUCT_CTOR(scalar_min_op)
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE result_type operator() (const LhsScalar& a, const RhsScalar& b) const { return numext::mini(a, b); }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE result_type operator() (const LhsScalar& a, const RhsScalar& b) const {
+    if (NaNPropagation == PropagateFast) {
+      return numext::mini(a, b); 
+    } else if (NaNPropagation == PropagateNumbers) {
+      return internal::pfmin(a,b);
+    } else if (NaNPropagation == PropagateNaN) {
+      return internal::pfmin_nan(a,b);
+    }
+  }
   template<typename Packet>
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet packetOp(const Packet& a, const Packet& b) const
-  { return internal::pmin(a,b); }
+  {
+    if (NaNPropagation == PropagateFast) {
+      return internal::pmin(a,b);
+    } else if (NaNPropagation == PropagateNumbers) {
+      return internal::pfmin(a,b);
+    } else if (NaNPropagation == PropagateNaN) {
+      return internal::pfmin_nan(a,b);
+    }
+  }
+  // TODO(rmlarsen): Handle all NaN propagation semantics reductions.
   template<typename Packet>
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE result_type predux(const Packet& a) const
   { return internal::predux_min(a); }
 };
-template<typename LhsScalar,typename RhsScalar>
-struct functor_traits<scalar_min_op<LhsScalar,RhsScalar> > {
+
+template<typename LhsScalar,typename RhsScalar, int NaNPropagation>
+struct functor_traits<scalar_min_op<LhsScalar,RhsScalar, NaNPropagation> > {
   enum {
     Cost = (NumTraits<LhsScalar>::AddCost+NumTraits<RhsScalar>::AddCost)/2,
     PacketAccess = internal::is_same<LhsScalar, RhsScalar>::value && packet_traits<LhsScalar>::HasMin
@@ -160,21 +178,39 @@ struct functor_traits<scalar_min_op<LhsScalar,RhsScalar> > {
   *
   * \sa class CwiseBinaryOp, MatrixBase::cwiseMax, class VectorwiseOp, MatrixBase::maxCoeff()
   */
-template<typename LhsScalar,typename RhsScalar>
-struct scalar_max_op  : binary_op_base<LhsScalar,RhsScalar>
+template<typename LhsScalar,typename RhsScalar, int NaNPropagation>
+struct scalar_max_op : binary_op_base<LhsScalar,RhsScalar>
 {
   typedef typename ScalarBinaryOpTraits<LhsScalar,RhsScalar,scalar_max_op>::ReturnType result_type;
   EIGEN_EMPTY_STRUCT_CTOR(scalar_max_op)
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE result_type operator() (const LhsScalar& a, const RhsScalar& b) const { return numext::maxi(a, b); }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE result_type operator() (const LhsScalar& a, const RhsScalar& b) const {
+    if (NaNPropagation == PropagateFast) {
+      return numext::maxi(a, b);
+    } else if (NaNPropagation == PropagateNumbers) {
+      return internal::pfmax(a,b);
+    } else if (NaNPropagation == PropagateNaN) {
+      return internal::pfmax_nan(a,b);
+    }
+  }
   template<typename Packet>
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet packetOp(const Packet& a, const Packet& b) const
-  { return internal::pmax(a,b); }
+  {
+    if (NaNPropagation == PropagateFast) {
+      return internal::pmax(a,b);
+    } else if (NaNPropagation == PropagateNumbers) {
+      return internal::pfmax(a,b);
+    } else if (NaNPropagation == PropagateNaN) {
+      return internal::pfmax_nan(a,b);
+    }
+  }
+  // TODO(rmlarsen): Handle all NaN propagation semantics reductions.
   template<typename Packet>
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE result_type predux(const Packet& a) const
   { return internal::predux_max(a); }
 };
-template<typename LhsScalar,typename RhsScalar>
-struct functor_traits<scalar_max_op<LhsScalar,RhsScalar> > {
+
+template<typename LhsScalar,typename RhsScalar, int NaNPropagation>
+struct functor_traits<scalar_max_op<LhsScalar,RhsScalar, NaNPropagation> > {
   enum {
     Cost = (NumTraits<LhsScalar>::AddCost+NumTraits<RhsScalar>::AddCost)/2,
     PacketAccess = internal::is_same<LhsScalar, RhsScalar>::value && packet_traits<LhsScalar>::HasMax

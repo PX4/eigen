@@ -328,12 +328,21 @@ enum StorageOptions {
   * Enum for specifying whether to apply or solve on the left or right. */
 enum SideType {
   /** Apply transformation on the left. */
-  OnTheLeft = 1,  
+  OnTheLeft = 1,
   /** Apply transformation on the right. */
-  OnTheRight = 2  
+  OnTheRight = 2
 };
 
-
+/** \ingroup enums
+ * Enum for specifying NaN-propagation behavior, e.g. for coeff-wise min/max. */
+enum NaNPropagationOptions {
+  /**  Implementation defined behavior if NaNs are present. */
+  PropagateFast = 0,
+  /**  Always propagate NaNs. */
+  PropagateNaN,
+  /**  Always propagate not-NaNs. */
+  PropagateNumbers
+};
 
 /* the following used to be written as:
  *

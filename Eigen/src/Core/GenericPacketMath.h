@@ -216,12 +216,12 @@ template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
 pdiv(const Packet& a, const Packet& b) { return a/b; }
 
 /** \internal \returns the min of \a a and \a b  (coeff-wise).
-Equivalent to std::min(a, b), so if either a or b is NaN, a is returned. */
+    If \a a or \b b is NaN, the return value is implementation defined. */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
 pmin(const Packet& a, const Packet& b) { return numext::mini(a, b); }
 
 /** \internal \returns the max of \a a and \a b  (coeff-wise)
-Equivalent to std::max(a, b), so if either a or b is NaN, a is returned.*/
+    If \a a or \b b is NaN, the return value is implementation defined. */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
 pmax(const Packet& a, const Packet& b) { return numext::maxi(a, b); }
 
@@ -635,22 +635,53 @@ Packet print(const Packet& a) { using numext::rint; return rint(a); }
 template<typename Packet> EIGEN_DECLARE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS
 Packet pceil(const Packet& a) { using numext::ceil; return ceil(a); }
 
-/** \internal \returns the min of \a a and \a b  (coeff-wise)
-    Equivalent to std::fmin(a, b). Only if both a and b are NaN is NaN returned.
-*/
+
+/** \internal \returns the max of \a a and \a b (coeff-wise)
+    If both \a a and \a b are NaN, NaN is returned.
+    Equivalent to std::fmax(a, b).  */
+template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
+pfmax(const Packet& a, const Packet& b) {
+  Packet not_nan_mask_a = pcmp_eq(a, a);
+  Packet not_nan_mask_b = pcmp_eq(b, b);
+  return pselect(not_nan_mask_a,
+                 pselect(not_nan_mask_b, pmax(a, b), a),
+                 b);
+}
+
+/** \internal \returns the min of \a a and \a b (coeff-wise)
+    If both \a a and \a b are NaN, NaN is returned.
+    Equivalent to std::fmin(a, b).  */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
 pfmin(const Packet& a, const Packet& b) {
-  Packet not_nan_mask = pcmp_eq(a, a);
-  return pselect(not_nan_mask, pmin(a, b), b);
+  Packet not_nan_mask_a = pcmp_eq(a, a);
+  Packet not_nan_mask_b = pcmp_eq(b, b);
+  return pselect(not_nan_mask_a,
+                 pselect(not_nan_mask_b, pmin(a, b), a),
+                 b);
 }
 
 /** \internal \returns the max of \a a and \a b  (coeff-wise)
-    Equivalent to std::fmax(a, b). Only if both a and b are NaN is NaN returned.*/
+    If either \a a or \a b are NaN, NaN is returned. */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
-pfmax(const Packet& a, const Packet& b) {
-  Packet not_nan_mask = pcmp_eq(a, a);
-  return pselect(not_nan_mask, pmax(a, b), b);
+pfmax_nan(const Packet& a, const Packet& b) {
+  Packet not_nan_mask_a = pcmp_eq(a, a);
+  Packet not_nan_mask_b = pcmp_eq(b, b);
+  return pselect(not_nan_mask_a,
+                 pselect(not_nan_mask_b, pmax(a, b), b),
+                 a);
 }
+
+/** \internal \returns the min of \a a and \a b  (coeff-wise)
+    If either \a a or \a b are NaN, NaN is returned. */
+template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
+pfmin_nan(const Packet& a, const Packet& b) {
+  Packet not_nan_mask_a = pcmp_eq(a, a);
+  Packet not_nan_mask_b = pcmp_eq(b, b);
+  return pselect(not_nan_mask_a,
+                 pselect(not_nan_mask_b, pmin(a, b), b),
+                 a);
+}
+
 
 /***************************************************************************
 * The following functions might not have to be overwritten for vectorized types
