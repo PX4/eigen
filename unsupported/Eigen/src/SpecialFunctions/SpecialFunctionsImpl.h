@@ -60,20 +60,20 @@ struct lgamma_retval {
 // Since glibc 2.19
 #if defined(__GLIBC__) && ((__GLIBC__>=2 && __GLIBC_MINOR__ >= 19) || __GLIBC__>2) \
  && (defined(_DEFAULT_SOURCE) || defined(_BSD_SOURCE) || defined(_SVID_SOURCE))
-#define HAS_LGAMMA_R
+#define EIGEN_HAS_LGAMMA_R
 #endif
 
 // Glibc versions before 2.19
 #if defined(__GLIBC__) && ((__GLIBC__==2 && __GLIBC_MINOR__ < 19) || __GLIBC__<2) \
  && (defined(_BSD_SOURCE) || defined(_SVID_SOURCE))
-#define HAS_LGAMMA_R
+#define EIGEN_HAS_LGAMMA_R
 #endif
 
 template <>
 struct lgamma_impl<float> {
   EIGEN_DEVICE_FUNC
   static EIGEN_STRONG_INLINE float run(float x) {
-#if !defined(EIGEN_GPU_COMPILE_PHASE) && defined (HAS_LGAMMA_R) && !defined(__APPLE__)
+#if !defined(EIGEN_GPU_COMPILE_PHASE) && defined (EIGEN_HAS_LGAMMA_R) && !defined(__APPLE__)
     int dummy;
     return ::lgammaf_r(x, &dummy);
 #elif defined(SYCL_DEVICE_ONLY)
@@ -88,7 +88,7 @@ template <>
 struct lgamma_impl<double> {
   EIGEN_DEVICE_FUNC
   static EIGEN_STRONG_INLINE double run(double x) {
-#if !defined(EIGEN_GPU_COMPILE_PHASE) && defined(HAS_LGAMMA_R) && !defined(__APPLE__)
+#if !defined(EIGEN_GPU_COMPILE_PHASE) && defined(EIGEN_HAS_LGAMMA_R) && !defined(__APPLE__)
     int dummy;
     return ::lgamma_r(x, &dummy);
 #elif defined(SYCL_DEVICE_ONLY)
@@ -99,7 +99,7 @@ struct lgamma_impl<double> {
   }
 };
 
-#undef HAS_LGAMMA_R
+#undef EIGEN_HAS_LGAMMA_R
 #endif
 
 /****************************************************************************
