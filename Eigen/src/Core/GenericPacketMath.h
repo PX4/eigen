@@ -304,17 +304,38 @@ EIGEN_DEVICE_FUNC inline std::complex<RealScalar> ptrue(const std::complex<RealS
   return std::complex<RealScalar>(b, b);
 }
 
+template <typename Packet, typename Op>
+Packet bitwise_helper(const Packet& a, const Packet& b, Op op) {
+  const unsigned char* a_ptr = reinterpret_cast<const unsigned char*>(&a);
+  const unsigned char* b_ptr = reinterpret_cast<const unsigned char*>(&b);
+  Packet c;
+  unsigned char* c_ptr = reinterpret_cast<unsigned char*>(&c);
+  for (size_t i = 0; i < sizeof(Packet); ++i) {
+    *c_ptr++ = op(*a_ptr++, *b_ptr++);
+  }
+  return c;
+}
+
 /** \internal \returns the bitwise and of \a a and \a b */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
-pand(const Packet& a, const Packet& b) { return a & b; }
+pand(const Packet& a, const Packet& b) {
+  EIGEN_USING_STD(bit_and);
+  return bitwise_helper(a ,b, bit_and<unsigned char>());
+}
 
 /** \internal \returns the bitwise or of \a a and \a b */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
-por(const Packet& a, const Packet& b) { return a | b; }
+por(const Packet& a, const Packet& b) {
+  EIGEN_USING_STD(bit_or);
+  return bitwise_helper(a ,b, bit_or<unsigned char>());
+}
 
 /** \internal \returns the bitwise xor of \a a and \a b */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
-pxor(const Packet& a, const Packet& b) { return a ^ b; }
+pxor(const Packet& a, const Packet& b) {
+  EIGEN_USING_STD(bit_xor);
+  return bitwise_helper(a ,b, bit_xor<unsigned char>());
+}
 
 /** \internal \returns the bitwise and of \a a and not \a b */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
