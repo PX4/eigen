@@ -61,6 +61,7 @@ For thread-safe random generator, we recommend the use of c++11 random generator
 
 In the case your application is parallelized with OpenMP, you might want to disable %Eigen's own parallelization as detailed in the previous section.
 
+\warning Using OpenMP with custom scalar types that might throw exceptions can lead to unexpected behaviour in the event of throwing.
 */
 
 }
