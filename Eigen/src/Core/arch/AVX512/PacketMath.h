@@ -1626,8 +1626,6 @@ template <> struct is_arithmetic<Packet16bf> { enum { value = true }; };
 template <>
 struct packet_traits<bfloat16> : default_packet_traits {
   typedef Packet16bf type;
-  // There is no half-size packet for current Packet16bf.
-  // TODO: support as SSE path.
   typedef Packet8bf half;
   enum {
     Vectorizable = 1,
@@ -1881,6 +1879,11 @@ template <>
 EIGEN_STRONG_INLINE Packet16bf pmax<Packet16bf>(const Packet16bf& a,
                                                 const Packet16bf& b) {
   return F32ToBf16(pmax<Packet16f>(Bf16ToF32(a), Bf16ToF32(b)));
+}
+
+template <>
+EIGEN_STRONG_INLINE Packet16bf plset<Packet16bf>(const bfloat16& a) {
+  return F32ToBf16(plset<Packet16f>(static_cast<float>(a)));
 }
 
 template <>

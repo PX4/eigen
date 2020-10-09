@@ -498,18 +498,18 @@ void packetmath_real() {
   EIGEN_ALIGN_MAX Scalar ref[PacketSize * 4];
 
   for (int i = 0; i < size; ++i) {
-    data1[i] = internal::random<Scalar>(0, 1) * std::pow(Scalar(10), internal::random<Scalar>(-6, 6));
-    data2[i] = internal::random<Scalar>(0, 1) * std::pow(Scalar(10), internal::random<Scalar>(-6, 6));
+    data1[i] = Scalar(internal::random<double>(0, 1) * std::pow(10., internal::random<double>(-6, 6)));
+    data2[i] = Scalar(internal::random<double>(0, 1) * std::pow(10., internal::random<double>(-6, 6)));
   }
 
-  if (internal::random<float>(0, 1) < 0.1f) data1[internal::random<int>(0, PacketSize)] = 0;
+  if (internal::random<float>(0, 1) < 0.1f) data1[internal::random<int>(0, PacketSize)] = Scalar(0);
 
   CHECK_CWISE1_IF(PacketTraits::HasLog, std::log, internal::plog);
-  CHECK_CWISE1_IF(PacketTraits::HasRsqrt, Scalar(1) / std::sqrt, internal::prsqrt);
+  CHECK_CWISE1_IF(PacketTraits::HasRsqrt, 1 / std::sqrt, internal::prsqrt);
 
   for (int i = 0; i < size; ++i) {
-    data1[i] = internal::random<Scalar>(-1, 1) * std::pow(Scalar(10), internal::random<Scalar>(-3, 3));
-    data2[i] = internal::random<Scalar>(-1, 1) * std::pow(Scalar(10), internal::random<Scalar>(-3, 3));
+    data1[i] = Scalar(internal::random<double>(-1, 1) * std::pow(10., internal::random<double>(-3, 3)));
+    data2[i] = Scalar(internal::random<double>(-1, 1) * std::pow(10., internal::random<double>(-3, 3)));
   }
   CHECK_CWISE1_IF(PacketTraits::HasSin, std::sin, internal::psin);
   CHECK_CWISE1_IF(PacketTraits::HasCos, std::cos, internal::pcos);
@@ -522,42 +522,49 @@ void packetmath_real() {
 
   // See bug 1785.
   for (int i = 0; i < size; ++i) {
-    data1[i] = -1.5 + i;
-    data2[i] = -1.5 + i;
+    data1[i] = Scalar(-1.5 + i);
+    data2[i] = Scalar(-1.5 + i);
   }
   CHECK_CWISE1_IF(PacketTraits::HasRound, numext::round, internal::pround);
   CHECK_CWISE1_IF(PacketTraits::HasRint, numext::rint, internal::print);
 
   for (int i = 0; i < size; ++i) {
-    data1[i] = internal::random<Scalar>(-1, 1);
-    data2[i] = internal::random<Scalar>(-1, 1);
+    data1[i] = Scalar(internal::random<double>(-1, 1));
+    data2[i] = Scalar(internal::random<double>(-1, 1));
   }
   CHECK_CWISE1_IF(PacketTraits::HasASin, std::asin, internal::pasin);
   CHECK_CWISE1_IF(PacketTraits::HasACos, std::acos, internal::pacos);
 
   for (int i = 0; i < size; ++i) {
-    data1[i] = internal::random<Scalar>(-87, 88);
-    data2[i] = internal::random<Scalar>(-87, 88);
+    data1[i] = Scalar(internal::random<double>(-87, 88));
+    data2[i] = Scalar(internal::random<double>(-87, 88));
   }
   CHECK_CWISE1_IF(PacketTraits::HasExp, std::exp, internal::pexp);
   for (int i = 0; i < size; ++i) {
-    data1[i] = internal::random<Scalar>(-1, 1) * std::pow(Scalar(10), internal::random<Scalar>(-6, 6));
-    data2[i] = internal::random<Scalar>(-1, 1) * std::pow(Scalar(10), internal::random<Scalar>(-6, 6));
+    data1[i] = Scalar(internal::random<double>(-1, 1) * std::pow(10., internal::random<double>(-6, 6)));
+    data2[i] = Scalar(internal::random<double>(-1, 1) * std::pow(10., internal::random<double>(-6, 6)));
   }
-  data1[0] = 1e-20;
+  data1[0] = Scalar(1e-20);
   CHECK_CWISE1_IF(PacketTraits::HasTanh, std::tanh, internal::ptanh);
   if (PacketTraits::HasExp && PacketSize >= 2) {
+    const Scalar small = std::numeric_limits<Scalar>::epsilon();
     data1[0] = std::numeric_limits<Scalar>::quiet_NaN();
-    data1[1] = std::numeric_limits<Scalar>::epsilon();
+    data1[1] = small;
     test::packet_helper<PacketTraits::HasExp, Packet> h;
     h.store(data2, internal::pexp(h.load(data1)));
     VERIFY((numext::isnan)(data2[0]));
-    VERIFY_IS_EQUAL(std::exp(std::numeric_limits<Scalar>::epsilon()), data2[1]);
+    // TODO(rmlarsen): Re-enable for bfloat16.
+    if (!internal::is_same<Scalar, bfloat16>::value) {
+      VERIFY_IS_EQUAL(std::exp(small), data2[1]);
+    }
 
-    data1[0] = -std::numeric_limits<Scalar>::epsilon();
-    data1[1] = 0;
+    data1[0] = -small;
+    data1[1] = Scalar(0);
     h.store(data2, internal::pexp(h.load(data1)));
-    VERIFY_IS_EQUAL(std::exp(-std::numeric_limits<Scalar>::epsilon()), data2[0]);
+    // TODO(rmlarsen): Re-enable for bfloat16.
+    if (!internal::is_same<Scalar, bfloat16>::value) {
+      VERIFY_IS_EQUAL(std::exp(-small), data2[0]);
+    }
     VERIFY_IS_EQUAL(std::exp(Scalar(0)), data2[1]);
 
     data1[0] = (std::numeric_limits<Scalar>::min)();
@@ -584,7 +591,7 @@ void packetmath_real() {
   if (PacketTraits::HasExp) {
     internal::scalar_logistic_op<Scalar> logistic;
     for (int i = 0; i < size; ++i) {
-      data1[i] = internal::random<Scalar>(-20, 20);
+      data1[i] = Scalar(internal::random<double>(-20, 20));
     }
 
     test::packet_helper<PacketTraits::HasExp, Packet> h;
@@ -613,7 +620,7 @@ void packetmath_real() {
       VERIFY_IS_EQUAL(std::log(std::numeric_limits<Scalar>::epsilon()), data2[1]);
 
       data1[0] = -std::numeric_limits<Scalar>::epsilon();
-      data1[1] = 0;
+      data1[1] = Scalar(0);
       h.store(data2, internal::plog(h.load(data1)));
       VERIFY((numext::isnan)(data2[0]));
       VERIFY_IS_EQUAL(std::log(Scalar(0)), data2[1]);
@@ -630,7 +637,8 @@ void packetmath_real() {
         data1[0] = std::numeric_limits<Scalar>::denorm_min();
         data1[1] = -std::numeric_limits<Scalar>::denorm_min();
         h.store(data2, internal::plog(h.load(data1)));
-        // VERIFY_IS_EQUAL(std::log(std::numeric_limits<Scalar>::denorm_min()), data2[0]);
+        // TODO(rmlarsen): Reenable.
+        //        VERIFY_IS_EQUAL(std::log(std::numeric_limits<Scalar>::denorm_min()), data2[0]);
         VERIFY((numext::isnan)(data2[1]));
       }
 #endif
@@ -654,17 +662,22 @@ void packetmath_real() {
     if (PacketTraits::HasSqrt) {
       test::packet_helper<PacketTraits::HasSqrt, Packet> h;
       data1[0] = Scalar(-1.0f);
-      data1[1] = -std::numeric_limits<Scalar>::denorm_min();
+      if (std::numeric_limits<Scalar>::has_denorm == std::denorm_present) {
+        data1[1] = -std::numeric_limits<Scalar>::denorm_min();
+      } else {
+        data1[1] = -std::numeric_limits<Scalar>::epsilon();
+      }
       h.store(data2, internal::psqrt(h.load(data1)));
       VERIFY((numext::isnan)(data2[0]));
       VERIFY((numext::isnan)(data2[1]));
     }
-    if (PacketTraits::HasCos) {
+    // TODO(rmlarsen): Re-enable for bfloat16.
+    if (PacketTraits::HasCos && !internal::is_same<Scalar, bfloat16>::value) {
       test::packet_helper<PacketTraits::HasCos, Packet> h;
-      for (Scalar k = 1; k < Scalar(10000) / std::numeric_limits<Scalar>::epsilon(); k *= 2) {
+      for (Scalar k = Scalar(1); k < Scalar(10000) / std::numeric_limits<Scalar>::epsilon(); k *= Scalar(2)) {
         for (int k1 = 0; k1 <= 1; ++k1) {
-          data1[0] = (2 * k + k1) * Scalar(EIGEN_PI) / 2 * internal::random<Scalar>(0.8, 1.2);
-          data1[1] = (2 * k + 2 + k1) * Scalar(EIGEN_PI) / 2 * internal::random<Scalar>(0.8, 1.2);
+          data1[0] = Scalar((2 * k + k1) * EIGEN_PI / 2 * internal::random<double>(0.8, 1.2));
+          data1[1] = Scalar((2 * k + 2 + k1) * EIGEN_PI / 2 * internal::random<double>(0.8, 1.2));
           h.store(data2, internal::pcos(h.load(data1)));
           h.store(data2 + PacketSize, internal::psin(h.load(data1)));
           VERIFY(data2[0] <= Scalar(1.) && data2[0] >= Scalar(-1.));
@@ -765,16 +778,16 @@ void packetmath_real<bfloat16, typename internal::packet_traits<bfloat16>::type>
 
 template <typename Scalar>
 Scalar propagate_nan_max(const Scalar& a, const Scalar& b) {
-  if ((std::isnan)(a)) return a;
-  if ((std::isnan)(b)) return b;
-  return (std::max)(a,b);
+  if ((numext::isnan)(a)) return a;
+  if ((numext::isnan)(b)) return b;
+  return (numext::maxi)(a,b);
 }
 
 template <typename Scalar>
 Scalar propagate_nan_min(const Scalar& a, const Scalar& b) {
-  if ((std::isnan)(a)) return a;
-  if ((std::isnan)(b)) return b;
-  return (std::min)(a,b);
+  if ((numext::isnan)(a)) return a;
+  if ((numext::isnan)(b)) return b;
+  return (numext::mini)(a,b);
 }
 
 template <typename Scalar, typename Packet>

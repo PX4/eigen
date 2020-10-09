@@ -1205,6 +1205,11 @@ EIGEN_STRONG_INLINE Packet8bf pmax<Packet8bf>(const Packet8bf& a,
   return F32ToBf16(pmax<Packet8f>(Bf16ToF32(a), Bf16ToF32(b)));
 }
 
+template <>
+EIGEN_STRONG_INLINE Packet8bf plset<Packet8bf>(const bfloat16& a) {
+  return F32ToBf16(plset<Packet8f>(static_cast<float>(a)));
+}
+
 template<> EIGEN_STRONG_INLINE Packet8bf por(const Packet8bf& a,const Packet8bf& b) {
   return _mm_or_si128(a,b);
 }

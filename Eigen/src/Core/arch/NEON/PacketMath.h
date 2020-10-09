@@ -3373,6 +3373,11 @@ template <> EIGEN_STRONG_INLINE Packet4bf pmax<Packet4bf>(const Packet4bf &a,
   return F32ToBf16(pmax<Packet4f>(Bf16ToF32(a), Bf16ToF32(b)));
 }
 
+template<> EIGEN_STRONG_INLINE Packet4bf plset<Packet4bf>(const bfloat16& a)
+{
+  return F32ToBf16(plset<Packet4f>(static_cast<float>(a)));
+}
+
 template<> EIGEN_STRONG_INLINE Packet4bf por(const Packet4bf& a,const Packet4bf& b) {
   return por<Packet4us>(a, b);
 }

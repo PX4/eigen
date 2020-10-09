@@ -103,8 +103,8 @@ struct numeric_limits<Eigen::bfloat16> {
   static const bool has_infinity = true;
   static const bool has_quiet_NaN = true;
   static const bool has_signaling_NaN = true;
-  static const float_denorm_style has_denorm = numeric_limits<float>::has_denorm;
-  static const bool has_denorm_loss = numeric_limits<float>::has_denorm_loss;
+  static const float_denorm_style has_denorm = std::denorm_absent;
+  static const bool has_denorm_loss = false;
   static const std::float_round_style round_style = numeric_limits<float>::round_style;
   static const bool is_iec559 = false;
   static const bool is_bounded = true;
@@ -551,17 +551,23 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC bfloat16 tanh(const bfloat16& a) {
 }
 #if EIGEN_HAS_CXX11_MATH
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC bfloat16 asinh(const bfloat16& a) {
-  return bfloat16(::asinh(float(a)));
+  EIGEN_USING_STD(asinhf);
+  return bfloat16(asinhf(float(a)));
 }
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC bfloat16 acosh(const bfloat16& a) {
-  return bfloat16(::acosh(float(a)));
+  EIGEN_USING_STD(acoshf);
+  return bfloat16(acoshf(float(a)));
 }
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC bfloat16 atanh(const bfloat16& a) {
-  return bfloat16(::atanh(float(a)));
+  EIGEN_USING_STD(atanhf);
+  return bfloat16(atanhf(float(a)));
 }
 #endif
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC bfloat16 floor(const bfloat16& a) {
   return bfloat16(::floorf(float(a)));
+}
+EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC bfloat16 rint(const bfloat16& a) {
+  return bfloat16(::rintf(float(a)));
 }
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC bfloat16 ceil(const bfloat16& a) {
   return bfloat16(::ceilf(float(a)));
@@ -579,6 +585,17 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC bfloat16 (max)(const bfloat16& a, const bf
   const float f1 = static_cast<float>(a);
   const float f2 = static_cast<float>(b);
   return f1 < f2 ? b : a;
+}
+
+EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC bfloat16 fmin(const bfloat16& a, const bfloat16& b) {
+  const float f1 = static_cast<float>(a);
+  const float f2 = static_cast<float>(b);
+  return bfloat16(::fminf(f1, f2));
+}
+EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC bfloat16 fmax(const bfloat16& a, const bfloat16& b) {
+  const float f1 = static_cast<float>(a);
+  const float f2 = static_cast<float>(b);
+  return bfloat16(::fmaxf(f1, f2));
 }
 
 #ifndef EIGEN_NO_IO

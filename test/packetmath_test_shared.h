@@ -156,7 +156,7 @@ struct packet_helper<false,Packet>
 #define CHECK_CWISE1_IF(COND, REFOP, POP) if(COND) { \
   test::packet_helper<COND,Packet> h; \
   for (int i=0; i<PacketSize; ++i) \
-    ref[i] = REFOP(data1[i]); \
+    ref[i] = Scalar(REFOP(data1[i])); \
   h.store(data2, POP(h.load(data1))); \
   VERIFY(test::areApprox(ref, data2, PacketSize) && #POP); \
 }
@@ -164,7 +164,7 @@ struct packet_helper<false,Packet>
 #define CHECK_CWISE2_IF(COND, REFOP, POP) if(COND) { \
   test::packet_helper<COND,Packet> h; \
   for (int i=0; i<PacketSize; ++i) \
-    ref[i] = REFOP(data1[i], data1[i+PacketSize]); \
+    ref[i] = Scalar(REFOP(data1[i], data1[i+PacketSize]));     \
   h.store(data2, POP(h.load(data1),h.load(data1+PacketSize))); \
   VERIFY(test::areApprox(ref, data2, PacketSize) && #POP); \
 }
@@ -172,8 +172,8 @@ struct packet_helper<false,Packet>
 #define CHECK_CWISE3_IF(COND, REFOP, POP) if (COND) {                      \
   test::packet_helper<COND, Packet> h;                                     \
   for (int i = 0; i < PacketSize; ++i)                                     \
-    ref[i] =                                                               \
-        REFOP(data1[i], data1[i + PacketSize], data1[i + 2 * PacketSize]); \
+    ref[i] = Scalar(REFOP(data1[i], data1[i + PacketSize],                 \
+                          data1[i + 2 * PacketSize]));                     \
   h.store(data2, POP(h.load(data1), h.load(data1 + PacketSize),            \
                      h.load(data1 + 2 * PacketSize)));                     \
   VERIFY(test::areApprox(ref, data2, PacketSize) && #POP);                 \

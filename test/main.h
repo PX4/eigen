@@ -1,3 +1,4 @@
+
 // This file is part of Eigen, a lightweight C++ template library
 // for linear algebra.
 //
@@ -540,7 +541,7 @@ template<typename T1,typename T2>
 typename NumTraits<typename NumTraits<T1>::Real>::NonInteger test_relative_error(const T1 &a, const T2 &b, typename internal::enable_if<internal::is_arithmetic<typename NumTraits<T1>::Real>::value, T1>::type* = 0)
 {
   typedef typename NumTraits<typename NumTraits<T1>::Real>::NonInteger RealScalar;
-  return numext::sqrt(RealScalar(numext::abs2(a-b))/RealScalar((numext::mini)(numext::abs2(a),numext::abs2(b))));
+  return numext::sqrt(RealScalar(numext::abs2(a-b))/(numext::mini)(RealScalar(numext::abs2(a)),RealScalar(numext::abs2(b))));
 }
 
 template<typename T>
