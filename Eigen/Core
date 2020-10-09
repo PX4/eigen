@@ -22,7 +22,7 @@
 #include "src/Core/util/ConfigureVectorization.h"
 
 // We need cuda_runtime.h/hip_runtime.h to ensure that
-// the EIGEN_USING_STD_MATH macro works properly on the device side
+// the EIGEN_USING_STD macro works properly on the device side
 #if defined(EIGEN_CUDACC)
   #include <cuda_runtime.h>
 #elif defined(EIGEN_HIPCC)

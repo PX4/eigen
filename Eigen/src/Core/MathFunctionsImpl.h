@@ -79,7 +79,7 @@ template<typename RealScalar>
 EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
 RealScalar positive_real_hypot(const RealScalar& x, const RealScalar& y)
 {
-  EIGEN_USING_STD_MATH(sqrt);
+  EIGEN_USING_STD(sqrt);
   RealScalar p, qp;
   p = numext::maxi(x,y);
   if(p==RealScalar(0)) return RealScalar(0);
@@ -94,7 +94,7 @@ struct hypot_impl
   static EIGEN_DEVICE_FUNC
   inline RealScalar run(const Scalar& x, const Scalar& y)
   {
-    EIGEN_USING_STD_MATH(abs);
+    EIGEN_USING_STD(abs);
     return positive_real_hypot<RealScalar>(abs(x), abs(y));
   }
 };

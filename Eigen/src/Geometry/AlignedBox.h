@@ -310,14 +310,14 @@ EIGEN_MAKE_ALIGNED_OPERATOR_NEW_IF_VECTORIZABLE_FIXED_SIZE(_Scalar,_AmbientDim)
     */
   template<typename Derived>
   EIGEN_DEVICE_FUNC inline NonInteger exteriorDistance(const MatrixBase<Derived>& p) const
-  { EIGEN_USING_STD_MATH(sqrt) return sqrt(NonInteger(squaredExteriorDistance(p))); }
+  { EIGEN_USING_STD(sqrt) return sqrt(NonInteger(squaredExteriorDistance(p))); }
 
   /** \returns the distance between the boxes \a b and \c *this,
     * and zero if the boxes intersect.
     * \sa squaredExteriorDistance(const AlignedBox&), exteriorDistance(const MatrixBase&)
     */
   EIGEN_DEVICE_FUNC inline NonInteger exteriorDistance(const AlignedBox& b) const
-  { EIGEN_USING_STD_MATH(sqrt) return sqrt(NonInteger(squaredExteriorDistance(b))); }
+  { EIGEN_USING_STD(sqrt) return sqrt(NonInteger(squaredExteriorDistance(b))); }
 
   /**
    * Specialization of transform for pure translation.
