@@ -305,7 +305,7 @@ EIGEN_DEVICE_FUNC inline std::complex<RealScalar> ptrue(const std::complex<RealS
 }
 
 template <typename Packet, typename Op>
-Packet bitwise_helper(const Packet& a, const Packet& b, Op op) {
+EIGEN_DEVICE_FUNC inline Packet bitwise_helper(const Packet& a, const Packet& b, Op op) {
   const unsigned char* a_ptr = reinterpret_cast<const unsigned char*>(&a);
   const unsigned char* b_ptr = reinterpret_cast<const unsigned char*>(&b);
   Packet c;
