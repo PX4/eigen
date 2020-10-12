@@ -21,14 +21,33 @@ namespace internal {
 template<typename Packet, int N> EIGEN_DEVICE_FUNC inline Packet
 pset(const typename unpacket_traits<Packet>::type (&a)[N] /* a */);
 
+/***************************************************************************
+ * Some generic implementations to be used by implementors
+***************************************************************************/
+
+/** Default implementation of pfrexp for float.
+  * It is expected to be called by implementers of template<> pfrexp.
+  */
 template<typename Packet> EIGEN_STRONG_INLINE Packet
 pfrexp_float(const Packet& a, Packet& exponent);
 
+/** Default implementation of pfrexp for double.
+  * It is expected to be called by implementers of template<> pfrexp.
+  */
 template<typename Packet> EIGEN_STRONG_INLINE Packet
 pfrexp_double(const Packet& a, Packet& exponent);
 
+/** Default implementation of pldexp for float.
+  * It is expected to be called by implementers of template<> pldexp.
+  */
 template<typename Packet> EIGEN_STRONG_INLINE Packet
-pldexp_float(Packet a, Packet exponent);
+pldexp_float(const Packet& a, const Packet& exponent);
+
+/** Default implementation of pldexp for double.
+  * It is expected to be called by implementers of template<> pldexp.
+  */
+template<typename Packet> EIGEN_STRONG_INLINE Packet
+pldexp_double(const Packet& a, const Packet& exponent);
 
 /** \internal \returns log(x) for single precision float */
 template <typename Packet>

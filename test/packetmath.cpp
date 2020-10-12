@@ -573,10 +573,41 @@ void packetmath_real() {
     data2[i] = Scalar(internal::random<double>(-1, 1));
   }
   for (int i = 0; i < PacketSize; ++i) {
-    data1[i+PacketSize] = Scalar(internal::random<int>(0, 4));
-    data2[i+PacketSize] = Scalar(internal::random<double>(0, 4));
+    data1[i+PacketSize] = Scalar(internal::random<int>(-4, 4));
+    data2[i+PacketSize] = Scalar(internal::random<double>(-4, 4));
   }
   CHECK_CWISE2_IF(PacketTraits::HasExp, REF_LDEXP, internal::pldexp);
+  if (PacketTraits::HasExp) {
+    data1[0] = Scalar(-1);
+    // underflow to zero
+    data1[PacketSize] = Scalar(std::numeric_limits<Scalar>::min_exponent-10);
+    CHECK_CWISE2_IF(PacketTraits::HasExp, REF_LDEXP, internal::pldexp);
+    // overflow to inf
+    data1[PacketSize] = Scalar(std::numeric_limits<Scalar>::max_exponent+10);
+    CHECK_CWISE2_IF(PacketTraits::HasExp, REF_LDEXP, internal::pldexp);
+    // NaN stays NaN
+    data1[0] = NumTraits<Scalar>::quiet_NaN();
+    CHECK_CWISE2_IF(PacketTraits::HasExp, REF_LDEXP, internal::pldexp);
+    VERIFY((numext::isnan)(data2[0]));
+    // inf stays inf
+    data1[0] = NumTraits<Scalar>::infinity();
+    data1[PacketSize] = Scalar(std::numeric_limits<Scalar>::min_exponent-10);
+    CHECK_CWISE2_IF(PacketTraits::HasExp, REF_LDEXP, internal::pldexp);
+    // zero stays zero
+    data1[0] = Scalar(0);
+    data1[PacketSize] = Scalar(std::numeric_limits<Scalar>::max_exponent+10);
+    CHECK_CWISE2_IF(PacketTraits::HasExp, REF_LDEXP, internal::pldexp);
+    // Small number big exponent.
+    data1[0] = Scalar(std::ldexp(Scalar(1.0), std::numeric_limits<Scalar>::min_exponent-1));
+    data1[PacketSize] = Scalar(-std::numeric_limits<Scalar>::min_exponent
+                               +std::numeric_limits<Scalar>::max_exponent);
+    CHECK_CWISE2_IF(PacketTraits::HasExp, REF_LDEXP, internal::pldexp);
+    // Big number small exponent.
+    data1[0] = Scalar(std::ldexp(Scalar(1.0), std::numeric_limits<Scalar>::max_exponent-1));
+    data1[PacketSize] = Scalar(+std::numeric_limits<Scalar>::min_exponent
+                               -std::numeric_limits<Scalar>::max_exponent);
+    CHECK_CWISE2_IF(PacketTraits::HasExp, REF_LDEXP, internal::pldexp);
+  }
 
   for (int i = 0; i < size; ++i) {
     data1[i] = Scalar(internal::random<double>(-1, 1) * std::pow(10., internal::random<double>(-6, 6)));

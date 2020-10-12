@@ -917,16 +917,29 @@ template<> EIGEN_STRONG_INLINE Packet16f pldexp<Packet16f>(const Packet16f& a, c
 }
 
 template<> EIGEN_STRONG_INLINE Packet8d pldexp<Packet8d>(const Packet8d& a, const Packet8d& exponent) {
-  // Build e=2^n by constructing the exponents in a 256-bit vector and
-  // shifting them to where they belong in double-precision values.
-  Packet8i cst_1023 = pset1<Packet8i>(1023);
-  __m256i emm0 = _mm512_cvtpd_epi32(exponent);
-  emm0 = _mm256_add_epi32(emm0, cst_1023);
-  emm0 = _mm256_shuffle_epi32(emm0, _MM_SHUFFLE(3, 1, 2, 0));
-  __m256i lo = _mm256_slli_epi64(emm0, 52);
-  __m256i hi = _mm256_slli_epi64(_mm256_srli_epi64(emm0, 32), 52);
-  __m512d b = _mm512_castsi512_pd(_mm512_inserti64x4(_mm512_castsi256_si512(lo), hi, 1));
-  return pmul(a, b);
+  // Clamp exponent to [-2099, 2099]
+  const Packet8d max_exponent = pset1<Packet8d>(2099.0);
+  const Packet8i e = _mm512_cvtpd_epi32(pmin(pmax(exponent, pnegate(max_exponent)), max_exponent));
+  
+  // Split 2^e into four factors and multiply.
+  const Packet8i bias = pset1<Packet8i>(1023);
+  Packet8i b = parithmetic_shift_right<2>(e);  // floor(e/4)
+  
+  // 2^b
+  Packet8i hi = _mm256_shuffle_epi32(padd(b, bias), _MM_SHUFFLE(3, 1, 2, 0));
+  Packet8i lo = _mm256_slli_epi64(hi, 52);
+  hi = _mm256_slli_epi64(_mm256_srli_epi64(hi, 32), 52);
+  Packet8d c = _mm512_castsi512_pd(_mm512_inserti64x4(_mm512_castsi256_si512(lo), hi, 1));
+  Packet8d out = pmul(pmul(pmul(a, c), c), c);  // a * 2^(3b)
+  
+  // 2^(e - 3b)
+  b = psub(psub(psub(e, b), b), b);  // e - 3b
+  hi = _mm256_shuffle_epi32(padd(b, bias), _MM_SHUFFLE(3, 1, 2, 0));
+  lo = _mm256_slli_epi64(hi, 52);
+  hi = _mm256_slli_epi64(_mm256_srli_epi64(hi, 32), 52);
+  c = _mm512_castsi512_pd(_mm512_inserti64x4(_mm512_castsi256_si512(lo), hi, 1));
+  out = pmul(out, c);  // a * 2^e
+  return out;
 }
 
 #ifdef EIGEN_VECTORIZE_AVX512DQ

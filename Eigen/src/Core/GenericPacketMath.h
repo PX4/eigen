@@ -453,7 +453,7 @@ EIGEN_DEVICE_FUNC inline Packet pfrexp(const Packet& a, Packet& exponent) {
   return result;
 }
 
-/** \internal \returns a * 2^exponent
+/** \internal \returns a * 2^((int)exponent)
   * See https://en.cppreference.com/w/cpp/numeric/math/ldexp
   */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
@@ -904,28 +904,6 @@ template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
 pblend(const Selector<unpacket_traits<Packet>::size>& ifPacket, const Packet& thenPacket, const Packet& elsePacket) {
   return ifPacket.select[0] ? thenPacket : elsePacket;
 }
-
-/***************************************************************************
- * Some generic implementations to be used by implementors
-***************************************************************************/
-
-/** Default implementation of pfrexp for float.
-  * It is expected to be called by implementers of template<> pfrexp.
-  */
-template<typename Packet> EIGEN_STRONG_INLINE Packet
-pfrexp_float(const Packet& a, Packet& exponent);
-
-/** Default implementation of pldexp for float.
-  * It is expected to be called by implementers of template<> pldexp.
-  */
-template<typename Packet> EIGEN_STRONG_INLINE Packet
-pldexp_float(Packet a, Packet exponent);
-
-/** Default implementation of pldexp for double.
-  * It is expected to be called by implementers of template<> pldexp.
-  */
-template<typename Packet> EIGEN_STRONG_INLINE Packet
-pldexp_double(Packet a, Packet exponent);
 
 } // end namespace internal
 

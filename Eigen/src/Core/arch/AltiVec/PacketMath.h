@@ -2452,38 +2452,134 @@ static inline Packet2l ConvertToPacket2l(const Packet2d& x) {
 #endif
 }
 
-template<> EIGEN_STRONG_INLINE Packet2d pldexp<Packet2d>(const Packet2d& a, const Packet2d& exponent) {
-  
-  // build 2^n
-  Packet2l emm0 = ConvertToPacket2l(exponent);
 
-#ifdef __POWER8_VECTOR__ 
-  const Packet2l  p2l_1023 = { 1023, 1023 };
-  const Packet2ul p2ul_52 = { 52, 52 };
-  emm0 = vec_add(emm0, p2l_1023);
-  emm0 = vec_sl(emm0, p2ul_52);
+// Packet2l shifts.
+// For POWER8 we simply use vec_sr/l. 
+//
+// Things are more complicated for POWER7. There is actually a
+// vec_xxsxdi intrinsic but it is not supported by some gcc versions.
+// So we need to shift by N % 32 and rearrage bytes.
+#ifdef __POWER8_VECTOR__
+
+template<int N>
+EIGEN_STRONG_INLINE Packet2l plogical_shift_left(const Packet2l& a) {
+  const Packet2ul shift = { N, N };
+  return vec_sl(a, shift); 
+}
+
+template<int N>
+EIGEN_STRONG_INLINE Packet2l plogical_shift_right(const Packet2l& a) {
+  const Packet2ul shift = { N, N };
+  return vec_sr(a, shift); 
+}
+
 #else
-  // Code is a bit complex for POWER7.  There is actually a
-  // vec_xxsldi intrinsic but it is not supported by some gcc versions.
-  // So we shift (52-32) bits and do a word swap with zeros.
-  const Packet4i p4i_1023 = pset1<Packet4i>(1023);
-  const Packet4i p4i_20 = pset1<Packet4i>(20);    // 52 - 32
 
-  Packet4i emm04i = reinterpret_cast<Packet4i>(emm0);
-  emm04i = vec_add(emm04i, p4i_1023);
-  emm04i = vec_sl(emm04i, reinterpret_cast<Packet4ui>(p4i_20));
+// Shifts [A, B, C, D] to [B, 0, D, 0].
+// Used to implement left shifts for Packet2l.
+EIGEN_ALWAYS_INLINE Packet4i shift_even_left(const Packet4i& a) {
   static const Packet16uc perm = {
-    0x14, 0x15, 0x16, 0x17, 0x00, 0x01, 0x02, 0x03, 
-    0x1c, 0x1d, 0x1e, 0x1f, 0x08, 0x09, 0x0a, 0x0b };
-#ifdef  _BIG_ENDIAN
-  emm0 = reinterpret_cast<Packet2l>(vec_perm(p4i_ZERO, emm04i, perm));
-#else
-  emm0 = reinterpret_cast<Packet2l>(vec_perm(emm04i, p4i_ZERO, perm));
+      0x14, 0x15, 0x16, 0x17, 0x00, 0x01, 0x02, 0x03, 
+      0x1c, 0x1d, 0x1e, 0x1f, 0x08, 0x09, 0x0a, 0x0b };
+  #ifdef  _BIG_ENDIAN
+    return vec_perm(p4i_ZERO, a, perm);
+  #else
+    return vec_perm(a, p4i_ZERO, perm);
+  #endif
+}
+
+// Shifts [A, B, C, D] to [0, A, 0, C].
+// Used to implement right shifts for Packet2l.
+EIGEN_ALWAYS_INLINE Packet4i shift_odd_right(const Packet4i& a) {
+  static const Packet16uc perm = {
+      0x04, 0x05, 0x06, 0x07, 0x10, 0x11, 0x12, 0x13, 
+      0x0c, 0x0d, 0x0e, 0x0f, 0x18, 0x19, 0x1a, 0x1b };
+  #ifdef  _BIG_ENDIAN
+    return vec_perm(p4i_ZERO, a, perm);
+  #else
+    return vec_perm(a, p4i_ZERO, perm);
+  #endif
+}
+
+template<int N, typename EnableIf = void>
+struct plogical_shift_left_impl;
+
+template<int N>
+struct plogical_shift_left_impl<N, typename enable_if<(N < 32) && (N >= 0)>::type> {
+  static EIGEN_STRONG_INLINE Packet2l run(const Packet2l& a) {
+    static const unsigned n = static_cast<unsigned>(N);
+    const Packet4ui shift = {n, n, n, n};
+    const Packet4i ai = reinterpret_cast<Packet4i>(a);
+    static const unsigned m = static_cast<unsigned>(32 - N);
+    const Packet4ui shift_right = {m, m, m, m};
+    const Packet4i out_hi = vec_sl(ai, shift);
+    const Packet4i out_lo = shift_even_left(vec_sr(ai, shift_right));
+    return reinterpret_cast<Packet2l>(por<Packet4i>(out_hi, out_lo));
+  }
+};
+
+template<int N>
+struct plogical_shift_left_impl<N, typename enable_if<(N >= 32)>::type> {
+  static EIGEN_STRONG_INLINE Packet2l run(const Packet2l& a) {
+    static const unsigned m = static_cast<unsigned>(N - 32);
+    const Packet4ui shift = {m, m, m, m};
+    const Packet4i ai = reinterpret_cast<Packet4i>(a);
+    return reinterpret_cast<Packet2l>(shift_even_left(vec_sl(ai, shift)));
+  }
+};
+
+template<int N>
+EIGEN_STRONG_INLINE Packet2l plogical_shift_left(const Packet2l& a) {
+  return plogical_shift_left_impl<N>::run(a); 
+}
+
+template<int N, typename EnableIf = void>
+struct plogical_shift_right_impl;
+
+template<int N>
+struct plogical_shift_right_impl<N, typename enable_if<(N < 32) && (N >= 0)>::type> {
+  static EIGEN_STRONG_INLINE Packet2l run(const Packet2l& a) {
+    static const unsigned n = static_cast<unsigned>(N);
+    const Packet4ui shift = {n, n, n, n};
+    const Packet4i ai = reinterpret_cast<Packet4i>(a);
+    static const unsigned m = static_cast<unsigned>(32 - N);
+    const Packet4ui shift_left = {m, m, m, m};
+    const Packet4i out_lo = vec_sr(ai, shift);
+    const Packet4i out_hi = shift_odd_right(vec_sl(ai, shift_left));
+    return reinterpret_cast<Packet2l>(por<Packet4i>(out_hi, out_lo));
+  }
+};
+
+template<int N>
+struct plogical_shift_right_impl<N, typename enable_if<(N >= 32)>::type> {
+  static EIGEN_STRONG_INLINE Packet2l run(const Packet2l& a) {
+    static const unsigned m = static_cast<unsigned>(N - 32);
+    const Packet4ui shift = {m, m, m, m};
+    const Packet4i ai = reinterpret_cast<Packet4i>(a);
+    return reinterpret_cast<Packet2l>(shift_odd_right(vec_sr(ai, shift)));
+  }
+};
+
+template<int N>
+EIGEN_STRONG_INLINE Packet2l plogical_shift_right(const Packet2l& a) {
+  return plogical_shift_right_impl<N>::run(a); 
+}
 #endif
 
-#endif
+template<> EIGEN_STRONG_INLINE Packet2d pldexp<Packet2d>(const Packet2d& a, const Packet2d& exponent) {
+  // Clamp exponent to [-2099, 2099]
+  const Packet2d max_exponent = pset1<Packet2d>(2099.0);
+  const Packet2l e = ConvertToPacket2l(pmin(pmax(exponent, pnegate(max_exponent)), max_exponent));
 
-  return pmul(a, reinterpret_cast<Packet2d>(emm0));
+  // Split 2^e into four factors and multiply:
+  const Packet2l  bias = { 1023, 1023 };
+  Packet2l b = plogical_shift_right<2>(e);  // floor(e/4)
+  Packet2d c = reinterpret_cast<Packet2d>(plogical_shift_left<52>(b + bias));
+  Packet2d out = pmul(pmul(pmul(a, c), c), c); // a * 2^(3b)
+  b = psub(psub(psub(e, b), b), b);  // e - 3b
+  c = reinterpret_cast<Packet2d>(plogical_shift_left<52>(b + bias)); // 2^(e - 3b)
+  out = pmul(out, c); // a * 2^e
+  return out;
 }
 
 template<> EIGEN_STRONG_INLINE Packet2d pfrexp<Packet2d> (const Packet2d& a, Packet2d& exponent) {

@@ -273,6 +273,15 @@ template<> EIGEN_STRONG_INLINE Packet8i padd<Packet8i>(const Packet8i& a, const 
 
 template<> EIGEN_STRONG_INLINE Packet8f psub<Packet8f>(const Packet8f& a, const Packet8f& b) { return _mm256_sub_ps(a,b); }
 template<> EIGEN_STRONG_INLINE Packet4d psub<Packet4d>(const Packet4d& a, const Packet4d& b) { return _mm256_sub_pd(a,b); }
+template<> EIGEN_STRONG_INLINE Packet8i psub<Packet8i>(const Packet8i& a, const Packet8i& b) {
+#ifdef EIGEN_VECTORIZE_AVX2
+  return _mm256_sub_epi32(a,b);
+#else
+  __m128i lo = _mm_sub_epi32(_mm256_extractf128_si256(a, 0), _mm256_extractf128_si256(b, 0));
+  __m128i hi = _mm_sub_epi32(_mm256_extractf128_si256(a, 1), _mm256_extractf128_si256(b, 1));
+  return _mm256_insertf128_si256(_mm256_castsi128_si256(lo), (hi), 1);
+#endif
+}
 
 template<> EIGEN_STRONG_INLINE Packet8f pnegate(const Packet8f& a)
 {
@@ -379,6 +388,7 @@ template<> EIGEN_STRONG_INLINE Packet4d pmin<Packet4d>(const Packet4d& a, const 
   return _mm256_min_pd(b,a);
 #endif
 }
+
 template<> EIGEN_STRONG_INLINE Packet8f pmax<Packet8f>(const Packet8f& a, const Packet8f& b) {
 #if EIGEN_COMP_GNUC && EIGEN_COMP_GNUC < 63
   // See pmin above
@@ -756,17 +766,29 @@ template<> EIGEN_STRONG_INLINE Packet8f pldexp<Packet8f>(const Packet8f& a, cons
 }
 
 template<> EIGEN_STRONG_INLINE Packet4d pldexp<Packet4d>(const Packet4d& a, const Packet4d& exponent) {
-  // Build e=2^n by constructing the exponents in a 128-bit vector and
-  // shifting them to where they belong in double-precision values.
-  Packet4i cst_1023 = pset1<Packet4i>(1023);
-  __m128i emm0 = _mm256_cvtpd_epi32(exponent);
-  emm0 = _mm_add_epi32(emm0, cst_1023);
-  emm0 = _mm_shuffle_epi32(emm0, _MM_SHUFFLE(3, 1, 2, 0));
-  __m128i lo = _mm_slli_epi64(emm0, 52);
-  __m128i hi = _mm_slli_epi64(_mm_srli_epi64(emm0, 32), 52);
-  __m256i e = _mm256_insertf128_si256(_mm256_setzero_si256(), lo, 0);
-  e = _mm256_insertf128_si256(e, hi, 1);
-  return pmul(a,_mm256_castsi256_pd(e));
+  // Clamp exponent to [-2099, 2099]
+  const Packet4d max_exponent = pset1<Packet4d>(2099.0);
+  const Packet4i e = _mm256_cvtpd_epi32(pmin(pmax(exponent, pnegate(max_exponent)), max_exponent));
+  
+  // Split 2^e into four factors and multiply.
+  const Packet4i bias = pset1<Packet4i>(1023);
+  Packet4i b = parithmetic_shift_right<2>(e);  // floor(e/4)
+  
+  // 2^b
+  Packet4i hi = vec4i_swizzle1(padd(b, bias), 0, 2, 1, 3);
+  Packet4i lo = _mm_slli_epi64(hi, 52);
+  hi = _mm_slli_epi64(_mm_srli_epi64(hi, 32), 52);
+  Packet4d c = _mm256_castsi256_pd(_mm256_insertf128_si256(_mm256_castsi128_si256(lo), hi, 1));
+  Packet4d out = pmul(pmul(pmul(a, c), c), c);  // a * 2^(3b)
+  
+  // 2^(e - 3b)
+  b = psub(psub(psub(e, b), b), b);  // e - 3b
+  hi = vec4i_swizzle1(padd(b, bias), 0, 2, 1, 3);
+  lo = _mm_slli_epi64(hi, 52);
+  hi = _mm_slli_epi64(_mm_srli_epi64(hi, 32), 52);
+  c = _mm256_castsi256_pd(_mm256_insertf128_si256(_mm256_castsi128_si256(lo), hi, 1));
+  out = pmul(out, c); // a * 2^e
+  return out;
 }
 
 template<> EIGEN_STRONG_INLINE float predux<Packet8f>(const Packet8f& a)
