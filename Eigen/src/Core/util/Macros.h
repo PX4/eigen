@@ -1103,7 +1103,7 @@ namespace Eigen {
  * This is necessary, because the implicit definition is deprecated if the copy-assignment is overridden.
  */
 #if EIGEN_HAS_CXX11
-#define EIGEN_DEFAULT_COPY_CONSTRUCTOR(CLASS) EIGEN_DEVICE_FUNC CLASS(const CLASS&) = default;
+#define EIGEN_DEFAULT_COPY_CONSTRUCTOR(CLASS) CLASS(const CLASS&) = default;
 #else
 #define EIGEN_DEFAULT_COPY_CONSTRUCTOR(CLASS)
 #endif
@@ -1128,12 +1128,12 @@ namespace Eigen {
  */
 #if EIGEN_HAS_CXX11
 #define EIGEN_DEFAULT_EMPTY_CONSTRUCTOR_AND_DESTRUCTOR(Derived)  \
-    EIGEN_DEVICE_FUNC Derived() = default; \
-    EIGEN_DEVICE_FUNC ~Derived() = default;
+    Derived() = default; \
+    ~Derived() = default;
 #else
 #define EIGEN_DEFAULT_EMPTY_CONSTRUCTOR_AND_DESTRUCTOR(Derived)  \
-    EIGEN_DEVICE_FUNC Derived() {}; \
-    /* EIGEN_DEVICE_FUNC ~Derived() {}; */
+    Derived() {}; \
+    /* ~Derived() {}; */
 #endif
 
 
