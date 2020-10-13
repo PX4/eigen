@@ -140,29 +140,18 @@ struct scalar_min_op : binary_op_base<LhsScalar,RhsScalar>
   typedef typename ScalarBinaryOpTraits<LhsScalar,RhsScalar,scalar_min_op>::ReturnType result_type;
   EIGEN_EMPTY_STRUCT_CTOR(scalar_min_op)
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE result_type operator() (const LhsScalar& a, const RhsScalar& b) const {
-    if (NaNPropagation == PropagateFast) {
-      return numext::mini(a, b); 
-    } else if (NaNPropagation == PropagateNumbers) {
-      return internal::pfmin(a,b);
-    } else if (NaNPropagation == PropagateNaN) {
-      return internal::pfmin_nan(a,b);
-    }
+    return internal::pmin<NaNPropagation>(a, b);
   }
   template<typename Packet>
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet packetOp(const Packet& a, const Packet& b) const
   {
-    if (NaNPropagation == PropagateFast) {
-      return internal::pmin(a,b);
-    } else if (NaNPropagation == PropagateNumbers) {
-      return internal::pfmin(a,b);
-    } else if (NaNPropagation == PropagateNaN) {
-      return internal::pfmin_nan(a,b);
-    }
+    return internal::pmin<NaNPropagation>(a,b);
   }
-  // TODO(rmlarsen): Handle all NaN propagation semantics reductions.
   template<typename Packet>
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE result_type predux(const Packet& a) const
-  { return internal::predux_min(a); }
+  {
+    return internal::predux_min<NaNPropagation>(a);
+  }
 };
 
 template<typename LhsScalar,typename RhsScalar, int NaNPropagation>
@@ -184,29 +173,18 @@ struct scalar_max_op : binary_op_base<LhsScalar,RhsScalar>
   typedef typename ScalarBinaryOpTraits<LhsScalar,RhsScalar,scalar_max_op>::ReturnType result_type;
   EIGEN_EMPTY_STRUCT_CTOR(scalar_max_op)
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE result_type operator() (const LhsScalar& a, const RhsScalar& b) const {
-    if (NaNPropagation == PropagateFast) {
-      return numext::maxi(a, b);
-    } else if (NaNPropagation == PropagateNumbers) {
-      return internal::pfmax(a,b);
-    } else if (NaNPropagation == PropagateNaN) {
-      return internal::pfmax_nan(a,b);
-    }
+    return internal::pmax<NaNPropagation>(a,b);
   }
   template<typename Packet>
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet packetOp(const Packet& a, const Packet& b) const
   {
-    if (NaNPropagation == PropagateFast) {
-      return internal::pmax(a,b);
-    } else if (NaNPropagation == PropagateNumbers) {
-      return internal::pfmax(a,b);
-    } else if (NaNPropagation == PropagateNaN) {
-      return internal::pfmax_nan(a,b);
-    }
+    return internal::pmax<NaNPropagation>(a,b);
   }
-  // TODO(rmlarsen): Handle all NaN propagation semantics reductions.
   template<typename Packet>
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE result_type predux(const Packet& a) const
-  { return internal::predux_max(a); }
+  {
+    return internal::predux_max<NaNPropagation>(a);
+  }
 };
 
 template<typename LhsScalar,typename RhsScalar, int NaNPropagation>

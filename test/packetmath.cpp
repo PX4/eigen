@@ -801,10 +801,6 @@ void packetmath_notcomplex() {
 
   Array<Scalar, Dynamic, 1>::Map(data1, PacketSize * 4).setRandom();
 
-  ref[0] = data1[0];
-  for (int i = 0; i < PacketSize; ++i) ref[0] = (std::min)(ref[0], data1[i]);
-  VERIFY(internal::isApprox(ref[0], internal::predux_min(internal::pload<Packet>(data1))) && "internal::predux_min");
-
   VERIFY((!PacketTraits::Vectorizable) || PacketTraits::HasMin);
   VERIFY((!PacketTraits::Vectorizable) || PacketTraits::HasMax);
 
@@ -817,13 +813,16 @@ void packetmath_notcomplex() {
   using ::fmin;
   using ::fmax;
 #endif
-  CHECK_CWISE2_IF(PacketTraits::HasMin, fmin, internal::pfmin);
-  CHECK_CWISE2_IF(PacketTraits::HasMax, fmax, internal::pfmax);
+  CHECK_CWISE2_IF(PacketTraits::HasMin, fmin, (internal::pmin<PropagateNumbers>));
+  CHECK_CWISE2_IF(PacketTraits::HasMax, fmax, internal::pmax<PropagateNumbers>);
   CHECK_CWISE1(numext::abs, internal::pabs);
   CHECK_CWISE2_IF(PacketTraits::HasAbsDiff, REF_ABS_DIFF, internal::pabsdiff);
 
   ref[0] = data1[0];
-  for (int i = 0; i < PacketSize; ++i) ref[0] = (std::max)(ref[0], data1[i]);
+  for (int i = 0; i < PacketSize; ++i) ref[0] = internal::pmin(ref[0], data1[i]);
+  VERIFY(internal::isApprox(ref[0], internal::predux_min(internal::pload<Packet>(data1))) && "internal::predux_min");
+  ref[0] = data1[0];
+  for (int i = 0; i < PacketSize; ++i) ref[0] = internal::pmax(ref[0], data1[i]);
   VERIFY(internal::isApprox(ref[0], internal::predux_max(internal::pload<Packet>(data1))) && "internal::predux_max");
 
   for (int i = 0; i < PacketSize; ++i) ref[i] = data1[0] + Scalar(i);
@@ -852,16 +851,47 @@ void packetmath_notcomplex() {
     }
   }
 
-  for (int i = 0; i < PacketSize; ++i) {
-    data1[i] = internal::random<bool>() ? std::numeric_limits<Scalar>::quiet_NaN() : Scalar(0);
-    data1[i + PacketSize] = internal::random<bool>() ? std::numeric_limits<Scalar>::quiet_NaN() : Scalar(0);
+
+  // Test NaN propagation.
+  if (!NumTraits<Scalar>::IsInteger) {
+    // Test reductions with no NaNs.
+    ref[0] = data1[0];
+    for (int i = 0; i < PacketSize; ++i) ref[0] = internal::pmin<PropagateNumbers>(ref[0], data1[i]);
+    VERIFY(internal::isApprox(ref[0], internal::predux_min<PropagateNumbers>(internal::pload<Packet>(data1))) && "internal::predux_min<PropagateNumbers>");
+    ref[0] = data1[0];
+    for (int i = 0; i < PacketSize; ++i) ref[0] = internal::pmin<PropagateNaN>(ref[0], data1[i]);
+    VERIFY(internal::isApprox(ref[0], internal::predux_min<PropagateNaN>(internal::pload<Packet>(data1))) && "internal::predux_min<PropagateNaN>");
+    ref[0] = data1[0];
+    for (int i = 0; i < PacketSize; ++i) ref[0] = internal::pmax<PropagateNumbers>(ref[0], data1[i]);
+    VERIFY(internal::isApprox(ref[0], internal::predux_max<PropagateNumbers>(internal::pload<Packet>(data1))) && "internal::predux_max<PropagateNumbers>");
+    ref[0] = data1[0];
+    for (int i = 0; i < PacketSize; ++i) ref[0] = internal::pmax<PropagateNaN>(ref[0], data1[i]);
+    VERIFY(internal::isApprox(ref[0], internal::predux_max<PropagateNaN>(internal::pload<Packet>(data1))) && "internal::predux_max<PropagateNumbers>");
+    // A single NaN.
+    const size_t index = std::numeric_limits<size_t>::quiet_NaN() % PacketSize;
+    data1[index] = std::numeric_limits<Scalar>::quiet_NaN();
+    VERIFY(PacketSize==1 || !(numext::isnan)(internal::predux_min<PropagateNumbers>(internal::pload<Packet>(data1))));
+    VERIFY((numext::isnan)(internal::predux_min<PropagateNaN>(internal::pload<Packet>(data1))));
+    VERIFY(PacketSize==1 || !(numext::isnan)(internal::predux_max<PropagateNumbers>(internal::pload<Packet>(data1))));
+    VERIFY((numext::isnan)(internal::predux_max<PropagateNaN>(internal::pload<Packet>(data1))));
+    // All NaNs.
+    for (int i = 0; i < 4 * PacketSize; ++i) data1[i] = std::numeric_limits<Scalar>::quiet_NaN();
+    VERIFY((numext::isnan)(internal::predux_min<PropagateNumbers>(internal::pload<Packet>(data1))));
+    VERIFY((numext::isnan)(internal::predux_min<PropagateNaN>(internal::pload<Packet>(data1))));
+    VERIFY((numext::isnan)(internal::predux_max<PropagateNumbers>(internal::pload<Packet>(data1))));
+    VERIFY((numext::isnan)(internal::predux_max<PropagateNaN>(internal::pload<Packet>(data1))));
+
+    // Test NaN propagation for coefficient-wise min and max.
+    for (int i = 0; i < PacketSize; ++i) {
+      data1[i] = internal::random<bool>() ? std::numeric_limits<Scalar>::quiet_NaN() : Scalar(0);
+      data1[i + PacketSize] = internal::random<bool>() ? std::numeric_limits<Scalar>::quiet_NaN() : Scalar(0);
+    }
+    // Note: NaN propagation is implementation defined for pmin/pmax, so we do not test it here.
+    CHECK_CWISE2_IF(PacketTraits::HasMin, fmin, (internal::pmin<PropagateNumbers>));
+    CHECK_CWISE2_IF(PacketTraits::HasMax, fmax, internal::pmax<PropagateNumbers>);
+    CHECK_CWISE2_IF(PacketTraits::HasMin, propagate_nan_min, (internal::pmin<PropagateNaN>));
+    CHECK_CWISE2_IF(PacketTraits::HasMax, propagate_nan_max, internal::pmax<PropagateNaN>);
   }
-  // Test NaN propagation for pfmin and pfmax. It should be equivalent to std::fmin.
-  // Note: NaN propagation is implementation defined for pmin/pmax, so we do not test it here.
-  CHECK_CWISE2_IF(PacketTraits::HasMin, fmin, internal::pfmin);
-  CHECK_CWISE2_IF(PacketTraits::HasMax, fmax, internal::pfmax);
-  CHECK_CWISE2_IF(PacketTraits::HasMin, propagate_nan_min, internal::pfmin_nan);
-  CHECK_CWISE2_IF(PacketTraits::HasMax, propagate_nan_max, internal::pfmax_nan);
 }
 
 template <>

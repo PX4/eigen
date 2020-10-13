@@ -192,17 +192,19 @@ struct MinMaxBottomValue<T, false, false> {
 };
 
 
-template <typename T> struct MaxReducer
+template <typename T, int NaNPropagation=PropagateFast> struct MaxReducer
 {
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void reduce(const T t, T* accum) const {
-    if (t > *accum) { *accum = t; }
+    scalar_max_op<T, T, NaNPropagation> op;
+    *accum = op(t, *accum);
   }
   template <typename Packet>
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void reducePacket(const Packet& p, Packet* accum) const {
-    (*accum) = pmax<Packet>(*accum, p);
+    scalar_max_op<T, T, NaNPropagation> op;
+    (*accum) = op.packetOp(*accum, p);
   }
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE T initialize() const {
-    return MinMaxBottomValue<T, true, Eigen::NumTraits<T>::IsInteger>::bottom_value();
+    return MinMaxBottomValue<T, /*IsMax=*/true, Eigen::NumTraits<T>::IsInteger>::bottom_value();
   }
   template <typename Packet>
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet initializePacket() const {
@@ -217,32 +219,34 @@ template <typename T> struct MaxReducer
   }
   template <typename Packet>
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE T finalizeBoth(const T saccum, const Packet& vaccum) const {
-    return numext::maxi(saccum, predux_max(vaccum));
+    scalar_max_op<T, T, NaNPropagation> op;
+    return op(saccum, op.predux(vaccum));
   }
 };
 
-template <typename T, typename Device>
-struct reducer_traits<MaxReducer<T>, Device> {
+template <typename T, typename Device, int NaNPropagation>
+    struct reducer_traits<MaxReducer<T, NaNPropagation>, Device> {
   enum {
     Cost = NumTraits<T>::AddCost,
     PacketAccess = PacketType<T, Device>::HasMax,
     IsStateful = false,
-    IsExactlyAssociative = true
+    IsExactlyAssociative = (NaNPropagation!=PropagateFast)
   };
 };
 
-
-template <typename T> struct MinReducer
+template <typename T, int NaNPropagation=PropagateFast> struct MinReducer
 {
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void reduce(const T t, T* accum) const {
-    if (t < *accum) { *accum = t; }
+    scalar_min_op<T, T, NaNPropagation> op;
+    *accum = op(t, *accum);
   }
   template <typename Packet>
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void reducePacket(const Packet& p, Packet* accum) const {
-    (*accum) = pmin<Packet>(*accum, p);
+    scalar_min_op<T, T, NaNPropagation> op;
+    (*accum) = op.packetOp(*accum, p);
   }
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE T initialize() const {
-    return MinMaxBottomValue<T, false, Eigen::NumTraits<T>::IsInteger>::bottom_value();
+    return MinMaxBottomValue<T, /*IsMax=*/false, Eigen::NumTraits<T>::IsInteger>::bottom_value();
   }
   template <typename Packet>
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet initializePacket() const {
@@ -257,20 +261,20 @@ template <typename T> struct MinReducer
   }
   template <typename Packet>
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE T finalizeBoth(const T saccum, const Packet& vaccum) const {
-    return numext::mini(saccum, predux_min(vaccum));
+    scalar_min_op<T, T, NaNPropagation> op;
+    return op(saccum, op.predux(vaccum));
   }
 };
 
-template <typename T, typename Device>
-struct reducer_traits<MinReducer<T>, Device> {
+template <typename T, typename Device, int NaNPropagation>
+    struct reducer_traits<MinReducer<T, NaNPropagation>, Device> {
   enum {
     Cost = NumTraits<T>::AddCost,
     PacketAccess = PacketType<T, Device>::HasMin,
     IsStateful = false,
-    IsExactlyAssociative = true
+    IsExactlyAssociative = (NaNPropagation!=PropagateFast)
   };
 };
-
 
 template <typename T> struct ProdReducer
 {
@@ -282,7 +286,6 @@ template <typename T> struct ProdReducer
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void reducePacket(const Packet& p, Packet* accum) const {
     (*accum) = pmul<Packet>(*accum, p);
   }
-
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE T initialize() const {
     internal::scalar_cast_op<int, T> conv;
     return conv(1);
