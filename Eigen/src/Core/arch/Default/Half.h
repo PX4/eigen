@@ -53,6 +53,7 @@
 // GPU support. Hence the need to disable EIGEN_CONSTEXPR when building
 // Eigen with GPU support
   #pragma push_macro("EIGEN_CONSTEXPR")
+  #undef EIGEN_CONSTEXPR
   #define EIGEN_CONSTEXPR
 #endif
 
