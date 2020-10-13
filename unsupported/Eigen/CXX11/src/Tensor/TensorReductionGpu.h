@@ -80,8 +80,8 @@ __device__ inline double atomicExchCustom(double* address, double val) {
 }
 
 #ifdef EIGEN_HAS_GPU_FP16
-template <template <typename T> class R>
-__device__ inline void atomicReduce(half2* output, half2 accum, R<half>& reducer) {
+template <typename R>
+__device__ inline void atomicReduce(half2* output, half2 accum, R& reducer) {
   unsigned int oldval = *reinterpret_cast<unsigned int*>(output);
   unsigned int newval = oldval;
   reducer.reducePacket(accum, reinterpret_cast<half2*>(&newval));
@@ -99,9 +99,8 @@ __device__ inline void atomicReduce(half2* output, half2 accum, R<half>& reducer
   }
 }
 // reduction should be associative since reduction is not atomic in wide vector but atomic in half2 operations
-template <template <typename T> class R>
-__device__ inline void atomicReduce(Packet4h2* output, Packet4h2 accum,
-                                    R<half>& reducer) {
+template <typename R>
+__device__ inline void atomicReduce(Packet4h2* output, Packet4h2 accum, R& reducer) {
   half2* houtput=reinterpret_cast<half2*>(output);
   half2* haccum=reinterpret_cast<half2*>(&accum);
   for(int i=0;i<4;++i){
