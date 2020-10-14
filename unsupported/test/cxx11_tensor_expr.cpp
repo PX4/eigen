@@ -302,7 +302,6 @@ static void test_select()
 template <typename Scalar>
 void test_minmax_nan_propagation_templ() {
   for (int size = 1; size < 17; ++size) {
-    std::cout << "size = " << size << std::endl;
     const Scalar kNaN = std::numeric_limits<Scalar>::quiet_NaN();
     const Scalar kInf = std::numeric_limits<Scalar>::infinity();
     const Scalar kZero(0);
