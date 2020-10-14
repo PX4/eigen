@@ -344,6 +344,41 @@ EIGEN_STRONG_INLINE Packet8d pmax<Packet8d>(const Packet8d& a,
   return _mm512_max_pd(b, a);
 }
 
+// Add specializations for min/max with prescribed NaN progation.
+template<>
+EIGEN_STRONG_INLINE Packet16f pmin<PropagateNumbers, Packet16f>(const Packet16f& a, const Packet16f& b) {
+  return pminmax_propagate_numbers(a, b, pmin<Packet16f>);
+}
+template<>
+EIGEN_STRONG_INLINE Packet8d pmin<PropagateNumbers, Packet8d>(const Packet8d& a, const Packet8d& b) {
+  return pminmax_propagate_numbers(a, b, pmin<Packet8d>);
+}
+template<>
+EIGEN_STRONG_INLINE Packet16f pmax<PropagateNumbers, Packet16f>(const Packet16f& a, const Packet16f& b) {
+  return pminmax_propagate_numbers(a, b, pmax<Packet16f>);
+}
+template<>
+EIGEN_STRONG_INLINE Packet8d pmax<PropagateNumbers, Packet8d>(const Packet8d& a, const Packet8d& b) {
+  return pminmax_propagate_numbers(a, b, pmax<Packet8d>);
+}
+template<>
+EIGEN_STRONG_INLINE Packet16f pmin<PropagateNaN, Packet16f>(const Packet16f& a, const Packet16f& b) {
+  return pminmax_propagate_nan(a, b, pmin<Packet16f>);
+}
+template<>
+EIGEN_STRONG_INLINE Packet8d pmin<PropagateNaN, Packet8d>(const Packet8d& a, const Packet8d& b) {
+  return pminmax_propagate_nan(a, b, pmin<Packet8d>);
+}
+template<>
+EIGEN_STRONG_INLINE Packet16f pmax<PropagateNaN, Packet16f>(const Packet16f& a, const Packet16f& b) {
+  return pminmax_propagate_nan(a, b, pmax<Packet16f>);
+}
+template<>
+EIGEN_STRONG_INLINE Packet8d pmax<PropagateNaN, Packet8d>(const Packet8d& a, const Packet8d& b) {
+  return pminmax_propagate_nan(a, b, pmax<Packet8d>);
+}
+
+
 #ifdef EIGEN_VECTORIZE_AVX512DQ
 template<int I_> EIGEN_STRONG_INLINE Packet8f extract256(Packet16f x) { return _mm512_extractf32x8_ps(x,I_); }
 template<int I_> EIGEN_STRONG_INLINE Packet2d extract128(Packet8d x) { return _mm512_extractf64x2_pd(x,I_); }
