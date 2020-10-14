@@ -74,6 +74,20 @@ This also means that, unless specified, if the function \c std::foo is available
   <td>All engines (fc,fd)</td>
 </tr>
 <tr>
+  <td class="code">
+  \anchor cwisetable_arg
+  a.\link ArrayBase::arg arg\endlink(); \n
+  \link Eigen::arg arg\endlink(a); \n
+  m.\link MatrixBase::cwiseArg cwiseArg\endlink();
+  </td>
+  <td>phase angle of complex number</td>
+  <td class="code">
+  using <a href="http://en.cppreference.com/w/cpp/numeric/complex/arg">std::arg</a>; \n
+  arg(a[i]);
+  </td>
+  <td>All engines (fc,fd)</td>
+</tr>
+<tr>
 <th colspan="4">Exponential functions</th>
 </tr>
 <tr>
