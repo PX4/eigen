@@ -689,7 +689,7 @@ template<typename Packet>
 EIGEN_DEVICE_FUNC inline typename unpacket_traits<Packet>::type
 predux(const Packet& a)
 {
-  return predux_helper(a, padd<typename unpacket_traits<Packet>::type>);
+  return a;
 }
 
 /** \internal \returns the product of the elements of \a a */
