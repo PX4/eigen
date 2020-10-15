@@ -98,6 +98,7 @@ template<> struct packet_traits<double> : default_packet_traits
 
     HasCmp  = 1,
     HasDiv  = 1,
+    HasLog  = 1,
     HasExp  = 1,
     HasSqrt = 1,
     HasRsqrt = 1,
@@ -215,6 +216,7 @@ template<> EIGEN_STRONG_INLINE Packet4d pset1<Packet4d>(const double& from) { re
 template<> EIGEN_STRONG_INLINE Packet8i pset1<Packet8i>(const int&    from) { return _mm256_set1_epi32(from); }
 
 template<> EIGEN_STRONG_INLINE Packet8f pset1frombits<Packet8f>(unsigned int from) { return _mm256_castsi256_ps(pset1<Packet8i>(from)); }
+template<> EIGEN_STRONG_INLINE Packet4d pset1frombits<Packet4d>(uint64_t from) { return _mm256_castsi256_pd(_mm256_set1_epi64x(from)); }
 
 template<> EIGEN_STRONG_INLINE Packet8f pzero(const Packet8f& /*a*/) { return _mm256_setzero_ps(); }
 template<> EIGEN_STRONG_INLINE Packet4d pzero(const Packet4d& /*a*/) { return _mm256_setzero_pd(); }
@@ -684,6 +686,31 @@ template<> EIGEN_STRONG_INLINE Packet4d pabs(const Packet4d& a)
 
 template<> EIGEN_STRONG_INLINE Packet8f pfrexp<Packet8f>(const Packet8f& a, Packet8f& exponent) {
   return pfrexp_float(a,exponent);
+}
+
+template<> EIGEN_STRONG_INLINE Packet4d pfrexp<Packet4d>(const Packet4d& a, Packet4d& exponent) {
+  const Packet4d cst_1022d = pset1<Packet4d>(1022.0);
+  const Packet4d cst_half = pset1<Packet4d>(0.5);
+  const Packet4d cst_inv_mant_mask  = pset1frombits<Packet4d>(static_cast<uint64_t>(~0x7ff0000000000000ull));
+  __m256i a_expo = _mm256_castpd_si256(a);
+#ifdef EIGEN_VECTORIZE_AVX2
+  a_expo = _mm256_srli_epi64(a_expo, 52);
+#else
+  __m128i lo = _mm_srli_epi64(_mm256_extractf128_si256(a_expo, 0), 52);
+  __m128i hi = _mm_srli_epi64(_mm256_extractf128_si256(a_expo, 1), 52);
+  a_expo = _mm256_insertf128_si256(_mm256_castsi128_si256(lo), (hi), 1);
+#endif
+#ifdef EIGEN_VECTORIZE_AVX512DQ
+  // AVX512DQ finally provides an instruction for this
+  exponent =  _mm256_cvtepi64_pd(a_expo);
+#else   
+  exponent =  _mm256_set_pd(static_cast<double>(_mm256_extract_epi64(a_expo, 3)), 
+                            static_cast<double>(_mm256_extract_epi64(a_expo, 2)),
+                            static_cast<double>(_mm256_extract_epi64(a_expo, 1)), 
+                            static_cast<double>(_mm256_extract_epi64(a_expo, 0)));
+#endif  
+  exponent = psub(exponent, cst_1022d);
+  return por(pand(a, cst_inv_mant_mask), cst_half);
 }
 
 template<> EIGEN_STRONG_INLINE Packet8f pldexp<Packet8f>(const Packet8f& a, const Packet8f& exponent) {

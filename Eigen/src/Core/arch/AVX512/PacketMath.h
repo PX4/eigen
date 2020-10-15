@@ -118,6 +118,9 @@ template<> struct packet_traits<double> : default_packet_traits
     size = 8,
     HasHalfPacket = 1,
 #if EIGEN_GNUC_AT_LEAST(5, 3) || (!EIGEN_COMP_GNUC_STRICT)
+#ifdef EIGEN_VECTORIZE_AVX512DQ
+    HasLog  = 1,
+#endif
     HasSqrt = EIGEN_FAST_MATH,
     HasRsqrt = EIGEN_FAST_MATH,
 #endif
@@ -182,6 +185,11 @@ EIGEN_STRONG_INLINE Packet16i pset1<Packet16i>(const int& from) {
 template <>
 EIGEN_STRONG_INLINE Packet16f pset1frombits<Packet16f>(unsigned int from) {
   return _mm512_castsi512_ps(_mm512_set1_epi32(from));
+}
+
+template <>
+EIGEN_STRONG_INLINE Packet8d pset1frombits<Packet8d>(uint64_t from) {
+  return _mm512_castsi512_pd(_mm512_set1_epi64(from));
 }
 
 template <>
@@ -821,6 +829,20 @@ EIGEN_STRONG_INLINE Packet8d pabs(const Packet8d& a) {
                                    _mm512_set1_epi64(0x7fffffffffffffff)));
 }
 
+template<>
+EIGEN_STRONG_INLINE Packet16f pfrexp<Packet16f>(const Packet16f& a, Packet16f& exponent){
+  return pfrexp_float(a, exponent);
+}
+
+template<>
+EIGEN_STRONG_INLINE Packet8d pfrexp<Packet8d>(const Packet8d& a, Packet8d& exponent){
+  const Packet8d cst_1022d = pset1<Packet8d>(1022.0);
+  const Packet8d cst_half = pset1<Packet8d>(0.5);
+  const Packet8d cst_inv_mant_mask  = pset1frombits<Packet8d>(static_cast<uint64_t>(~0x7ff0000000000000ull));
+  exponent = psub(_mm512_cvtepi64_pd(_mm512_srli_epi64(_mm512_castpd_si512(a), 52)), cst_1022d);
+  return por(pand(a, cst_inv_mant_mask), cst_half);  
+}
+
 #ifdef EIGEN_VECTORIZE_AVX512DQ
 // AVX512F does not define _mm512_extractf32x8_ps to extract _m256 from _m512
 #define EIGEN_EXTRACT_8f_FROM_16f(INPUT, OUTPUT)                           \
@@ -1263,7 +1285,6 @@ template<> EIGEN_STRONG_INLINE Packet16i preinterpret<Packet16i,Packet16f>(const
 template<> EIGEN_STRONG_INLINE Packet16f preinterpret<Packet16f,Packet16i>(const Packet16i& a) {
   return _mm512_castsi512_ps(a);
 }
-
 
 // Packet math for Eigen::half
 template<> EIGEN_STRONG_INLINE Packet16h pset1<Packet16h>(const Eigen::half& from) {

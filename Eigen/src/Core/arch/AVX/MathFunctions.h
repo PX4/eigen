@@ -36,6 +36,12 @@ plog<Packet8f>(const Packet8f& _x) {
   return plog_float(_x);
 }
 
+template <>
+EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED Packet4d
+plog<Packet4d>(const Packet4d& _x) {
+  return plog_double(_x);
+}
+
 template<> EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED
 Packet8f plog1p<Packet8f>(const Packet8f& _x) {
   return generic_plog1p(_x);
