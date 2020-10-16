@@ -691,7 +691,7 @@ template<> EIGEN_DEVICE_FUNC inline Packet16b pgather<bool, Packet16b>(const boo
                       from[11*stride], from[10*stride], from[9*stride], from[8*stride],
                       from[7*stride], from[6*stride], from[5*stride], from[4*stride],
                       from[3*stride], from[2*stride], from[1*stride], from[0*stride]);
- }
+}
 
 template<> EIGEN_DEVICE_FUNC inline void pscatter<float, Packet4f>(float* to, const Packet4f& from, Index stride)
 {
@@ -761,8 +761,8 @@ template<> EIGEN_STRONG_INLINE int    pfirst<Packet4i>(const Packet4i& a) { int 
 template<> EIGEN_STRONG_INLINE float  pfirst<Packet4f>(const Packet4f& a) { return _mm_cvtss_f32(a); }
 template<> EIGEN_STRONG_INLINE double pfirst<Packet2d>(const Packet2d& a) { return _mm_cvtsd_f64(a); }
 template<> EIGEN_STRONG_INLINE int    pfirst<Packet4i>(const Packet4i& a) { return _mm_cvtsi128_si32(a); }
-template<> EIGEN_STRONG_INLINE bool   pfirst<Packet16b>(const Packet16b& a) { int x = _mm_cvtsi128_si32(a); return static_cast<bool>(x & 1); }
 #endif
+template<> EIGEN_STRONG_INLINE bool   pfirst<Packet16b>(const Packet16b& a) { int x = _mm_cvtsi128_si32(a); return static_cast<bool>(x & 1); }
 
 template<> EIGEN_STRONG_INLINE Packet4f preverse(const Packet4f& a) { return _mm_shuffle_ps(a,a,0x1B); }
 template<> EIGEN_STRONG_INLINE Packet2d preverse(const Packet2d& a) { return _mm_shuffle_pd(a,a,0x1); }
