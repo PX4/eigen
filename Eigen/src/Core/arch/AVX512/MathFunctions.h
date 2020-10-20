@@ -85,17 +85,17 @@ pexp<Packet16f>(const Packet16f& _x) {
   _EIGEN_DECLARE_CONST_Packet16f(nln2, -0.6931471805599453f);
   Packet16f r = _mm512_fmadd_ps(m, p16f_nln2, x);
   Packet16f r2 = pmul(r, r);
+  Packet16f r3 = pmul(r2, r);
 
-  // TODO(gonnet): Split into odd/even polynomials and try to exploit
-  //               instruction-level parallelism.
-  Packet16f y = p16f_cephes_exp_p0;
-  y = pmadd(y, r, p16f_cephes_exp_p1);
-  y = pmadd(y, r, p16f_cephes_exp_p2);
-  y = pmadd(y, r, p16f_cephes_exp_p3);
-  y = pmadd(y, r, p16f_cephes_exp_p4);
-  y = pmadd(y, r, p16f_cephes_exp_p5);
-  y = pmadd(y, r2, r);
-  y = padd(y, p16f_1);
+  // Evaluate the polynomial approximant,improved by instruction-level parallelism.
+  Packet16f y, y1, y2;
+  y  = pmadd(p16f_cephes_exp_p0, r, p16f_cephes_exp_p1);
+  y1 = pmadd(p16f_cephes_exp_p3, r, p16f_cephes_exp_p4);
+  y2 = padd(r, p16f_1);
+  y  = pmadd(y, r, p16f_cephes_exp_p2);
+  y1 = pmadd(y1, r, p16f_cephes_exp_p5);
+  y  = pmadd(y, r3, y1);
+  y  = pmadd(y, r2, y2);
 
   // Build emm0 = 2^m.
   Packet16i emm0 = _mm512_cvttps_epi32(padd(m, p16f_127));

@@ -345,18 +345,18 @@ Packet pexp_float(const Packet _x)
 #endif
 
   Packet r2 = pmul(r, r);
+  Packet r3 = pmul(r2, r);
 
-  // TODO(gonnet): Split into odd/even polynomials and try to exploit
-  //               instruction-level parallelism.
-  Packet y = cst_cephes_exp_p0;
-  y = pmadd(y, r, cst_cephes_exp_p1);
-  y = pmadd(y, r, cst_cephes_exp_p2);
-  y = pmadd(y, r, cst_cephes_exp_p3);
-  y = pmadd(y, r, cst_cephes_exp_p4);
-  y = pmadd(y, r, cst_cephes_exp_p5);
-  y = pmadd(y, r2, r);
-  y = padd(y, cst_1);
-
+  // Evaluate the polynomial approximant,improved by instruction-level parallelism.
+  Packet y, y1, y2;
+  y  = pmadd(cst_cephes_exp_p0, r, cst_cephes_exp_p1);
+  y1 = pmadd(cst_cephes_exp_p3, r, cst_cephes_exp_p4);
+  y2 = padd(r, cst_1);
+  y  = pmadd(y, r, cst_cephes_exp_p2);
+  y1 = pmadd(y1, r, cst_cephes_exp_p5);
+  y  = pmadd(y, r3, y1);
+  y  = pmadd(y, r2, y2);
+  
   // Return 2^m * exp(r).
   return pmax(pldexp(y,m), _x);
 }
