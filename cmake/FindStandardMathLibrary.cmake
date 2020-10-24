@@ -24,10 +24,8 @@ include(CheckCXXSourceCompiles)
 set(find_standard_math_library_test_program
 "
 #include<cmath>
-int main(int argc, char **argv) {
-  (void)std::sin(argc));
-  (void)std::log(argc));
-  return 0;
+int main(int argc, char **){
+  return int(std::sin(double(argc)) + std::log(double(argc)));
 }")
 
 # first try compiling/linking the test program without any linker flags
