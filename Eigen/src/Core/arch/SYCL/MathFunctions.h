@@ -281,6 +281,19 @@ SYCL_PMAX(cl::sycl::cl_float4, cl::sycl::fmax(a, b))
 SYCL_PMAX(cl::sycl::cl_double2, cl::sycl::fmax(a, b))
 #undef SYCL_PMAX
 
+#define SYCL_PLDEXP(packet_type)                                             \
+  template <>                                                                \
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE packet_type pldexp(                  \
+      const packet_type& a, const packet_type& exponent) {                   \
+    return cl::sycl::ldexp(                                                  \
+        a, exponent.template convert<cl::sycl::cl_int,                       \
+                                     cl::sycl::rounding_mode::automatic>()); \
+  }
+
+SYCL_PLDEXP(cl::sycl::cl_float4)
+SYCL_PLDEXP(cl::sycl::cl_double2)
+#undef SYCL_PLDEXP
+
 #endif
 
 }  // end namespace internal
