@@ -100,7 +100,6 @@ struct SecondStepFullReducer {
     CoeffReturnType accumulator = *aInPtr;
 
     scratchptr[localid] = op.finalize(accumulator);
-#pragma unroll 8
     for (Index offset = itemID.get_local_range(0) / 2; offset > 0; offset /= 2) {
       itemID.barrier(cl::sycl::access::fence_space::local_space);
       if (localid < offset) {
@@ -154,7 +153,6 @@ class FullReductionKernelFunctor {
     Index start = Evaluator::PacketSize * globalid;
     // vectorizable parts
     PacketReturnType packetAccumulator = op.template initializePacket<PacketReturnType>();
-#pragma unroll(8 / Evaluator::PacketSize)
     for (Index i = start; i < VectorizedRange; i += step) {
       op.template reducePacket<PacketReturnType>(evaluator.impl().template packet<Unaligned>(i), &packetAccumulator);
     }
@@ -293,7 +291,6 @@ struct PartialReductionKernel {
     const Index per_thread_local_stride = PannelParameters::LocalThreadSizeR * reduce_elements_num_groups;
     const Index per_thread_global_stride =
         rt == reduction_dim::outer_most ? num_coeffs_to_preserve * per_thread_local_stride : per_thread_local_stride;
-#pragma unroll 8
     for (Index i = globalRId; i < num_coeffs_to_reduce; i += per_thread_local_stride) {
       op.reduce(evaluator.impl().coeff(global_offset), &accumulator);
       localOffset += per_thread_local_stride;
@@ -391,7 +388,6 @@ struct SecondStepPartialReduction {
 
     OutScalar accumulator = op.initialize();
 // num_coeffs_to_reduce is not bigger that 256
-#pragma unroll 8
     for (Index i = 0; i < num_coeffs_to_reduce; i++) {
       op.reduce(*in_ptr, &accumulator);
       in_ptr += num_coeffs_to_preserve;
