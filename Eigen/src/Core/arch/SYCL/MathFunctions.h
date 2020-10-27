@@ -70,6 +70,7 @@ SYCL_PLOG10(cl::sycl::cl_double2)
   }
 
 SYCL_PEXP(cl::sycl::cl_float4)
+SYCL_PEXP(cl::sycl::cl_float)
 SYCL_PEXP(cl::sycl::cl_double2)
 #undef SYCL_PEXP
 
