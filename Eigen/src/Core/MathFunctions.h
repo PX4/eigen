@@ -1846,6 +1846,11 @@ template<> struct random_impl<bool>
   {
     return random<int>(0,1)==0 ? false : true;
   }
+
+  static inline bool run(const bool& a, const bool& b)
+  {
+    return random<int>(a, b)==0 ? false : true;
+  }
 };
 
 template<> struct scalar_fuzzy_impl<bool>

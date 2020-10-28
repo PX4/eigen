@@ -414,6 +414,13 @@
   #endif
 #endif
 
+// Following the Arm ACLE arm_neon.h should also include arm_fp16.h but not all
+// compilers seem to follow this. We therefore include it explicitly.
+// See also: https://bugs.llvm.org/show_bug.cgi?id=47955
+#if defined(EIGEN_HAS_ARM64_FP16_SCALAR_ARITHMETIC)
+  #include <arm_fp16.h>
+#endif
+
 #if defined(__F16C__) && (!defined(EIGEN_GPUCC) && (!defined(EIGEN_COMP_CLANG) || EIGEN_COMP_CLANG>=380))
   // We can use the optimized fp16 to float and float to fp16 conversion routines
   #define EIGEN_HAS_FP16_C

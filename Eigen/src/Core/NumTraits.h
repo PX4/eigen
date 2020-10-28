@@ -77,6 +77,30 @@ struct default_digits_impl<T,false,true> // Integer
 
 } // end namespace internal
 
+namespace numext {
+/** \internal bit-wise cast without changing the underlying bit representation. */
+
+// TODO: Replace by std::bit_cast (available in C++20)
+template <typename Tgt, typename Src>
+EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC Tgt bit_cast(const Src& src) {
+#if EIGEN_HAS_TYPE_TRAITS
+  // The behaviour of memcpy is not specified for non-trivially copyable types
+  EIGEN_STATIC_ASSERT(std::is_trivially_copyable<Src>::value, THIS_TYPE_IS_NOT_SUPPORTED);
+  EIGEN_STATIC_ASSERT(std::is_trivially_copyable<Tgt>::value && std::is_default_constructible<Tgt>::value,
+                      THIS_TYPE_IS_NOT_SUPPORTED);
+#endif
+
+  EIGEN_STATIC_ASSERT(sizeof(Src) == sizeof(Tgt), THIS_TYPE_IS_NOT_SUPPORTED);
+  Tgt tgt;
+  EIGEN_USING_STD(memcpy)
+  memcpy(&tgt, &src, sizeof(Tgt));
+  return tgt;
+}
+
+/** \internal extract the bits of the float \a x */
+EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC numext::uint32_t as_uint(float x) { return bit_cast<numext::uint32_t>(x); }
+}  // namespace numext
+
 /** \class NumTraits
   * \ingroup Core_Module
   *

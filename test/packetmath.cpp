@@ -246,6 +246,7 @@ void packetmath_boolean_mask_ops() {
     data1[i] = Scalar(i);
     data1[i + PacketSize] = internal::random<bool>() ? data1[i] : Scalar(0);
   }
+
   CHECK_CWISE2_IF(true, internal::pcmp_eq, internal::pcmp_eq);
 
   //Test (-0) == (0) for signed operations

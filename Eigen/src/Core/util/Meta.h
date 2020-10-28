@@ -684,15 +684,6 @@ template<> EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC
 bool not_equal_strict(const double& x,const double& y) { return std::not_equal_to<double>()(x,y); }
 #endif
 
-/** \internal extract the bits of the float \a x */
-EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC unsigned int as_uint(float x)
-{
-  unsigned int ret;
-  EIGEN_USING_STD(memcpy)
-  memcpy(&ret, &x, sizeof(float));
-  return ret;
-}
-
 } // end namespace numext
 
 } // end namespace Eigen

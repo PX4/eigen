@@ -22,6 +22,9 @@ void test_conversion()
 {
   using Eigen::half_impl::__half_raw;
 
+  // We don't use a uint16_t raw member x if the platform has native Arm __fp16
+  // support
+#if !defined(EIGEN_HAS_ARM64_FP16_SCALAR_ARITHMETIC)
   // Conversion from float.
   VERIFY_IS_EQUAL(half(1.0f).x, 0x3c00);
   VERIFY_IS_EQUAL(half(0.5f).x, 0x3800);
@@ -53,6 +56,41 @@ void test_conversion()
   // Conversion from bool.
   VERIFY_IS_EQUAL(half(false).x, 0x0000);
   VERIFY_IS_EQUAL(half(true).x, 0x3c00);
+#endif
+
+#if defined(EIGEN_HAS_ARM64_FP16_SCALAR_ARITHMETIC)
+   // Conversion from float.
+  VERIFY_IS_EQUAL(half(1.0f).x, __fp16(1.0f));
+  VERIFY_IS_EQUAL(half(0.5f).x, __fp16(0.5f));
+  VERIFY_IS_EQUAL(half(0.33333f).x, __fp16(0.33333f));
+  VERIFY_IS_EQUAL(half(0.0f).x, __fp16(0.0f));
+  VERIFY_IS_EQUAL(half(-0.0f).x, __fp16(-0.0f));
+  VERIFY_IS_EQUAL(half(65504.0f).x, __fp16(65504.0f));
+  VERIFY_IS_EQUAL(half(65536.0f).x, __fp16(65536.0f));  // Becomes infinity.
+
+  // Denormals.
+  VERIFY_IS_EQUAL(half(-5.96046e-08f).x, __fp16(-5.96046e-08f));
+  VERIFY_IS_EQUAL(half(5.96046e-08f).x, __fp16(5.96046e-08f));
+  VERIFY_IS_EQUAL(half(1.19209e-07f).x, __fp16(1.19209e-07f));
+
+  // Verify round-to-nearest-even behavior.
+  float val1 = float(half(__half_raw(0x3c00)));
+  float val2 = float(half(__half_raw(0x3c01)));
+  float val3 = float(half(__half_raw(0x3c02)));
+  VERIFY_IS_EQUAL(half(0.5f * (val1 + val2)).x, __fp16(0.5f * (val1 + val2)));
+  VERIFY_IS_EQUAL(half(0.5f * (val2 + val3)).x, __fp16(0.5f * (val2 + val3)));
+
+  // Conversion from int.
+  VERIFY_IS_EQUAL(half(-1).x, __fp16(-1));
+  VERIFY_IS_EQUAL(half(0).x, __fp16(0));
+  VERIFY_IS_EQUAL(half(1).x, __fp16(1));
+  VERIFY_IS_EQUAL(half(2).x, __fp16(2));
+  VERIFY_IS_EQUAL(half(3).x, __fp16(3));
+
+  // Conversion from bool.
+  VERIFY_IS_EQUAL(half(false).x, __fp16(false));
+  VERIFY_IS_EQUAL(half(true).x, __fp16(true));
+#endif
 
   // Conversion to float.
   VERIFY_IS_EQUAL(float(half(__half_raw(0x0000))), 0.0f);
@@ -92,6 +130,15 @@ void test_conversion()
   VERIFY((numext::isinf)(half(1.0 / 0.0)));
   VERIFY((numext::isinf)(half(-1.0 / 0.0)));
 #endif
+
+  // Conversion to bool
+  VERIFY(!static_cast<bool>(half(0.0)));
+  VERIFY(!static_cast<bool>(half(-0.0)));
+  VERIFY(static_cast<bool>(half(__half_raw(0x7bff))));
+  VERIFY(static_cast<bool>(half(-0.33333)));
+  VERIFY(static_cast<bool>(half(1.0)));
+  VERIFY(static_cast<bool>(half(-1.0)));
+  VERIFY(static_cast<bool>(half(-5.96046e-08f)));
 }
 
 void test_numtraits()
@@ -108,8 +155,12 @@ void test_numtraits()
   VERIFY(NumTraits<half>::IsSigned);
 
   VERIFY_IS_EQUAL( std::numeric_limits<half>::infinity().x, half(std::numeric_limits<float>::infinity()).x );
+
+// If we have a native fp16 types this becomes a nan == nan comparision so we have to disable it
+#if !defined(EIGEN_HAS_ARM64_FP16_SCALAR_ARITHMETIC)
   VERIFY_IS_EQUAL( std::numeric_limits<half>::quiet_NaN().x, half(std::numeric_limits<float>::quiet_NaN()).x );
   VERIFY_IS_EQUAL( std::numeric_limits<half>::signaling_NaN().x, half(std::numeric_limits<float>::signaling_NaN()).x );
+#endif
   VERIFY( (std::numeric_limits<half>::min)() > half(0.f) );
   VERIFY( (std::numeric_limits<half>::denorm_min)() > half(0.f) );
   VERIFY( (std::numeric_limits<half>::min)()/half(2) > half(0.f) );
@@ -218,8 +269,8 @@ void test_trigonometric_functions()
   VERIFY_IS_APPROX(numext::cos(half(0.0f)), half(cosf(0.0f)));
   VERIFY_IS_APPROX(cos(half(0.0f)), half(cosf(0.0f)));
   VERIFY_IS_APPROX(numext::cos(half(EIGEN_PI)), half(cosf(EIGEN_PI)));
-  //VERIFY_IS_APPROX(numext::cos(half(EIGEN_PI/2)), half(cosf(EIGEN_PI/2)));
-  //VERIFY_IS_APPROX(numext::cos(half(3*EIGEN_PI/2)), half(cosf(3*EIGEN_PI/2)));
+  // VERIFY_IS_APPROX(numext::cos(half(EIGEN_PI/2)), half(cosf(EIGEN_PI/2)));
+  // VERIFY_IS_APPROX(numext::cos(half(3*EIGEN_PI/2)), half(cosf(3*EIGEN_PI/2)));
   VERIFY_IS_APPROX(numext::cos(half(3.5f)), half(cosf(3.5f)));
 
   VERIFY_IS_APPROX(numext::sin(half(0.0f)), half(sinf(0.0f)));
