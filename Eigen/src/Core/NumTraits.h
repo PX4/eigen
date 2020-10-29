@@ -96,9 +96,6 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC Tgt bit_cast(const Src& src) {
   memcpy(&tgt, &src, sizeof(Tgt));
   return tgt;
 }
-
-/** \internal extract the bits of the float \a x */
-EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC numext::uint32_t as_uint(float x) { return bit_cast<numext::uint32_t>(x); }
 }  // namespace numext
 
 /** \class NumTraits

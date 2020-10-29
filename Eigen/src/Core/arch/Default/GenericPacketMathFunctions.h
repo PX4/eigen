@@ -461,7 +461,7 @@ inline float trig_reduce_huge (float xf, int *quadrant)
     0x10e41000, 0xe4100000
   };
   
-  uint32_t xi = numext::as_uint(xf);
+  uint32_t xi = numext::bit_cast<uint32_t>(xf);
   // Below, -118 = -126 + 8.
   //   -126 is to get the exponent,
   //   +8 is to enable alignment of 2/pi's bits on 8 bits.

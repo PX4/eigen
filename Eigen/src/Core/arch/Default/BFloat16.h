@@ -460,14 +460,14 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC __bfloat16_raw float_to_bfloat16_rtne<true
 #if (defined(EIGEN_HAS_CUDA_BF16) && defined(EIGEN_HAS_HIP_BF16))
     // Nothing to do here
 #else
-    unsigned int input = numext::as_uint(ff);
+    numext::uint32_t input = numext::bit_cast<numext::uint32_t>(ff);
     __bfloat16_raw output;
 
     // Least significant bit of resulting bfloat.
-    unsigned int lsb = (input >> 16) & 1;
-    unsigned int rounding_bias = 0x7fff + lsb;
+    numext::uint32_t lsb = (input >> 16) & 1;
+    numext::uint32_t rounding_bias = 0x7fff + lsb;
     input += rounding_bias;
-    output.value = static_cast<unsigned short>(input >> 16);
+    output.value = static_cast<numext::uint16_t>(input >> 16);
     return output;
 #endif
 }
