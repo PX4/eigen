@@ -792,40 +792,6 @@ template<> struct NumTraits<Eigen::half>
   #pragma pop_macro("EIGEN_CONSTEXPR")
 #endif
 
-// C-like standard mathematical functions and trancendentals.
-EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC Eigen::half fabsh(const Eigen::half& a) {
-#if defined(EIGEN_HAS_ARM64_FP16_SCALAR_ARITHMETIC)
-  return Eigen::half(vabsh_f16(a.x));
-#else
-  Eigen::half result;
-  result.x = a.x & 0x7FFF;
-  return result;
-#endif
-}
-EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC Eigen::half exph(const Eigen::half& a) {
-  return Eigen::half(::expf(float(a)));
-}
-EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC Eigen::half logh(const Eigen::half& a) {
-#if (EIGEN_CUDA_SDK_VER >= 80000 && defined(EIGEN_CUDA_ARCH) && EIGEN_CUDA_ARCH >= 530) || \
-  defined(EIGEN_HIP_DEVICE_COMPILE)
-  return Eigen::half(::hlog(a));
-#else
-  return Eigen::half(::logf(float(a)));
-#endif
-}
-EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC Eigen::half sqrth(const Eigen::half& a) {
-  return Eigen::half(::sqrtf(float(a)));
-}
-EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC Eigen::half powh(const Eigen::half& a, const Eigen::half& b) {
-  return Eigen::half(::powf(float(a), float(b)));
-}
-EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC Eigen::half floorh(const Eigen::half& a) {
-  return Eigen::half(::floorf(float(a)));
-}
-EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC Eigen::half ceilh(const Eigen::half& a) {
-  return Eigen::half(::ceilf(float(a)));
-}
-
 namespace std {
 
 #if __cplusplus > 199711L
@@ -838,7 +804,6 @@ struct hash<Eigen::half> {
 #endif
 
 } // end namespace std
-
 
 // Add the missing shfl_xor intrinsic
 #if (defined(EIGEN_CUDA_ARCH) && EIGEN_CUDA_ARCH >= 300) || \
@@ -855,11 +820,9 @@ __device__ EIGEN_STRONG_INLINE Eigen::half __shfl_xor(Eigen::half var, int laneM
 #endif
 
 // ldg() has an overload for __half_raw, but we also need one for Eigen::half.
-#if (defined(EIGEN_CUDA_ARCH) && EIGEN_CUDA_ARCH >= 350) || \
-  defined(EIGEN_HIPCC)
+#if (defined(EIGEN_CUDA_ARCH) && EIGEN_CUDA_ARCH >= 350) || defined(EIGEN_HIPCC)
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC Eigen::half __ldg(const Eigen::half* ptr) {
-  return Eigen::half_impl::raw_uint16_to_half(
-      __ldg(reinterpret_cast<const numext::uint16_t*>(ptr)));
+  return Eigen::half_impl::raw_uint16_to_half(__ldg(reinterpret_cast<const numext::uint16_t*>(ptr)));
 }
 #endif
 
@@ -867,26 +830,22 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC Eigen::half __ldg(const Eigen::half* ptr) 
 namespace Eigen {
 namespace numext {
 
-template<>
-EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE
-bool (isnan)(const Eigen::half& h) {
+template <>
+EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE bool(isnan)(const Eigen::half& h) {
   return (half_impl::isnan)(h);
 }
 
-template<>
-EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE
-bool (isinf)(const Eigen::half& h) {
+template <>
+EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE bool(isinf)(const Eigen::half& h) {
   return (half_impl::isinf)(h);
 }
 
-template<>
-EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE
-bool (isfinite)(const Eigen::half& h) {
+template <>
+EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE bool(isfinite)(const Eigen::half& h) {
   return (half_impl::isfinite)(h);
 }
-
-} // namespace Eigen
 }  // namespace numext
+}  // namespace Eigen
 #endif
 
 #endif // EIGEN_HALF_H
