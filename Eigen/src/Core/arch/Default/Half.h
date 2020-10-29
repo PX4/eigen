@@ -822,7 +822,7 @@ __device__ EIGEN_STRONG_INLINE Eigen::half __shfl_xor(Eigen::half var, int laneM
 // ldg() has an overload for __half_raw, but we also need one for Eigen::half.
 #if (defined(EIGEN_CUDA_ARCH) && EIGEN_CUDA_ARCH >= 350) || defined(EIGEN_HIPCC)
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC Eigen::half __ldg(const Eigen::half* ptr) {
-  return Eigen::half_impl::raw_uint16_to_half(__ldg(reinterpret_cast<const numext::uint16_t*>(ptr)));
+  return Eigen::half_impl::raw_uint16_to_half(__ldg(reinterpret_cast<const Eigen::numext::uint16_t*>(ptr)));
 }
 #endif
 
