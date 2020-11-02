@@ -20,7 +20,6 @@
 
 #ifndef EIGEN_MATH_FUNCTIONS_SYCL_H
 #define EIGEN_MATH_FUNCTIONS_SYCL_H
-
 namespace Eigen {
 
 namespace internal {
@@ -238,7 +237,7 @@ SYCL_PROUND(cl::sycl::cl_double2)
 #undef SYCL_PROUND
 
 #define SYCL_PRINT(packet_type)                                         \
-  template<>                                                            \
+  template <>                                                           \
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE packet_type print<packet_type>( \
       const packet_type& a) {                                           \
     return cl::sycl::rint(a);                                           \
@@ -295,7 +294,6 @@ SYCL_PLDEXP(cl::sycl::cl_double2)
 #undef SYCL_PLDEXP
 
 #endif
-
 }  // end namespace internal
 
 }  // end namespace Eigen

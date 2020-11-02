@@ -364,6 +364,15 @@ struct pminmax_impl<PropagateNumbers> {
   }
 };
 
+
+#ifndef SYCL_DEVICE_ONLY
+#define EIGEN_BINARY_OP_NAN_PROPAGATION(Type, Func) Func
+#else
+#define EIGEN_BINARY_OP_NAN_PROPAGATION(Type, Func) \
+[](const Type& a, const Type& b) { \
+        return Func(a, b);}
+#endif
+
 /** \internal \returns the min of \a a and \a b  (coeff-wise).
     If \a a or \b b is NaN, the return value is implementation defined. */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
@@ -371,8 +380,10 @@ pmin(const Packet& a, const Packet& b) { return numext::mini(a,b); }
 
 /** \internal \returns the min of \a a and \a b  (coeff-wise).
     NaNPropagation determines the NaN propagation semantics. */
-template<int NaNPropagation, typename Packet> EIGEN_DEVICE_FUNC inline Packet
-pmin(const Packet& a, const Packet& b) { return pminmax_impl<NaNPropagation>::run(a,b, pmin<Packet>); }
+template <int NaNPropagation, typename Packet>
+EIGEN_DEVICE_FUNC inline Packet pmin(const Packet& a, const Packet& b) {
+  return pminmax_impl<NaNPropagation>::run(a, b, EIGEN_BINARY_OP_NAN_PROPAGATION(Packet, (pmin<Packet>)));
+}
 
 /** \internal \returns the max of \a a and \a b  (coeff-wise)
     If \a a or \b b is NaN, the return value is implementation defined. */
@@ -381,8 +392,10 @@ pmax(const Packet& a, const Packet& b) { return numext::maxi(a, b); }
 
 /** \internal \returns the max of \a a and \a b  (coeff-wise).
     NaNPropagation determines the NaN propagation semantics. */
-template<int NaNPropagation, typename Packet> EIGEN_DEVICE_FUNC inline Packet
-pmax(const Packet& a, const Packet& b) { return pminmax_impl<NaNPropagation>::run(a,b, pmax<Packet>); }
+template <int NaNPropagation, typename Packet>
+EIGEN_DEVICE_FUNC inline Packet pmax(const Packet& a, const Packet& b) {
+  return pminmax_impl<NaNPropagation>::run(a, b, EIGEN_BINARY_OP_NAN_PROPAGATION(Packet,(pmax<Packet>)));
+}
 
 /** \internal \returns the absolute value of \a a */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
@@ -705,42 +718,44 @@ predux(const Packet& a)
 }
 
 /** \internal \returns the product of the elements of \a a */
-template<typename Packet>
-EIGEN_DEVICE_FUNC inline typename unpacket_traits<Packet>::type
-predux_mul(const Packet& a)
-{
-  return predux_helper(a, pmul<typename unpacket_traits<Packet>::type>);
+template <typename Packet>
+EIGEN_DEVICE_FUNC inline typename unpacket_traits<Packet>::type predux_mul(
+    const Packet& a) {
+  typedef typename unpacket_traits<Packet>::type Scalar; 
+  return predux_helper(a, EIGEN_BINARY_OP_NAN_PROPAGATION(Scalar, (pmul<Scalar>)));
 }
 
 /** \internal \returns the min of the elements of \a a */
-template<typename Packet>
-EIGEN_DEVICE_FUNC inline typename unpacket_traits<Packet>::type
-predux_min(const Packet& a)
-{
-  return predux_helper(a, pmin<PropagateFast, typename unpacket_traits<Packet>::type>);
+template <typename Packet>
+EIGEN_DEVICE_FUNC inline typename unpacket_traits<Packet>::type predux_min(
+    const Packet &a) {
+  typedef typename unpacket_traits<Packet>::type Scalar; 
+  return predux_helper(a, EIGEN_BINARY_OP_NAN_PROPAGATION(Scalar, (pmin<PropagateFast, Scalar>)));
 }
 
-template<int NaNPropagation, typename Packet>
-EIGEN_DEVICE_FUNC inline typename unpacket_traits<Packet>::type
-predux_min(const Packet& a)
-{
-  return predux_helper(a, pmin<NaNPropagation, typename unpacket_traits<Packet>::type>);
+template <int NaNPropagation, typename Packet>
+EIGEN_DEVICE_FUNC inline typename unpacket_traits<Packet>::type predux_min(
+    const Packet& a) {
+  typedef typename unpacket_traits<Packet>::type Scalar; 
+  return predux_helper(a, EIGEN_BINARY_OP_NAN_PROPAGATION(Scalar, (pmin<NaNPropagation, Scalar>)));
 }
 
-/** \internal \returns the max of the elements of \a a */
-template<typename Packet>
-EIGEN_DEVICE_FUNC inline typename unpacket_traits<Packet>::type
-predux_max(const Packet& a)
-{
-  return predux_helper(a, pmax<PropagateFast, typename unpacket_traits<Packet>::type>);
+/** \internal \returns the min of the elements of \a a */
+template <typename Packet>
+EIGEN_DEVICE_FUNC inline typename unpacket_traits<Packet>::type predux_max(
+    const Packet &a) {
+  typedef typename unpacket_traits<Packet>::type Scalar; 
+  return predux_helper(a, EIGEN_BINARY_OP_NAN_PROPAGATION(Scalar, (pmax<PropagateFast, Scalar>)));
 }
 
-template<int NaNPropagation, typename Packet>
-EIGEN_DEVICE_FUNC inline typename unpacket_traits<Packet>::type
-predux_max(const Packet& a)
-{
-  return predux_helper(a, pmax<NaNPropagation, typename unpacket_traits<Packet>::type>);
+template <int NaNPropagation, typename Packet>
+EIGEN_DEVICE_FUNC inline typename unpacket_traits<Packet>::type predux_max(
+    const Packet& a) {
+  typedef typename unpacket_traits<Packet>::type Scalar; 
+  return predux_helper(a, EIGEN_BINARY_OP_NAN_PROPAGATION(Scalar, (pmax<NaNPropagation, Scalar>)));
 }
+
+#undef EIGEN_BINARY_OP_NAN_PROPAGATION
 
 /** \internal \returns true if all coeffs of \a a means "true"
   * It is supposed to be called on values returned by pcmp_*.

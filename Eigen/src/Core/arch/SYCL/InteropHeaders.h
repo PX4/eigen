@@ -59,6 +59,9 @@ struct sycl_packet_traits : default_packet_traits {
     HasIGammac = 0,
     HasBetaInc = 0,
     HasBlend = has_blend,
+    // This flag is used to indicate whether packet comparison is supported.
+    // pcmp_eq, pcmp_lt and pcmp_le should be defined for it to be true.
+    HasCmp = 1,
     HasMax = 1,
     HasMin = 1,
     HasMul = 1,
