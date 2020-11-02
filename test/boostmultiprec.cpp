@@ -68,6 +68,7 @@
 #undef isfinite
 #undef I
 
+#include <boost/serialization/nvp.hpp>
 #include <boost/multiprecision/cpp_dec_float.hpp>
 #include <boost/multiprecision/number.hpp>
 #include <boost/math/special_functions.hpp>
