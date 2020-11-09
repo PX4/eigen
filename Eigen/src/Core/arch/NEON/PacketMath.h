@@ -3766,7 +3766,7 @@ template<> EIGEN_STRONG_INLINE Packet2d psqrt(const Packet2d& _x){
 }
 
 #else 
-template<> EIGEN_STRONG_INLINE Packet2d psqrt(const Packet2d& _x){ return vsqrt_f64(_x); }
+template<> EIGEN_STRONG_INLINE Packet2d psqrt(const Packet2d& _x){ return vsqrtq_f64(_x); }
 #endif
 
 #endif // EIGEN_ARCH_ARM64
