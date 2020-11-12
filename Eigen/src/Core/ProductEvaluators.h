@@ -377,7 +377,7 @@ struct generic_product_impl<Lhs,Rhs,DenseShape,DenseShape,GemvProduct>
   {
     // Fallback to inner product if both the lhs and rhs is a runtime vector.
     if (lhs.rows() == 1 && rhs.cols() == 1) {
-      dst.coeffRef(0,0) += alpha * (lhs.row(0).transpose().cwiseProduct(rhs.col(0)).sum());
+      dst.coeffRef(0,0) += alpha * lhs.row(0).conjugate().dot(rhs.col(0));
       return;
     } 
     LhsNested actual_lhs(lhs);
