@@ -80,44 +80,28 @@ template<DenseIndex DimId, typename XprType>
 class TensorChippingOp : public TensorBase<TensorChippingOp<DimId, XprType> >
 {
   public:
-  typedef typename Eigen::internal::traits<TensorChippingOp>::Scalar Scalar;
-  typedef typename Eigen::NumTraits<Scalar>::Real RealScalar;
-  typedef typename XprType::CoeffReturnType CoeffReturnType;
-  typedef typename Eigen::internal::nested<TensorChippingOp>::type Nested;
-  typedef typename Eigen::internal::traits<TensorChippingOp>::StorageKind StorageKind;
-  typedef typename Eigen::internal::traits<TensorChippingOp>::Index Index;
+    typedef TensorBase<TensorChippingOp<DimId, XprType> > Base;
+    typedef typename Eigen::internal::traits<TensorChippingOp>::Scalar Scalar;
+    typedef typename Eigen::NumTraits<Scalar>::Real RealScalar;
+    typedef typename XprType::CoeffReturnType CoeffReturnType;
+    typedef typename Eigen::internal::nested<TensorChippingOp>::type Nested;
+    typedef typename Eigen::internal::traits<TensorChippingOp>::StorageKind StorageKind;
+    typedef typename Eigen::internal::traits<TensorChippingOp>::Index Index;
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorChippingOp(const XprType& expr, const Index offset, const Index dim)
-      : m_xpr(expr), m_offset(offset), m_dim(dim) {
-  }
+    EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorChippingOp(const XprType& expr, const Index offset, const Index dim)
+        : m_xpr(expr), m_offset(offset), m_dim(dim) {
+    }
 
-  EIGEN_DEVICE_FUNC
-  const Index offset() const { return m_offset; }
-  EIGEN_DEVICE_FUNC
-  const Index dim() const { return m_dim.actualDim(); }
+    EIGEN_DEVICE_FUNC
+    const Index offset() const { return m_offset; }
+    EIGEN_DEVICE_FUNC
+    const Index dim() const { return m_dim.actualDim(); }
 
-  EIGEN_DEVICE_FUNC
-  const typename internal::remove_all<typename XprType::Nested>::type&
-  expression() const { return m_xpr; }
+    EIGEN_DEVICE_FUNC
+    const typename internal::remove_all<typename XprType::Nested>::type&
+    expression() const { return m_xpr; }
 
-  EIGEN_DEVICE_FUNC
-  EIGEN_STRONG_INLINE TensorChippingOp& operator = (const TensorChippingOp& other)
-  {
-    typedef TensorAssignOp<TensorChippingOp, const TensorChippingOp> Assign;
-    Assign assign(*this, other);
-    internal::TensorExecutor<const Assign, DefaultDevice>::run(assign, DefaultDevice());
-    return *this;
-  }
-
-  template<typename OtherDerived>
-  EIGEN_DEVICE_FUNC
-  EIGEN_STRONG_INLINE TensorChippingOp& operator = (const OtherDerived& other)
-  {
-    typedef TensorAssignOp<TensorChippingOp, const OtherDerived> Assign;
-    Assign assign(*this, other);
-    internal::TensorExecutor<const Assign, DefaultDevice>::run(assign, DefaultDevice());
-    return *this;
-  }
+    EIGEN_TENSOR_INHERIT_ASSIGNMENT_OPERATORS(TensorChippingOp)
 
   protected:
     typename XprType::Nested m_xpr;

@@ -28,6 +28,8 @@ template <typename ExpressionType, typename DeviceType> class TensorDevice {
   public:
     TensorDevice(const DeviceType& device, ExpressionType& expression) : m_device(device), m_expression(expression) {}
 
+    EIGEN_DEFAULT_COPY_CONSTRUCTOR(TensorDevice)
+
     template<typename OtherDerived>
     EIGEN_STRONG_INLINE TensorDevice& operator=(const OtherDerived& other) {
       typedef TensorAssignOp<ExpressionType, const OtherDerived> Assign;

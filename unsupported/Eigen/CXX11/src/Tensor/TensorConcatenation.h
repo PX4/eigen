@@ -60,6 +60,7 @@ template<typename Axis, typename LhsXprType, typename RhsXprType>
 class TensorConcatenationOp : public TensorBase<TensorConcatenationOp<Axis, LhsXprType, RhsXprType>, WriteAccessors>
 {
   public:
+    typedef TensorBase<TensorConcatenationOp<Axis, LhsXprType, RhsXprType>, WriteAccessors> Base;
     typedef typename internal::traits<TensorConcatenationOp>::Scalar Scalar;
     typedef typename internal::traits<TensorConcatenationOp>::StorageKind StorageKind;
     typedef typename internal::traits<TensorConcatenationOp>::Index Index;
@@ -81,25 +82,7 @@ class TensorConcatenationOp : public TensorBase<TensorConcatenationOp<Axis, LhsX
 
     EIGEN_DEVICE_FUNC const Axis& axis() const { return m_axis; }
 
-    EIGEN_DEVICE_FUNC
-    EIGEN_STRONG_INLINE TensorConcatenationOp& operator = (const TensorConcatenationOp& other)
-    {
-      typedef TensorAssignOp<TensorConcatenationOp, const TensorConcatenationOp> Assign;
-      Assign assign(*this, other);
-      internal::TensorExecutor<const Assign, DefaultDevice>::run(assign, DefaultDevice());
-      return *this;
-    }
-
-    template<typename OtherDerived>
-    EIGEN_DEVICE_FUNC
-    EIGEN_STRONG_INLINE TensorConcatenationOp& operator = (const OtherDerived& other)
-    {
-      typedef TensorAssignOp<TensorConcatenationOp, const OtherDerived> Assign;
-      Assign assign(*this, other);
-      internal::TensorExecutor<const Assign, DefaultDevice>::run(assign, DefaultDevice());
-      return *this;
-    }
-
+    EIGEN_TENSOR_INHERIT_ASSIGNMENT_OPERATORS(TensorConcatenationOp)
   protected:
     typename LhsXprType::Nested m_lhs_xpr;
     typename RhsXprType::Nested m_rhs_xpr;

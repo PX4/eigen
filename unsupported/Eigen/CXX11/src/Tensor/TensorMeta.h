@@ -223,16 +223,6 @@ template <typename U, typename V> struct Tuple {
   Tuple(const U& f, const V& s) : first(f), second(s) {}
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
-  Tuple& operator= (const Tuple& rhs) {
-  #ifndef SYCL_DEVICE_ONLY
-    if (&rhs == this) return *this;
-  #endif
-    first = rhs.first;
-    second = rhs.second;
-    return *this;
-  }
-
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
   void swap(Tuple& rhs) {
     using numext::swap;
     swap(first, rhs.first);

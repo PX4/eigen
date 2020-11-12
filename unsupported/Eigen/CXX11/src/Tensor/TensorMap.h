@@ -30,7 +30,7 @@ template<typename PlainObjectType, int Options_, template <class> class MakePoin
 {
   public:
     typedef TensorMap<PlainObjectType, Options_, MakePointer_> Self;
-    typedef typename PlainObjectType::Base Base;
+    typedef TensorBase<TensorMap<PlainObjectType, Options_, MakePointer_> > Base;
   #ifdef EIGEN_USE_SYCL
     typedef  typename Eigen::internal::remove_reference<typename Eigen::internal::nested<Self>::type>::type Nested;
   #else
@@ -40,7 +40,7 @@ template<typename PlainObjectType, int Options_, template <class> class MakePoin
     typedef typename internal::traits<PlainObjectType>::Index Index;
     typedef typename internal::traits<PlainObjectType>::Scalar Scalar;
     typedef typename NumTraits<Scalar>::Real RealScalar;
-    typedef typename Base::CoeffReturnType CoeffReturnType;
+    typedef typename PlainObjectType::Base::CoeffReturnType CoeffReturnType;
 
     typedef typename MakePointer_<Scalar>::Type PointerType;
     typedef typename MakePointer_<Scalar>::ConstType PointerConstType;
@@ -315,23 +315,7 @@ template<typename PlainObjectType, int Options_, template <class> class MakePoin
     }
 #endif
 
-    EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Self& operator=(const Self& other)
-    {
-      typedef TensorAssignOp<Self, const Self> Assign;
-      Assign assign(*this, other);
-      internal::TensorExecutor<const Assign, DefaultDevice>::run(assign, DefaultDevice());
-      return *this;
-    }
-
-    template<typename OtherDerived>
-    EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
-    Self& operator=(const OtherDerived& other)
-    {
-      typedef TensorAssignOp<Self, const OtherDerived> Assign;
-      Assign assign(*this, other);
-      internal::TensorExecutor<const Assign, DefaultDevice>::run(assign, DefaultDevice());
-      return *this;
-    }
+    EIGEN_TENSOR_INHERIT_ASSIGNMENT_OPERATORS(TensorMap)
 
   private:
     StoragePointerType m_data;

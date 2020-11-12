@@ -340,27 +340,10 @@ class TensorFixedSize : public TensorBase<TensorFixedSize<Scalar_, Dimensions_, 
       internal::TensorExecutor<const Assign, DefaultDevice>::run(assign, DefaultDevice());
     }
 
-    EIGEN_DEVICE_FUNC
-    EIGEN_STRONG_INLINE TensorFixedSize& operator=(const TensorFixedSize& other)
-    {
-      // FIXME: check that the dimensions of other match the dimensions of *this.
-      // Unfortunately this isn't possible yet when the rhs is an expression.
-      typedef TensorAssignOp<Self, const TensorFixedSize> Assign;
-      Assign assign(*this, other);
-      internal::TensorExecutor<const Assign, DefaultDevice>::run(assign, DefaultDevice());
-      return *this;
-    }
-    template<typename OtherDerived>
-    EIGEN_DEVICE_FUNC
-    EIGEN_STRONG_INLINE TensorFixedSize& operator=(const OtherDerived& other)
-    {
-      // FIXME: check that the dimensions of other match the dimensions of *this.
-      // Unfortunately this isn't possible yet when the rhs is an expression.
-      typedef TensorAssignOp<Self, const OtherDerived> Assign;
-      Assign assign(*this, other);
-      internal::TensorExecutor<const Assign, DefaultDevice>::run(assign, DefaultDevice());
-      return *this;
-    }
+    // FIXME: check that the dimensions of other match the dimensions of *this.
+    // Unfortunately this isn't possible yet when the rhs is an expression.
+    EIGEN_TENSOR_INHERIT_ASSIGNMENT_EQUAL_OPERATOR(TensorFixedSize)
+
 
   protected:
     EIGEN_DEVICE_FUNC
