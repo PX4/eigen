@@ -376,13 +376,29 @@ struct hypot_retval
 * Implementation of cast                                                 *
 ****************************************************************************/
 
-template<typename OldType, typename NewType>
+template<typename OldType, typename NewType, typename EnableIf = void>
 struct cast_impl
 {
   EIGEN_DEVICE_FUNC
   static inline NewType run(const OldType& x)
   {
     return static_cast<NewType>(x);
+  }
+};
+
+// Casting from S -> Complex<T> leads to an implicit conversion from S to T,
+// generating warnings on clang.  Here we explicitly cast the real component.
+template<typename OldType, typename NewType>
+struct cast_impl<OldType, NewType,
+  typename internal::enable_if<
+    !NumTraits<OldType>::IsComplex && NumTraits<NewType>::IsComplex
+  >::type>
+{
+  EIGEN_DEVICE_FUNC
+  static inline NewType run(const OldType& x)
+  {
+    typedef typename NumTraits<NewType>::Real NewReal;
+    return static_cast<NewType>(static_cast<NewReal>(x));
   }
 };
 
@@ -486,7 +502,7 @@ struct rint_retval
       #if defined(EIGEN_HIP_DEVICE_COMPILE)
       // HIP does not seem to have a native device side implementation for the math routine "arg"
       using std::arg;
-      #else 		  
+      #else
       EIGEN_USING_STD(arg);
       #endif
       return arg(x);
@@ -967,7 +983,7 @@ template<typename T> T generic_fast_tanh_float(const T& a_x);
 
 namespace numext {
 
-#if (!defined(EIGEN_GPUCC) || defined(EIGEN_CONSTEXPR_ARE_DEVICE_FUNC)) 
+#if (!defined(EIGEN_GPUCC) || defined(EIGEN_CONSTEXPR_ARE_DEVICE_FUNC))
 template<typename T>
 EIGEN_DEVICE_FUNC
 EIGEN_ALWAYS_INLINE T mini(const T& x, const T& y)

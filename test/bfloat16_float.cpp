@@ -44,14 +44,14 @@ void test_truncate(float input, float expected_truncation, float expected_roundi
 template<typename T>
  void test_roundtrip() {
   // Representable T round trip via bfloat16
-  VERIFY_IS_EQUAL(static_cast<T>(static_cast<bfloat16>(-std::numeric_limits<T>::infinity())), -std::numeric_limits<T>::infinity());
-  VERIFY_IS_EQUAL(static_cast<T>(static_cast<bfloat16>(std::numeric_limits<T>::infinity())), std::numeric_limits<T>::infinity());
-  VERIFY_IS_EQUAL(static_cast<T>(static_cast<bfloat16>(T(-1.0))), T(-1.0));
-  VERIFY_IS_EQUAL(static_cast<T>(static_cast<bfloat16>(T(-0.5))), T(-0.5));
-  VERIFY_IS_EQUAL(static_cast<T>(static_cast<bfloat16>(T(-0.0))), T(-0.0));
-  VERIFY_IS_EQUAL(static_cast<T>(static_cast<bfloat16>(T(1.0))), T(1.0));
-  VERIFY_IS_EQUAL(static_cast<T>(static_cast<bfloat16>(T(0.5))), T(0.5));
-  VERIFY_IS_EQUAL(static_cast<T>(static_cast<bfloat16>(T(0.0))), T(0.0));
+  VERIFY_IS_EQUAL((internal::cast<bfloat16,T>(internal::cast<T,bfloat16>(-std::numeric_limits<T>::infinity()))), -std::numeric_limits<T>::infinity());
+  VERIFY_IS_EQUAL((internal::cast<bfloat16,T>(internal::cast<T,bfloat16>(std::numeric_limits<T>::infinity()))), std::numeric_limits<T>::infinity());
+  VERIFY_IS_EQUAL((internal::cast<bfloat16,T>(internal::cast<T,bfloat16>(T(-1.0)))), T(-1.0));
+  VERIFY_IS_EQUAL((internal::cast<bfloat16,T>(internal::cast<T,bfloat16>(T(-0.5)))), T(-0.5));
+  VERIFY_IS_EQUAL((internal::cast<bfloat16,T>(internal::cast<T,bfloat16>(T(-0.0)))), T(-0.0));
+  VERIFY_IS_EQUAL((internal::cast<bfloat16,T>(internal::cast<T,bfloat16>(T(1.0)))), T(1.0));
+  VERIFY_IS_EQUAL((internal::cast<bfloat16,T>(internal::cast<T,bfloat16>(T(0.5)))), T(0.5));
+  VERIFY_IS_EQUAL((internal::cast<bfloat16,T>(internal::cast<T,bfloat16>(T(0.0)))), T(0.0));
 }
 
 void test_conversion()

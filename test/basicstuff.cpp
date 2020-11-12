@@ -195,11 +195,8 @@ template<typename MatrixType> void basicStuffComplex(const MatrixType& m)
   VERIFY(!static_cast<const MatrixType&>(cm).imag().isZero());
 }
 
-template<typename SrcScalar, typename TgtScalar, bool SrcIsHalfOrBF16 = (internal::is_same<SrcScalar, half>::value || internal::is_same<SrcScalar, bfloat16>::value)> struct casting_test;
-
-
 template<typename SrcScalar, typename TgtScalar>
-struct casting_test<SrcScalar, TgtScalar, false> {
+struct casting_test {
   static void run() {
     Matrix<SrcScalar,4,4> m;
     for (int i=0; i<m.rows(); ++i) {
@@ -210,33 +207,7 @@ struct casting_test<SrcScalar, TgtScalar, false> {
     Matrix<TgtScalar,4,4> n = m.template cast<TgtScalar>();
     for (int i=0; i<m.rows(); ++i) {
       for (int j=0; j<m.cols(); ++j) {
-        VERIFY_IS_APPROX(n(i, j), static_cast<TgtScalar>(m(i, j)));
-      }
-    }
-  }
-};
-
-template<typename SrcScalar, typename TgtScalar>
-struct casting_test<SrcScalar, TgtScalar, true> {
-  static void run() {
-    casting_test<SrcScalar, TgtScalar, false>::run();
-  }
-};
-
-template<typename SrcScalar, typename RealScalar>
-struct casting_test<SrcScalar, std::complex<RealScalar>, true> {
-  static void run() {
-    typedef std::complex<RealScalar> TgtScalar;
-    Matrix<SrcScalar,4,4> m;
-    for (int i=0; i<m.rows(); ++i) {
-      for (int j=0; j<m.cols(); ++j) {
-        m(i, j) = internal::random_without_cast_overflow<SrcScalar, TgtScalar>::value();
-      }
-    }
-    Matrix<TgtScalar,4,4> n = m.template cast<TgtScalar>();
-    for (int i=0; i<m.rows(); ++i) {
-      for (int j=0; j<m.cols(); ++j) {
-        VERIFY_IS_APPROX(n(i, j), static_cast<TgtScalar>(static_cast<RealScalar>(m(i, j))));
+        VERIFY_IS_APPROX(n(i, j), (internal::cast<SrcScalar,TgtScalar>(m(i, j))));
       }
     }
   }

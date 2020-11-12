@@ -60,20 +60,6 @@ namespace Eigen {
 
 struct half;
 
-// explicit conversion operators are no available before C++11 so we first cast
-// half to RealScalar rather than to std::complex<RealScalar> directly
-#if !EIGEN_HAS_CXX11
-namespace internal {
-template <typename RealScalar>
-struct cast_impl<half, std::complex<RealScalar> > {
-  EIGEN_DEVICE_FUNC static inline std::complex<RealScalar> run(const half &x)
-  {
-    return static_cast<std::complex<RealScalar> >(static_cast<RealScalar>(x));
-  }
-};
-} // namespace internal
-#endif  // EIGEN_HAS_CXX11
-
 namespace half_impl {
 
 #if !defined(EIGEN_HAS_GPU_FP16)
