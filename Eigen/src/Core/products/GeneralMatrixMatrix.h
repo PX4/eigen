@@ -471,15 +471,21 @@ struct generic_product_impl<Lhs,Rhs,DenseShape,DenseShape,GemmProduct>
     if(a_lhs.cols()==0 || a_lhs.rows()==0 || a_rhs.cols()==0)
       return;
 
-    // Fallback to GEMV if either the lhs or rhs is a runtime vector
-    if (dst.cols() == 1)
+    if (dst.cols() == 1 && dst.rows() == 1) {
+      // Fallback to inner product if both the lhs and rhs is a runtime vector.
+      dst.coeffRef(0,0) += alpha * (a_lhs.row(0).transpose().cwiseProduct(a_rhs.col(0)).sum());
+      return;
+    }
+    else if (dst.cols() == 1)
     {
+      // Fallback to GEMV if either the lhs or rhs is a runtime vector
       typename Dest::ColXpr dst_vec(dst.col(0));
       return internal::generic_product_impl<Lhs,typename Rhs::ConstColXpr,DenseShape,DenseShape,GemvProduct>
         ::scaleAndAddTo(dst_vec, a_lhs, a_rhs.col(0), alpha);
     }
     else if (dst.rows() == 1)
     {
+      // Fallback to GEMV if either the lhs or rhs is a runtime vector
       typename Dest::RowXpr dst_vec(dst.row(0));
       return internal::generic_product_impl<typename Lhs::ConstRowXpr,Rhs,DenseShape,DenseShape,GemvProduct>
         ::scaleAndAddTo(dst_vec, a_lhs.row(0), a_rhs, alpha);

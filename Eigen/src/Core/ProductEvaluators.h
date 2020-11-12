@@ -256,7 +256,7 @@ struct generic_product_impl<Lhs,Rhs,DenseShape,DenseShape,InnerProduct>
   {
     dst.coeffRef(0,0) += (lhs.transpose().cwiseProduct(rhs)).sum();
   }
-  
+
   template<typename Dst>
   static EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void subTo(Dst& dst, const Lhs& lhs, const Rhs& rhs)
   { dst.coeffRef(0,0) -= (lhs.transpose().cwiseProduct(rhs)).sum(); }
@@ -375,6 +375,11 @@ struct generic_product_impl<Lhs,Rhs,DenseShape,DenseShape,GemvProduct>
   template<typename Dest>
   static EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void scaleAndAddTo(Dest& dst, const Lhs& lhs, const Rhs& rhs, const Scalar& alpha)
   {
+    // Fallback to inner product if both the lhs and rhs is a runtime vector.
+    if (lhs.rows() == 1 && rhs.cols() == 1) {
+      dst.coeffRef(0,0) += alpha * (lhs.row(0).transpose().cwiseProduct(rhs.col(0)).sum());
+      return;
+    } 
     LhsNested actual_lhs(lhs);
     RhsNested actual_rhs(rhs);
     internal::gemv_dense_selector<Side,
