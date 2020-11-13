@@ -9,9 +9,13 @@
 
 #include "main.h"
 
-#include <Eigen/Core>
-
-using namespace Eigen;
+// Disable "ignoring attributes on template argument"
+// for packet_traits<Packet*>
+// => The only workaround would be to wrap _m128 and the likes
+//    within wrappers.
+#if EIGEN_GNUC_AT_LEAST(6,0)
+    #pragma GCC diagnostic ignored "-Wignored-attributes"
+#endif
 
 #define GET(i,j) (StorageOrder == RowMajor ? (i)*stride + (j) : (i) + (j)*stride)
 #define SCATTER(i,j,k) (StorageOrder == RowMajor ? ((i)+(k))*stride + (j) : (i) + ((j)+(k))*stride)
