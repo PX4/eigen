@@ -14,7 +14,7 @@ endif()
 check_cxx_compiler_flag("-std=c++11" EIGEN_COMPILER_SUPPORT_CPP11)
 
 option(EIGEN_INTERNAL_DOCUMENTATION "Build internal documentation" OFF)
-
+option(EIGEN_DOC_USE_MATHJAX "Use MathJax for rendering math in HTML docs" ON)
 
 # Set some Doxygen flags
 set(EIGEN_DOXY_PROJECT_NAME             "Eigen")
@@ -22,10 +22,17 @@ set(EIGEN_DOXY_OUTPUT_DIRECTORY_SUFFIX  "")
 set(EIGEN_DOXY_INPUT                    "\"${Eigen_SOURCE_DIR}/Eigen\" \"${Eigen_SOURCE_DIR}/doc\"")
 set(EIGEN_DOXY_HTML_COLORSTYLE_HUE      "220")
 set(EIGEN_DOXY_TAGFILES                 "")
+
 if(EIGEN_INTERNAL_DOCUMENTATION)
   set(EIGEN_DOXY_INTERNAL                 "YES")
 else()
   set(EIGEN_DOXY_INTERNAL                 "NO")
+endif()
+
+if (EIGEN_DOC_USE_MATHJAX)
+  set(EIGEN_DOXY_USE_MATHJAX "YES")
+else ()
+  set(EIGEN_DOXY_USE_MATHJAX "NO")
 endif()
 
 configure_file(
