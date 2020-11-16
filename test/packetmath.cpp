@@ -677,8 +677,8 @@ void packetmath_real() {
       test::packet_helper<PacketTraits::HasCos, Packet> h;
       for (Scalar k = Scalar(1); k < Scalar(10000) / std::numeric_limits<Scalar>::epsilon(); k *= Scalar(2)) {
         for (int k1 = 0; k1 <= 1; ++k1) {
-          data1[0] = Scalar((2 * k + k1) * EIGEN_PI / 2 * internal::random<double>(0.8, 1.2));
-          data1[1] = Scalar((2 * k + 2 + k1) * EIGEN_PI / 2 * internal::random<double>(0.8, 1.2));
+          data1[0] = Scalar((2 * double(k) + k1) * double(EIGEN_PI) / 2 * internal::random<double>(0.8, 1.2));
+          data1[1] = Scalar((2 * double(k) + 2 + k1) * double(EIGEN_PI) / 2 * internal::random<double>(0.8, 1.2));
           h.store(data2, internal::pcos(h.load(data1)));
           h.store(data2 + PacketSize, internal::psin(h.load(data1)));
           VERIFY(data2[0] <= Scalar(1.) && data2[0] >= Scalar(-1.));
