@@ -84,6 +84,53 @@ typedef uint64x2_t                           Packet2ul;
 
 #endif // EIGEN_COMP_MSVC
 
+// fuctionally equivalent to _mm_shuffle_ps in SSE when interleave
+// == false (i.e. shuffle<false>(m, n, mask) equals _mm_shuffle_ps(m, n, mask)),
+// interleave m and n when interleave == true. Currently used in LU/arch/InverseSize4.h
+// to enable a shared implementation for fast inversion of matrices of size 4. 
+template<bool interleave> 
+EIGEN_STRONG_INLINE Packet4f shuffle(const Packet4f &m, const Packet4f &n, int mask)
+{
+  const float* a = reinterpret_cast<const float*>(&m);
+  const float* b = reinterpret_cast<const float*>(&n);
+  Packet4f res = {*(a + (mask & 3)), *(a + ((mask >> 2) & 3)), *(b + ((mask >> 4) & 3)), *(b + ((mask >> 6) & 3))};
+  return res;
+}
+
+template<> 
+EIGEN_STRONG_INLINE Packet4f shuffle<true>(const Packet4f &m, const Packet4f &n, int mask) 
+{
+  const float* a = reinterpret_cast<const float*>(&m);
+  const float* b = reinterpret_cast<const float*>(&n);
+  Packet4f res = {*(a + (mask & 3)), *(b + ((mask >> 2) & 3)), *(a + ((mask >> 4) & 3)), *(b + ((mask >> 6) & 3))};
+  return res;
+}
+
+EIGEN_STRONG_INLINE static int eigen_neon_shuffle_mask(int p, int q, int r, int s) {return ((s)<<6|(r)<<4|(q)<<2|(p));}
+
+EIGEN_STRONG_INLINE Packet4f vec4f_swizzle2(const Packet4f& a, const Packet4f& b, int p, int q, int r, int s)
+{ 
+  return shuffle<false>(a,b,eigen_neon_shuffle_mask(p, q, r, s));
+}
+EIGEN_STRONG_INLINE Packet4f vec4f_movelh(const Packet4f& a, const Packet4f& b)
+{
+  return shuffle<false>(a,b,eigen_neon_shuffle_mask(0, 1, 0, 1));
+}
+EIGEN_STRONG_INLINE Packet4f vec4f_movehl(const Packet4f& a, const Packet4f& b)
+{
+  return shuffle<false>(b,a,eigen_neon_shuffle_mask(2, 3, 2, 3));
+}
+EIGEN_STRONG_INLINE Packet4f vec4f_unpacklo(const Packet4f& a, const Packet4f& b)
+{
+  return shuffle<true>(a,b,eigen_neon_shuffle_mask(0, 0, 1, 1));
+}
+EIGEN_STRONG_INLINE Packet4f vec4f_unpackhi(const Packet4f& a, const Packet4f& b)
+{
+  return shuffle<true>(a,b,eigen_neon_shuffle_mask(2, 2, 3, 3));
+}
+#define vec4f_duplane(a, p) \
+  vdupq_lane_f32(vget_low_f32(a), p)
+
 #define _EIGEN_DECLARE_CONST_Packet4f(NAME,X) \
   const Packet4f p4f_##NAME = pset1<Packet4f>(X)
 
@@ -3524,6 +3571,32 @@ template <typename T> float64x2_t vreinterpretq_f64_u64(T a) { return (float64x2
 
 typedef float64x2_t Packet2d;
 typedef float64x1_t Packet1d;
+
+// fuctionally equivalent to _mm_shuffle_pd in SSE (i.e. shuffle(m, n, mask) equals _mm_shuffle_pd(m,n,mask))
+// Currently used in LU/arch/InverseSize4.h to enable a shared implementation 
+// for fast inversion of matrices of size 4.
+EIGEN_STRONG_INLINE Packet2d shuffle(const Packet2d& m, const Packet2d& n, int mask)
+{
+  const double* a = reinterpret_cast<const double*>(&m);
+  const double* b = reinterpret_cast<const double*>(&n);
+  Packet2d res = {*(a + (mask & 1)), *(b + ((mask >> 1) & 1))};
+  return res;
+}
+
+EIGEN_STRONG_INLINE Packet2d vec2d_swizzle2(const Packet2d& a, const Packet2d& b, int mask)
+{
+  return shuffle(a, b, mask);
+}
+EIGEN_STRONG_INLINE Packet2d vec2d_unpacklo(const Packet2d& a,const Packet2d& b)
+{
+  return shuffle(a, b, 0);
+}
+EIGEN_STRONG_INLINE Packet2d vec2d_unpackhi(const Packet2d& a,const Packet2d& b)
+{
+  return shuffle(a, b, 3);
+}
+#define vec2d_duplane(a, p) \
+  vdupq_laneq_f64(a, p)
 
 template<> struct packet_traits<double>  : default_packet_traits
 {

@@ -1401,6 +1401,14 @@ template <>
 EIGEN_STRONG_INLINE Packet2ul preinterpret<Packet2ul, Packet2d>(const Packet2d& a) {
   return vreinterpretq_u64_f64(a);
 }
+template <>
+EIGEN_STRONG_INLINE Packet2d preinterpret<Packet2d, Packet4i>(const Packet4i& a) {
+  return vreinterpretq_f64_s32(a);
+}
+template <>
+EIGEN_STRONG_INLINE Packet4i preinterpret<Packet4i, Packet2d>(const Packet2d& a) {
+  return vreinterpretq_s32_f64(a);
+}
 
 #endif  // EIGEN_ARCH_ARM64
 

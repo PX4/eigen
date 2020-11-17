@@ -52,22 +52,59 @@ template<> struct is_arithmetic<__m128d> { enum { value = true }; };
 template<> struct is_arithmetic<Packet4i>  { enum { value = true }; };
 template<> struct is_arithmetic<Packet16b>  { enum { value = true }; };
 
-#define EIGEN_SSE_SHUFFLE_MASK(p,q,r,s) ((s)<<6|(r)<<4|(q)<<2|(p))
+template<int p, int q, int r, int s>
+struct shuffle_mask{
+ enum { mask = (s)<<6|(r)<<4|(q)<<2|(p) };
+};
 
+// TODO: change the implementation of all swizzle* ops from macro to template,
 #define vec4f_swizzle1(v,p,q,r,s) \
-  (_mm_castsi128_ps(_mm_shuffle_epi32( _mm_castps_si128(v), EIGEN_SSE_SHUFFLE_MASK(p,q,r,s))))
+  Packet4f(_mm_castsi128_ps(_mm_shuffle_epi32( _mm_castps_si128(v), (shuffle_mask<p,q,r,s>::mask))))
 
 #define vec4i_swizzle1(v,p,q,r,s) \
-  (_mm_shuffle_epi32( v, EIGEN_SSE_SHUFFLE_MASK(p,q,r,s)))
+  Packet4i(_mm_shuffle_epi32( v, (shuffle_mask<p,q,r,s>::mask)))
 
 #define vec2d_swizzle1(v,p,q) \
-  (_mm_castsi128_pd(_mm_shuffle_epi32( _mm_castpd_si128(v), EIGEN_SSE_SHUFFLE_MASK(2*p,2*p+1,2*q,2*q+1))))
+  Packet2d(_mm_castsi128_pd(_mm_shuffle_epi32( _mm_castpd_si128(v), (shuffle_mask<2*p,2*p+1,2*q,2*q+1>::mask))))
 
 #define vec4f_swizzle2(a,b,p,q,r,s) \
-  (_mm_shuffle_ps( (a), (b), EIGEN_SSE_SHUFFLE_MASK(p,q,r,s)))
+  Packet4f(_mm_shuffle_ps( (a), (b), (shuffle_mask<p,q,r,s>::mask)))
 
 #define vec4i_swizzle2(a,b,p,q,r,s) \
-  (_mm_castps_si128( (_mm_shuffle_ps( _mm_castsi128_ps(a), _mm_castsi128_ps(b), EIGEN_SSE_SHUFFLE_MASK(p,q,r,s)))))
+  Packet4i(_mm_castps_si128( (_mm_shuffle_ps( _mm_castsi128_ps(a), _mm_castsi128_ps(b), (shuffle_mask<p,q,r,s>::mask)))))
+
+EIGEN_STRONG_INLINE Packet4f vec4f_movelh(const Packet4f& a, const Packet4f& b)
+{
+  return Packet4f(_mm_movelh_ps(a,b));
+}
+EIGEN_STRONG_INLINE Packet4f vec4f_movehl(const Packet4f& a, const Packet4f& b)
+{
+  return Packet4f(_mm_movehl_ps(a,b));
+}
+EIGEN_STRONG_INLINE Packet4f vec4f_unpacklo(const Packet4f& a, const Packet4f& b)
+{
+  return Packet4f(_mm_unpacklo_ps(a,b));
+}
+EIGEN_STRONG_INLINE Packet4f vec4f_unpackhi(const Packet4f& a, const Packet4f& b)
+{
+  return Packet4f(_mm_unpackhi_ps(a,b));
+}
+#define vec4f_duplane(a,p) \
+  vec4f_swizzle2(a,a,p,p,p,p)
+
+#define vec2d_swizzle2(a,b,mask) \
+  Packet2d(_mm_shuffle_pd(a,b,mask))
+
+EIGEN_STRONG_INLINE Packet2d vec2d_unpacklo(const Packet2d& a, const Packet2d& b)
+{
+  return Packet2d(_mm_unpacklo_pd(a,b));
+}
+EIGEN_STRONG_INLINE Packet2d vec2d_unpackhi(const Packet2d& a, const Packet2d& b)
+{
+  return Packet2d(_mm_unpackhi_pd(a,b));
+}
+#define vec2d_duplane(a,p) \
+  vec2d_swizzle2(a,a,(p<<1)|p)
 
 #define _EIGEN_DECLARE_CONST_Packet4f(NAME,X) \
   const Packet4f p4f_##NAME = pset1<Packet4f>(X)
