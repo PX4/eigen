@@ -11,6 +11,9 @@
 
 #include <Eigen/src/Core/arch/Default/Half.h>
 
+#define VERIFY_HALF_BITS_EQUAL(h, bits) \
+  VERIFY_IS_EQUAL((numext::bit_cast<numext::uint16_t>(h)), (static_cast<numext::uint16_t>(bits)))
+
 // Make sure it's possible to forward declare Eigen::half
 namespace Eigen {
 struct half;
@@ -22,75 +25,51 @@ void test_conversion()
 {
   using Eigen::half_impl::__half_raw;
 
-  // We don't use a uint16_t raw member x if the platform has native Arm __fp16
-  // support
-#if !defined(EIGEN_HAS_ARM64_FP16_SCALAR_ARITHMETIC)
+  // Round-trip bit-cast with uint16.
+  VERIFY_IS_EQUAL(
+    numext::bit_cast<half>(numext::bit_cast<numext::uint16_t>(half(1.0f))),
+    half(1.0f));
+  VERIFY_IS_EQUAL(
+    numext::bit_cast<half>(numext::bit_cast<numext::uint16_t>(half(0.5f))),
+    half(0.5f));
+  VERIFY_IS_EQUAL(
+    numext::bit_cast<half>(numext::bit_cast<numext::uint16_t>(half(-0.33333f))),
+    half(-0.33333f));
+   VERIFY_IS_EQUAL(
+    numext::bit_cast<half>(numext::bit_cast<numext::uint16_t>(half(0.0f))),
+    half(0.0f));
+
   // Conversion from float.
-  VERIFY_IS_EQUAL(half(1.0f).x, 0x3c00);
-  VERIFY_IS_EQUAL(half(0.5f).x, 0x3800);
-  VERIFY_IS_EQUAL(half(0.33333f).x, 0x3555);
-  VERIFY_IS_EQUAL(half(0.0f).x, 0x0000);
-  VERIFY_IS_EQUAL(half(-0.0f).x, 0x8000);
-  VERIFY_IS_EQUAL(half(65504.0f).x, 0x7bff);
-  VERIFY_IS_EQUAL(half(65536.0f).x, 0x7c00);  // Becomes infinity.
+  VERIFY_HALF_BITS_EQUAL(half(1.0f), 0x3c00);
+  VERIFY_HALF_BITS_EQUAL(half(0.5f), 0x3800);
+  VERIFY_HALF_BITS_EQUAL(half(0.33333f), 0x3555);
+  VERIFY_HALF_BITS_EQUAL(half(0.0f), 0x0000);
+  VERIFY_HALF_BITS_EQUAL(half(-0.0f), 0x8000);
+  VERIFY_HALF_BITS_EQUAL(half(65504.0f), 0x7bff);
+  VERIFY_HALF_BITS_EQUAL(half(65536.0f), 0x7c00);  // Becomes infinity.
 
   // Denormals.
-  VERIFY_IS_EQUAL(half(-5.96046e-08f).x, 0x8001);
-  VERIFY_IS_EQUAL(half(5.96046e-08f).x, 0x0001);
-  VERIFY_IS_EQUAL(half(1.19209e-07f).x, 0x0002);
+  VERIFY_HALF_BITS_EQUAL(half(-5.96046e-08f), 0x8001);
+  VERIFY_HALF_BITS_EQUAL(half(5.96046e-08f), 0x0001);
+  VERIFY_HALF_BITS_EQUAL(half(1.19209e-07f), 0x0002);
 
   // Verify round-to-nearest-even behavior.
   float val1 = float(half(__half_raw(0x3c00)));
   float val2 = float(half(__half_raw(0x3c01)));
   float val3 = float(half(__half_raw(0x3c02)));
-  VERIFY_IS_EQUAL(half(0.5f * (val1 + val2)).x, 0x3c00);
-  VERIFY_IS_EQUAL(half(0.5f * (val2 + val3)).x, 0x3c02);
+  VERIFY_HALF_BITS_EQUAL(half(0.5f * (val1 + val2)), 0x3c00);
+  VERIFY_HALF_BITS_EQUAL(half(0.5f * (val2 + val3)), 0x3c02);
 
   // Conversion from int.
-  VERIFY_IS_EQUAL(half(-1).x, 0xbc00);
-  VERIFY_IS_EQUAL(half(0).x, 0x0000);
-  VERIFY_IS_EQUAL(half(1).x, 0x3c00);
-  VERIFY_IS_EQUAL(half(2).x, 0x4000);
-  VERIFY_IS_EQUAL(half(3).x, 0x4200);
+  VERIFY_HALF_BITS_EQUAL(half(-1), 0xbc00);
+  VERIFY_HALF_BITS_EQUAL(half(0), 0x0000);
+  VERIFY_HALF_BITS_EQUAL(half(1), 0x3c00);
+  VERIFY_HALF_BITS_EQUAL(half(2), 0x4000);
+  VERIFY_HALF_BITS_EQUAL(half(3), 0x4200);
 
   // Conversion from bool.
-  VERIFY_IS_EQUAL(half(false).x, 0x0000);
-  VERIFY_IS_EQUAL(half(true).x, 0x3c00);
-#endif
-
-#if defined(EIGEN_HAS_ARM64_FP16_SCALAR_ARITHMETIC)
-   // Conversion from float.
-  VERIFY_IS_EQUAL(half(1.0f).x, __fp16(1.0f));
-  VERIFY_IS_EQUAL(half(0.5f).x, __fp16(0.5f));
-  VERIFY_IS_EQUAL(half(0.33333f).x, __fp16(0.33333f));
-  VERIFY_IS_EQUAL(half(0.0f).x, __fp16(0.0f));
-  VERIFY_IS_EQUAL(half(-0.0f).x, __fp16(-0.0f));
-  VERIFY_IS_EQUAL(half(65504.0f).x, __fp16(65504.0f));
-  VERIFY_IS_EQUAL(half(65536.0f).x, __fp16(65536.0f));  // Becomes infinity.
-
-  // Denormals.
-  VERIFY_IS_EQUAL(half(-5.96046e-08f).x, __fp16(-5.96046e-08f));
-  VERIFY_IS_EQUAL(half(5.96046e-08f).x, __fp16(5.96046e-08f));
-  VERIFY_IS_EQUAL(half(1.19209e-07f).x, __fp16(1.19209e-07f));
-
-  // Verify round-to-nearest-even behavior.
-  float val1 = float(half(__half_raw(0x3c00)));
-  float val2 = float(half(__half_raw(0x3c01)));
-  float val3 = float(half(__half_raw(0x3c02)));
-  VERIFY_IS_EQUAL(half(0.5f * (val1 + val2)).x, __fp16(0.5f * (val1 + val2)));
-  VERIFY_IS_EQUAL(half(0.5f * (val2 + val3)).x, __fp16(0.5f * (val2 + val3)));
-
-  // Conversion from int.
-  VERIFY_IS_EQUAL(half(-1).x, __fp16(-1));
-  VERIFY_IS_EQUAL(half(0).x, __fp16(0));
-  VERIFY_IS_EQUAL(half(1).x, __fp16(1));
-  VERIFY_IS_EQUAL(half(2).x, __fp16(2));
-  VERIFY_IS_EQUAL(half(3).x, __fp16(3));
-
-  // Conversion from bool.
-  VERIFY_IS_EQUAL(half(false).x, __fp16(false));
-  VERIFY_IS_EQUAL(half(true).x, __fp16(true));
-#endif
+  VERIFY_HALF_BITS_EQUAL(half(false), 0x0000);
+  VERIFY_HALF_BITS_EQUAL(half(true), 0x3c00);
 
   // Conversion to float.
   VERIFY_IS_EQUAL(float(half(__half_raw(0x0000))), 0.0f);
@@ -143,24 +122,27 @@ void test_conversion()
 
 void test_numtraits()
 {
-  std::cout << "epsilon       = " << NumTraits<half>::epsilon() << "  (0x" << std::hex << NumTraits<half>::epsilon().x << ")" << std::endl;
-  std::cout << "highest       = " << NumTraits<half>::highest() << "  (0x" << std::hex << NumTraits<half>::highest().x << ")" << std::endl;
-  std::cout << "lowest        = " << NumTraits<half>::lowest() << "  (0x" << std::hex << NumTraits<half>::lowest().x << ")" << std::endl;
-  std::cout << "min           = " << (std::numeric_limits<half>::min)() << "  (0x" << std::hex << half((std::numeric_limits<half>::min)()).x << ")" << std::endl;
-  std::cout << "denorm min    = " << (std::numeric_limits<half>::denorm_min)() << "  (0x" << std::hex << half((std::numeric_limits<half>::denorm_min)()).x << ")" << std::endl;
-  std::cout << "infinity      = " << NumTraits<half>::infinity() << "  (0x" << std::hex << NumTraits<half>::infinity().x << ")" << std::endl;
-  std::cout << "quiet nan     = " << NumTraits<half>::quiet_NaN() << "  (0x" << std::hex << NumTraits<half>::quiet_NaN().x << ")" << std::endl;
-  std::cout << "signaling nan = " << std::numeric_limits<half>::signaling_NaN() << "  (0x" << std::hex << std::numeric_limits<half>::signaling_NaN().x << ")" << std::endl;
+  std::cout << "epsilon       = " << NumTraits<half>::epsilon() << "  (0x" << std::hex << numext::bit_cast<numext::uint16_t>(NumTraits<half>::epsilon()) << ")" << std::endl;
+  std::cout << "highest       = " << NumTraits<half>::highest() << "  (0x" << std::hex << numext::bit_cast<numext::uint16_t>(NumTraits<half>::highest()) << ")" << std::endl;
+  std::cout << "lowest        = " << NumTraits<half>::lowest() << "  (0x" << std::hex << numext::bit_cast<numext::uint16_t>(NumTraits<half>::lowest()) << ")" << std::endl;
+  std::cout << "min           = " << (std::numeric_limits<half>::min)() << "  (0x" << std::hex << numext::bit_cast<numext::uint16_t>(half((std::numeric_limits<half>::min)())) << ")" << std::endl;
+  std::cout << "denorm min    = " << (std::numeric_limits<half>::denorm_min)() << "  (0x" << std::hex << numext::bit_cast<numext::uint16_t>(half((std::numeric_limits<half>::denorm_min)())) << ")" << std::endl;
+  std::cout << "infinity      = " << NumTraits<half>::infinity() << "  (0x" << std::hex << numext::bit_cast<numext::uint16_t>(NumTraits<half>::infinity()) << ")" << std::endl;
+  std::cout << "quiet nan     = " << NumTraits<half>::quiet_NaN() << "  (0x" << std::hex << numext::bit_cast<numext::uint16_t>(NumTraits<half>::quiet_NaN()) << ")" << std::endl;
+  std::cout << "signaling nan = " << std::numeric_limits<half>::signaling_NaN() << "  (0x" << std::hex << numext::bit_cast<numext::uint16_t>(std::numeric_limits<half>::signaling_NaN()) << ")" << std::endl;
 
   VERIFY(NumTraits<half>::IsSigned);
 
-  VERIFY_IS_EQUAL( std::numeric_limits<half>::infinity().x, half(std::numeric_limits<float>::infinity()).x );
+  VERIFY_IS_EQUAL(
+    numext::bit_cast<numext::uint16_t>(std::numeric_limits<half>::infinity()),
+    numext::bit_cast<numext::uint16_t>(half(std::numeric_limits<float>::infinity())) );
+  VERIFY_IS_EQUAL(
+    numext::bit_cast<numext::uint16_t>(std::numeric_limits<half>::quiet_NaN()),
+    numext::bit_cast<numext::uint16_t>(half(std::numeric_limits<float>::quiet_NaN())) );
+  VERIFY_IS_EQUAL(
+    numext::bit_cast<numext::uint16_t>(std::numeric_limits<half>::signaling_NaN()),
+    numext::bit_cast<numext::uint16_t>(half(std::numeric_limits<float>::signaling_NaN())) );
 
-// If we have a native fp16 types this becomes a nan == nan comparision so we have to disable it
-#if !defined(EIGEN_HAS_ARM64_FP16_SCALAR_ARITHMETIC)
-  VERIFY_IS_EQUAL( std::numeric_limits<half>::quiet_NaN().x, half(std::numeric_limits<float>::quiet_NaN()).x );
-  VERIFY_IS_EQUAL( std::numeric_limits<half>::signaling_NaN().x, half(std::numeric_limits<float>::signaling_NaN()).x );
-#endif
   VERIFY( (std::numeric_limits<half>::min)() > half(0.f) );
   VERIFY( (std::numeric_limits<half>::denorm_min)() > half(0.f) );
   VERIFY( (std::numeric_limits<half>::min)()/half(2) > half(0.f) );

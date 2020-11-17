@@ -494,6 +494,19 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR __half_raw raw_uint16_to_h
 #endif
 }
 
+EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR numext::uint16_t raw_half_as_uint16(const __half_raw& h) {
+  // HIP/CUDA/Default have a member 'x' of type uint16_t.
+  // For ARM64 native half, the member 'x' is of type __fp16, so we need to bit-cast.
+  // For SYCL, cl::sycl::half is _Float16, so cast directly.
+#if defined(EIGEN_HAS_ARM64_FP16_SCALAR_ARITHMETIC)
+  return numext::bit_cast<numext::uint16_t>(h.x);
+#elif defined(SYCL_DEVICE_ONLY)
+  return numext::bit_cast<numext::uint16_t>(h);
+#else
+  return h.x;
+#endif
+}
+
 union float32_bits {
   unsigned int u;
   float f;
@@ -812,9 +825,10 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC Eigen::half __ldg(const Eigen::half* ptr) 
 }
 #endif
 
-#if defined(EIGEN_GPU_COMPILE_PHASE)
 namespace Eigen {
 namespace numext {
+
+#if defined(EIGEN_GPU_COMPILE_PHASE)
 
 template <>
 EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE bool(isnan)(const Eigen::half& h) {
@@ -830,8 +844,20 @@ template <>
 EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE bool(isfinite)(const Eigen::half& h) {
   return (half_impl::isfinite)(h);
 }
+
+#endif
+
+template <>
+EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC Eigen::half bit_cast<Eigen::half, uint16_t>(const uint16_t& src) {
+  return Eigen::half(Eigen::half_impl::raw_uint16_to_half(src));
+}
+
+template <>
+EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC uint16_t bit_cast<uint16_t, Eigen::half>(const Eigen::half& src) {
+  return Eigen::half_impl::raw_half_as_uint16(src);
+}
+
 }  // namespace numext
 }  // namespace Eigen
-#endif
 
 #endif // EIGEN_HALF_H

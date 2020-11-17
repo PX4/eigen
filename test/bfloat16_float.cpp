@@ -13,6 +13,9 @@
 
 #include <Eigen/src/Core/arch/Default/BFloat16.h>
 
+#define VERIFY_BFLOAT16_BITS_EQUAL(h, bits) \
+  VERIFY_IS_EQUAL((numext::bit_cast<numext::uint16_t>(h)), (static_cast<numext::uint16_t>(bits)))
+
 // Make sure it's possible to forward declare Eigen::bfloat16
 namespace Eigen {
 struct bfloat16;
@@ -58,31 +61,45 @@ void test_conversion()
 {
   using Eigen::bfloat16_impl::__bfloat16_raw;
 
+  // Round-trip casts
+  VERIFY_IS_EQUAL(
+    numext::bit_cast<bfloat16>(numext::bit_cast<numext::uint16_t>(bfloat16(1.0f))),
+    bfloat16(1.0f));
+  VERIFY_IS_EQUAL(
+    numext::bit_cast<bfloat16>(numext::bit_cast<numext::uint16_t>(bfloat16(0.5f))),
+    bfloat16(0.5f));
+  VERIFY_IS_EQUAL(
+    numext::bit_cast<bfloat16>(numext::bit_cast<numext::uint16_t>(bfloat16(-0.33333f))),
+    bfloat16(-0.33333f));
+   VERIFY_IS_EQUAL(
+    numext::bit_cast<bfloat16>(numext::bit_cast<numext::uint16_t>(bfloat16(0.0f))),
+    bfloat16(0.0f));
+
   // Conversion from float.
-  VERIFY_IS_EQUAL(bfloat16(1.0f).value, 0x3f80);
-  VERIFY_IS_EQUAL(bfloat16(0.5f).value, 0x3f00);
-  VERIFY_IS_EQUAL(bfloat16(0.33333f).value, 0x3eab);
-  VERIFY_IS_EQUAL(bfloat16(3.38e38f).value, 0x7f7e);
-  VERIFY_IS_EQUAL(bfloat16(3.40e38f).value, 0x7f80);  // Becomes infinity.
+  VERIFY_BFLOAT16_BITS_EQUAL(bfloat16(1.0f), 0x3f80);
+  VERIFY_BFLOAT16_BITS_EQUAL(bfloat16(0.5f), 0x3f00);
+  VERIFY_BFLOAT16_BITS_EQUAL(bfloat16(0.33333f), 0x3eab);
+  VERIFY_BFLOAT16_BITS_EQUAL(bfloat16(3.38e38f), 0x7f7e);
+  VERIFY_BFLOAT16_BITS_EQUAL(bfloat16(3.40e38f), 0x7f80);  // Becomes infinity.
 
   // Verify round-to-nearest-even behavior.
   float val1 = static_cast<float>(bfloat16(__bfloat16_raw(0x3c00)));
   float val2 = static_cast<float>(bfloat16(__bfloat16_raw(0x3c01)));
   float val3 = static_cast<float>(bfloat16(__bfloat16_raw(0x3c02)));
-  VERIFY_IS_EQUAL(bfloat16(0.5f * (val1 + val2)).value, 0x3c00);
-  VERIFY_IS_EQUAL(bfloat16(0.5f * (val2 + val3)).value, 0x3c02);
+  VERIFY_BFLOAT16_BITS_EQUAL(bfloat16(0.5f * (val1 + val2)), 0x3c00);
+  VERIFY_BFLOAT16_BITS_EQUAL(bfloat16(0.5f * (val2 + val3)), 0x3c02);
 
   // Conversion from int.
-  VERIFY_IS_EQUAL(bfloat16(-1).value, 0xbf80);
-  VERIFY_IS_EQUAL(bfloat16(0).value, 0x0000);
-  VERIFY_IS_EQUAL(bfloat16(1).value, 0x3f80);
-  VERIFY_IS_EQUAL(bfloat16(2).value, 0x4000);
-  VERIFY_IS_EQUAL(bfloat16(3).value, 0x4040);
-  VERIFY_IS_EQUAL(bfloat16(12).value, 0x4140);
+  VERIFY_BFLOAT16_BITS_EQUAL(bfloat16(-1), 0xbf80);
+  VERIFY_BFLOAT16_BITS_EQUAL(bfloat16(0), 0x0000);
+  VERIFY_BFLOAT16_BITS_EQUAL(bfloat16(1), 0x3f80);
+  VERIFY_BFLOAT16_BITS_EQUAL(bfloat16(2), 0x4000);
+  VERIFY_BFLOAT16_BITS_EQUAL(bfloat16(3), 0x4040);
+  VERIFY_BFLOAT16_BITS_EQUAL(bfloat16(12), 0x4140);
 
   // Conversion from bool.
-  VERIFY_IS_EQUAL(bfloat16(false).value, 0x0000);
-  VERIFY_IS_EQUAL(bfloat16(true).value, 0x3f80);
+  VERIFY_BFLOAT16_BITS_EQUAL(bfloat16(false), 0x0000);
+  VERIFY_BFLOAT16_BITS_EQUAL(bfloat16(true), 0x3f80);
 
   // Conversion to bool
   VERIFY_IS_EQUAL(static_cast<bool>(bfloat16(3)), true);
@@ -102,8 +119,8 @@ void test_conversion()
   VERIFY_IS_EQUAL(bfloat16(0.0f), bfloat16(0.0f));
   VERIFY_IS_EQUAL(bfloat16(-0.0f), bfloat16(0.0f));
   VERIFY_IS_EQUAL(bfloat16(-0.0f), bfloat16(-0.0f));
-  VERIFY_IS_EQUAL(bfloat16(0.0f).value, 0x0000);
-  VERIFY_IS_EQUAL(bfloat16(-0.0f).value, 0x8000);
+  VERIFY_BFLOAT16_BITS_EQUAL(bfloat16(0.0f), 0x0000);
+  VERIFY_BFLOAT16_BITS_EQUAL(bfloat16(-0.0f), 0x8000);
 
   // Flush denormals to zero
   for (float denorm = -std::numeric_limits<float>::denorm_min();
@@ -117,16 +134,16 @@ void test_conversion()
     VERIFY_IS_EQUAL(bfloat16(denorm), false);
 
     if (std::signbit(denorm)) {
-      VERIFY_IS_EQUAL(bf_trunc.value, 0x8000);
+      VERIFY_BFLOAT16_BITS_EQUAL(bf_trunc, 0x8000);
     } else {
-      VERIFY_IS_EQUAL(bf_trunc.value, 0x0000);
+      VERIFY_BFLOAT16_BITS_EQUAL(bf_trunc, 0x0000);
     }
     bfloat16 bf_round = Eigen::bfloat16_impl::float_to_bfloat16_rtne<false>(denorm);
     VERIFY_IS_EQUAL(static_cast<float>(bf_round), 0.0f);
     if (std::signbit(denorm)) {
-      VERIFY_IS_EQUAL(bf_round.value, 0x8000);
+      VERIFY_BFLOAT16_BITS_EQUAL(bf_round, 0x8000);
     } else {
-      VERIFY_IS_EQUAL(bf_round.value, 0x0000);
+      VERIFY_BFLOAT16_BITS_EQUAL(bf_round, 0x0000);
     }
   }
 
@@ -231,33 +248,35 @@ void test_conversion()
   VERIFY((numext::isinf)(bfloat16(__bfloat16_raw(0x7f80))));
   VERIFY((numext::isnan)(bfloat16(__bfloat16_raw(0x7fc0))));
 
-  VERIFY_IS_EQUAL(bfloat16(BinaryToFloat(0x0, 0xff, 0x40, 0x0)).value, 0x7fc0);
-  VERIFY_IS_EQUAL(bfloat16(BinaryToFloat(0x1, 0xff, 0x40, 0x0)).value, 0xffc0);
-  VERIFY_IS_EQUAL(Eigen::bfloat16_impl::truncate_to_bfloat16(
-                      BinaryToFloat(0x0, 0xff, 0x40, 0x0))
-                      .value,
-                  0x7fc0);
-  VERIFY_IS_EQUAL(Eigen::bfloat16_impl::truncate_to_bfloat16(
-                      BinaryToFloat(0x1, 0xff, 0x40, 0x0))
-                      .value,
-                  0xffc0);
+  VERIFY_BFLOAT16_BITS_EQUAL(bfloat16(BinaryToFloat(0x0, 0xff, 0x40, 0x0)), 0x7fc0);
+  VERIFY_BFLOAT16_BITS_EQUAL(bfloat16(BinaryToFloat(0x1, 0xff, 0x40, 0x0)), 0xffc0);
+  VERIFY_BFLOAT16_BITS_EQUAL(Eigen::bfloat16_impl::truncate_to_bfloat16(
+                               BinaryToFloat(0x0, 0xff, 0x40, 0x0)),
+                             0x7fc0);
+  VERIFY_BFLOAT16_BITS_EQUAL(Eigen::bfloat16_impl::truncate_to_bfloat16(
+                               BinaryToFloat(0x1, 0xff, 0x40, 0x0)),
+                             0xffc0);
 }
 
 void test_numtraits()
 {
-  std::cout << "epsilon       = " << NumTraits<bfloat16>::epsilon() << "  (0x" << std::hex << NumTraits<bfloat16>::epsilon().value << ")" << std::endl;
-  std::cout << "highest       = " << NumTraits<bfloat16>::highest() << "  (0x" << std::hex << NumTraits<bfloat16>::highest().value << ")" << std::endl;
-  std::cout << "lowest        = " << NumTraits<bfloat16>::lowest() << "  (0x" << std::hex << NumTraits<bfloat16>::lowest().value << ")" << std::endl;
-  std::cout << "min           = " << (std::numeric_limits<bfloat16>::min)() << "  (0x" << std::hex << (std::numeric_limits<bfloat16>::min)().value << ")" << std::endl;
-  std::cout << "denorm min    = " << (std::numeric_limits<bfloat16>::denorm_min)() << "  (0x" << std::hex << (std::numeric_limits<bfloat16>::denorm_min)().value << ")" << std::endl;
-  std::cout << "infinity      = " << NumTraits<bfloat16>::infinity() << "  (0x" << std::hex << NumTraits<bfloat16>::infinity().value << ")" << std::endl;
-  std::cout << "quiet nan     = " << NumTraits<bfloat16>::quiet_NaN() << "  (0x" << std::hex << NumTraits<bfloat16>::quiet_NaN().value << ")" << std::endl;
-  std::cout << "signaling nan = " << std::numeric_limits<bfloat16>::signaling_NaN() << "  (0x" << std::hex << std::numeric_limits<bfloat16>::signaling_NaN().value << ")" << std::endl;
+  std::cout << "epsilon       = " << NumTraits<bfloat16>::epsilon() << "  (0x" << std::hex << numext::bit_cast<numext::uint16_t>(NumTraits<bfloat16>::epsilon()) << ")" << std::endl;
+  std::cout << "highest       = " << NumTraits<bfloat16>::highest() << "  (0x" << std::hex << numext::bit_cast<numext::uint16_t>(NumTraits<bfloat16>::highest()) << ")" << std::endl;
+  std::cout << "lowest        = " << NumTraits<bfloat16>::lowest() << "  (0x" << std::hex << numext::bit_cast<numext::uint16_t>(NumTraits<bfloat16>::lowest()) << ")" << std::endl;
+  std::cout << "min           = " << (std::numeric_limits<bfloat16>::min)() << "  (0x" << std::hex << numext::bit_cast<numext::uint16_t>((std::numeric_limits<bfloat16>::min)()) << ")" << std::endl;
+  std::cout << "denorm min    = " << (std::numeric_limits<bfloat16>::denorm_min)() << "  (0x" << std::hex << numext::bit_cast<numext::uint16_t>((std::numeric_limits<bfloat16>::denorm_min)()) << ")" << std::endl;
+  std::cout << "infinity      = " << NumTraits<bfloat16>::infinity() << "  (0x" << std::hex << numext::bit_cast<numext::uint16_t>(NumTraits<bfloat16>::infinity()) << ")" << std::endl;
+  std::cout << "quiet nan     = " << NumTraits<bfloat16>::quiet_NaN() << "  (0x" << std::hex << numext::bit_cast<numext::uint16_t>(NumTraits<bfloat16>::quiet_NaN()) << ")" << std::endl;
+  std::cout << "signaling nan = " << std::numeric_limits<bfloat16>::signaling_NaN() << "  (0x" << std::hex << numext::bit_cast<numext::uint16_t>(std::numeric_limits<bfloat16>::signaling_NaN()) << ")" << std::endl;
 
   VERIFY(NumTraits<bfloat16>::IsSigned);
 
-  VERIFY_IS_EQUAL( std::numeric_limits<bfloat16>::infinity().value, bfloat16(std::numeric_limits<float>::infinity()).value );
-  VERIFY_IS_EQUAL( std::numeric_limits<bfloat16>::quiet_NaN().value, bfloat16(std::numeric_limits<float>::quiet_NaN()).value );
+  VERIFY_IS_EQUAL(
+    numext::bit_cast<numext::uint16_t>(std::numeric_limits<bfloat16>::infinity()),
+    numext::bit_cast<numext::uint16_t>(bfloat16(std::numeric_limits<float>::infinity())) );
+  VERIFY_IS_EQUAL(
+    numext::bit_cast<numext::uint16_t>(std::numeric_limits<bfloat16>::quiet_NaN()),
+    numext::bit_cast<numext::uint16_t>(bfloat16(std::numeric_limits<float>::quiet_NaN())) );
   VERIFY( (std::numeric_limits<bfloat16>::min)() > bfloat16(0.f) );
   VERIFY( (std::numeric_limits<bfloat16>::denorm_min)() > bfloat16(0.f) );
   VERIFY_IS_EQUAL( (std::numeric_limits<bfloat16>::denorm_min)()/bfloat16(2), bfloat16(0.f) );
