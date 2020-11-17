@@ -774,7 +774,7 @@ template<> struct NumTraits<Eigen::half>
 
 } // end namespace Eigen
 
-#if defined(EIGEN_HAS_GPU_FP16)
+#if defined(EIGEN_HAS_GPU_FP16) || defined(EIGEN_HAS_ARM64_FP16_SCALAR_ARITHMETIC)
   #pragma pop_macro("EIGEN_CONSTEXPR")
 #endif
 
