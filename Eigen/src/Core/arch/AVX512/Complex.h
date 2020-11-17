@@ -323,7 +323,7 @@ template<> EIGEN_STRONG_INLINE std::complex<double> pfirst<Packet4cd>(const Pack
 }
 
 template<> EIGEN_STRONG_INLINE Packet4cd preverse(const Packet4cd& a) {
-  return Packet4cd(_mm512_shuffle_f64x2(a.v, a.v, EIGEN_SSE_SHUFFLE_MASK(3,2,1,0)));
+  return Packet4cd(_mm512_shuffle_f64x2(a.v, a.v, shuffle_mask<3,2,1,0>::mask));
 }
 
 template<> EIGEN_STRONG_INLINE std::complex<double> predux<Packet4cd>(const Packet4cd& a)
@@ -426,15 +426,15 @@ ptranspose(PacketBlock<Packet8cf,8>& kernel) {
 
 EIGEN_DEVICE_FUNC inline void
 ptranspose(PacketBlock<Packet4cd,4>& kernel) {
-  __m512d T0 = _mm512_shuffle_f64x2(kernel.packet[0].v, kernel.packet[1].v, EIGEN_SSE_SHUFFLE_MASK(0,1,0,1)); // [a0 a1 b0 b1]
-  __m512d T1 = _mm512_shuffle_f64x2(kernel.packet[0].v, kernel.packet[1].v, EIGEN_SSE_SHUFFLE_MASK(2,3,2,3)); // [a2 a3 b2 b3]
-  __m512d T2 = _mm512_shuffle_f64x2(kernel.packet[2].v, kernel.packet[3].v, EIGEN_SSE_SHUFFLE_MASK(0,1,0,1)); // [c0 c1 d0 d1]
-  __m512d T3 = _mm512_shuffle_f64x2(kernel.packet[2].v, kernel.packet[3].v, EIGEN_SSE_SHUFFLE_MASK(2,3,2,3)); // [c2 c3 d2 d3]
+  __m512d T0 = _mm512_shuffle_f64x2(kernel.packet[0].v, kernel.packet[1].v, shuffle_mask<0,1,0,1>::mask); // [a0 a1 b0 b1]
+  __m512d T1 = _mm512_shuffle_f64x2(kernel.packet[0].v, kernel.packet[1].v, shuffle_mask<2,3,2,3>::mask); // [a2 a3 b2 b3]
+  __m512d T2 = _mm512_shuffle_f64x2(kernel.packet[2].v, kernel.packet[3].v, shuffle_mask<0,1,0,1>::mask); // [c0 c1 d0 d1]
+  __m512d T3 = _mm512_shuffle_f64x2(kernel.packet[2].v, kernel.packet[3].v, shuffle_mask<2,3,2,3>::mask); // [c2 c3 d2 d3]
 
-  kernel.packet[3] = Packet4cd(_mm512_shuffle_f64x2(T1, T3, EIGEN_SSE_SHUFFLE_MASK(1,3,1,3))); // [a3 b3 c3 d3]
-  kernel.packet[2] = Packet4cd(_mm512_shuffle_f64x2(T1, T3, EIGEN_SSE_SHUFFLE_MASK(0,2,0,2))); // [a2 b2 c2 d2]
-  kernel.packet[1] = Packet4cd(_mm512_shuffle_f64x2(T0, T2, EIGEN_SSE_SHUFFLE_MASK(1,3,1,3))); // [a1 b1 c1 d1]
-  kernel.packet[0] = Packet4cd(_mm512_shuffle_f64x2(T0, T2, EIGEN_SSE_SHUFFLE_MASK(0,2,0,2))); // [a0 b0 c0 d0]
+  kernel.packet[3] = Packet4cd(_mm512_shuffle_f64x2(T1, T3, shuffle_mask<1,3,1,3>::mask)); // [a3 b3 c3 d3]
+  kernel.packet[2] = Packet4cd(_mm512_shuffle_f64x2(T1, T3, shuffle_mask<0,2,0,2>::mask)); // [a2 b2 c2 d2]
+  kernel.packet[1] = Packet4cd(_mm512_shuffle_f64x2(T0, T2, shuffle_mask<1,3,1,3>::mask)); // [a1 b1 c1 d1]
+  kernel.packet[0] = Packet4cd(_mm512_shuffle_f64x2(T0, T2, shuffle_mask<0,2,0,2>::mask)); // [a0 b0 c0 d0]
 }
 
 } // end namespace internal
