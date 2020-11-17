@@ -4355,7 +4355,7 @@ EIGEN_STRONG_INLINE Eigen::half predux_mul<Packet8hf>(const Packet8hf& a) {
   prod = vmul_f16(prod, vrev64_f16(prod));
 
   Eigen::half h;
-  h.x = vget_lane_f16(prod, 0) * vget_lane_f16(prod, 1);
+  h.x = vmulh_f16(vget_lane_f16(prod, 0), vget_lane_f16(prod, 1));
   return h;
 }
 
@@ -4364,7 +4364,7 @@ EIGEN_STRONG_INLINE Eigen::half predux_mul<Packet4hf>(const Packet4hf& a) {
   float16x4_t prod;
   prod = vmul_f16(a, vrev64_f16(a));
   Eigen::half h;
-  h.x = vget_lane_f16(prod, 0) * vget_lane_f16(prod, 1);
+  h.x = vmulh_f16(vget_lane_f16(prod, 0), vget_lane_f16(prod, 1));
   return h;
 }
 
