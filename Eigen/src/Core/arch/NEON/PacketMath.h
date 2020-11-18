@@ -3849,16 +3849,15 @@ template<> EIGEN_STRONG_INLINE Packet2d psqrt(const Packet2d& _x){ return vsqrtq
 typedef float16x4_t Packet4hf;
 typedef float16x8_t Packet8hf;
 
-// TODO(tellenbach): Enable packets of size 8 as soon as the GEBP can handle them
 template <>
 struct packet_traits<Eigen::half> : default_packet_traits {
-  typedef Packet4hf type;
+  typedef Packet8hf type;
   typedef Packet4hf half;
   enum {
     Vectorizable = 1,
     AlignedOnScalar = 1,
-    size = 4,
-    HasHalfPacket = 0,
+    size = 8,
+    HasHalfPacket = 1,
 
     HasCmp = 1,
     HasCast = 1,
@@ -3904,7 +3903,7 @@ struct unpacket_traits<Packet4hf> {
 template <>
 struct unpacket_traits<Packet8hf> {
   typedef Eigen::half type;
-  typedef Packet8hf half;
+  typedef Packet4hf half;
   enum {
     size = 8,
     alignment = Aligned16,
@@ -3913,6 +3912,11 @@ struct unpacket_traits<Packet8hf> {
     masked_store_available = false
   };
 };
+
+template<>
+EIGEN_DEVICE_FUNC Packet4hf predux_half_dowto4<Packet8hf>(const Packet8hf& a) {
+  return vadd_f16(vget_low_f16(a), vget_high_f16(a));
+}
 
 template <>
 EIGEN_STRONG_INLINE Packet8hf pset1<Packet8hf>(const Eigen::half& from) {
@@ -4418,7 +4422,8 @@ EIGEN_STRONG_INLINE Eigen::half predux_max<Packet4hf>(const Packet4hf& a) {
   return h;
 }
 
-EIGEN_DEVICE_FUNC inline void ptranspose(PacketBlock<Packet8hf, 4>& kernel) {
+EIGEN_DEVICE_FUNC inline void ptranspose(PacketBlock<Packet8hf, 4>& kernel)
+{
   EIGEN_ALIGN16 Eigen::half in[4][8];
 
   pstore<Eigen::half>(in[0], kernel.packet[0]);
@@ -4432,11 +4437,11 @@ EIGEN_DEVICE_FUNC inline void ptranspose(PacketBlock<Packet8hf, 4>& kernel) {
   for (int i = 0; i < 4; ++i) {
     EIGEN_UNROLL_LOOP
     for (int j = 0; j < 4; ++j) {
-      out[i][j] = in[j][2*i];
+      out[i][j] = in[j][2 * i];
     }
     EIGEN_UNROLL_LOOP
     for (int j = 0; j < 4; ++j) {
-      out[i][j+4] = in[j][2*i+1];
+      out[i][j + 4] = in[j][2 * i + 1];
     }
   }
 

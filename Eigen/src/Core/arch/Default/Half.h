@@ -159,6 +159,10 @@ struct half : public half_impl::half_base {
   explicit EIGEN_DEVICE_FUNC half(std::complex<RealScalar> c)
       : half_impl::half_base(half_impl::float_to_half_rtne(static_cast<float>(c.real()))) {}
 
+   EIGEN_DEVICE_FUNC operator float() const {  // NOLINT: Allow implicit conversion to float, because it is lossless.
+    return half_impl::half_to_float(*this);
+  }
+
   EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(bool) const {
     // +0.0 and -0.0 become false, everything else becomes true.
   #if defined(EIGEN_HAS_ARM64_FP16_SCALAR_ARITHMETIC)
@@ -166,47 +170,6 @@ struct half : public half_impl::half_base {
   #else
     return (x & 0x7fff) != 0;
   #endif
-  }
-  EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(signed char) const {
-    return static_cast<signed char>(half_impl::half_to_float(*this));
-  }
-  EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(unsigned char) const {
-    return static_cast<unsigned char>(half_impl::half_to_float(*this));
-  }
-  EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(short) const {
-    return static_cast<short>(half_impl::half_to_float(*this));
-  }
-  EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(numext::uint16_t) const {
-    return static_cast<numext::uint16_t>(half_impl::half_to_float(*this));
-  }
-  EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(int) const {
-    return static_cast<int>(half_impl::half_to_float(*this));
-  }
-  EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(unsigned int) const {
-    return static_cast<unsigned int>(half_impl::half_to_float(*this));
-  }
-  EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(long) const {
-    return static_cast<long>(half_impl::half_to_float(*this));
-  }
-  EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(unsigned long) const {
-    return static_cast<unsigned long>(half_impl::half_to_float(*this));
-  }
-  EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(long long) const {
-    return static_cast<long long>(half_impl::half_to_float(*this));
-  }
-  EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(unsigned long long) const {
-    return static_cast<unsigned long long>(half_to_float(*this));
-  }
-  EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(float) const {
-    return half_impl::half_to_float(*this);
-  }
-  EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(double) const {
-    return static_cast<double>(half_impl::half_to_float(*this));
-  }
-
-  template<typename RealScalar>
-  EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(std::complex<RealScalar>) const {
-    return std::complex<RealScalar>(static_cast<RealScalar>(*this), RealScalar(0));
   }
 };
 
@@ -686,6 +649,12 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half tan(const half& a) {
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half tanh(const half& a) {
   return half(::tanhf(float(a)));
 }
+EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half asin(const half& a) {
+  return half(::asinf(float(a)));
+}
+EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half acos(const half& a) {
+  return half(::acosf(float(a)));
+}
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half floor(const half& a) {
 #if (EIGEN_CUDA_SDK_VER >= 80000 && defined EIGEN_CUDA_ARCH && EIGEN_CUDA_ARCH >= 300) || \
   defined(EIGEN_HIP_DEVICE_COMPILE)
@@ -693,6 +662,9 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half floor(const half& a) {
 #else
   return half(::floorf(float(a)));
 #endif
+}
+EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half rint(const half& a) {
+  return half(::rintf(float(a)));
 }
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half ceil(const half& a) {
 #if (EIGEN_CUDA_SDK_VER >= 80000 && defined EIGEN_CUDA_ARCH && EIGEN_CUDA_ARCH >= 300) || \
