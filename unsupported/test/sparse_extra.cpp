@@ -22,6 +22,9 @@ static long g_dense_op_sparse_count = 0;
 #endif
 
 #define EIGEN_NO_DEPRECATED_WARNING
+// Disable counting of temporaries, since sparse_product(DynamicSparseMatrix)
+// has an extra copy-assignment.
+#define EIGEN_SPARSE_PRODUCT_IGNORE_TEMPORARY_COUNT
 #include "sparse_product.cpp"
 
 #if 0 // sparse_basic(DynamicSparseMatrix) does not compile at all -> disabled
