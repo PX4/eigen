@@ -1374,6 +1374,11 @@ T sqrt(const T &x)
   return sqrt(x);
 }
 
+// Boolean specialization, avoids implicit float to bool conversion (-Wimplicit-conversion-floating-point-to-bool).
+template<>
+EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_DEVICE_FUNC
+bool sqrt<bool>(const bool &x) { return x; }
+
 #if defined(SYCL_DEVICE_ONLY)
 SYCL_SPECIALIZE_FLOATING_TYPES_UNARY(sqrt, sqrt)
 #endif

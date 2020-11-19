@@ -99,6 +99,9 @@ Packet4f psqrt<Packet4f>(const Packet4f& x) { return _mm_sqrt_ps(x); }
 template<> EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED
 Packet2d psqrt<Packet2d>(const Packet2d& x) { return _mm_sqrt_pd(x); }
 
+template<> EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED
+Packet16b psqrt<Packet16b>(const Packet16b& x) { return x; }
+
 #if EIGEN_FAST_MATH
 
 template<> EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED

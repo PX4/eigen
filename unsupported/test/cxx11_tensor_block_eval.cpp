@@ -222,7 +222,7 @@ static void test_eval_tensor_unary_expr_block() {
   input.setRandom();
 
   VerifyBlockEvaluator<T, NumDims, Layout>(
-      input.square(), [&dims]() { return RandomBlock<Layout>(dims, 1, 10); });
+      input.abs(), [&dims]() { return RandomBlock<Layout>(dims, 1, 10); });
 }
 
 template <typename T, int NumDims, int Layout>
@@ -274,7 +274,7 @@ static void test_eval_tensor_broadcast() {
   // Check that desc.destination() memory is not shared between two broadcast
   // materializations.
   VerifyBlockEvaluator<T, NumDims, Layout>(
-      input.broadcast(bcast) * input.square().broadcast(bcast),
+      input.broadcast(bcast) * input.abs().broadcast(bcast),
       [&bcasted_dims]() { return SkewedInnerBlock<Layout>(bcasted_dims); });
 }
 
@@ -391,13 +391,38 @@ static void test_eval_tensor_chipping() {
 
   // Block expression assignment.
   VerifyBlockEvaluator<T, NumDims - 1, Layout>(
-      input.square().chip(chip_offset, chip_dim),
+      input.abs().chip(chip_offset, chip_dim),
       [&chipped_dims]() { return FixedSizeBlock(chipped_dims); });
 
   VerifyBlockEvaluator<T, NumDims - 1, Layout>(
-      input.square().chip(chip_offset, chip_dim),
+      input.abs().chip(chip_offset, chip_dim),
       [&chipped_dims]() { return RandomBlock<Layout>(chipped_dims, 1, 10); });
 }
+
+
+template<typename T, int NumDims>
+struct SimpleTensorGenerator {
+  T operator()(const array<Index, NumDims>& coords) const {
+    T result = static_cast<T>(0);
+    for (int i = 0; i < NumDims; ++i) {
+      result += static_cast<T>((i + 1) * coords[i]);
+    }
+    return result;
+  }
+};
+
+// Boolean specialization to avoid -Wint-in-bool-context warnings on GCC.
+template<int NumDims>
+struct SimpleTensorGenerator<bool, NumDims> {
+  bool operator()(const array<Index, NumDims>& coords) const {
+    bool result = false;
+    for (int i = 0; i < NumDims; ++i) {
+      result ^= coords[i];
+    }
+    return result;
+  }
+};
+
 
 template <typename T, int NumDims, int Layout>
 static void test_eval_tensor_generator() {
@@ -405,13 +430,7 @@ static void test_eval_tensor_generator() {
   Tensor<T, NumDims, Layout> input(dims);
   input.setRandom();
 
-  auto generator = [](const array<Index, NumDims>& coords) -> T {
-    T result = static_cast<T>(0);
-    for (int i = 0; i < NumDims; ++i) {
-      result += static_cast<T>((i + 1) * coords[i]);
-    }
-    return result;
-  };
+  auto generator = SimpleTensorGenerator<T, NumDims>();
 
   VerifyBlockEvaluator<T, NumDims, Layout>(
       input.generate(generator), [&dims]() { return FixedSizeBlock(dims); });

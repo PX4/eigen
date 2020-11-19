@@ -422,6 +422,18 @@ struct functor_traits<scalar_sqrt_op<Scalar> > {
   };
 };
 
+// Boolean specialization to eliminate -Wimplicit-conversion-floating-point-to-bool warnings.
+template<> struct scalar_sqrt_op<bool> {
+  EIGEN_EMPTY_STRUCT_CTOR(scalar_sqrt_op)
+  EIGEN_DEPRECATED EIGEN_DEVICE_FUNC inline bool operator() (const bool& a) const { return a; }
+  template <typename Packet>
+  EIGEN_DEPRECATED EIGEN_DEVICE_FUNC inline Packet packetOp(const Packet& a) const { return a; }
+};
+template <>
+struct functor_traits<scalar_sqrt_op<bool> > {
+  enum { Cost = 1, PacketAccess = packet_traits<bool>::Vectorizable };
+};
+
 /** \internal
   * \brief Template functor to compute the reciprocal square root of a scalar
   * \sa class CwiseUnaryOp, Cwise::rsqrt()
@@ -719,6 +731,19 @@ template<typename Scalar>
 struct functor_traits<scalar_square_op<Scalar> >
 { enum { Cost = NumTraits<Scalar>::MulCost, PacketAccess = packet_traits<Scalar>::HasMul }; };
 
+// Boolean specialization to avoid -Wint-in-bool-context warnings on GCC.
+template<>
+struct scalar_square_op<bool> {
+  EIGEN_EMPTY_STRUCT_CTOR(scalar_square_op)
+  EIGEN_DEPRECATED EIGEN_DEVICE_FUNC inline bool operator() (const bool& a) const { return a; }
+  template<typename Packet>
+  EIGEN_DEPRECATED EIGEN_DEVICE_FUNC inline const Packet packetOp(const Packet& a) const
+  { return a; }
+};
+template<>
+struct functor_traits<scalar_square_op<bool> >
+{ enum { Cost = 0, PacketAccess = packet_traits<bool>::Vectorizable }; };
+
 /** \internal
   * \brief Template functor to compute the cube of a scalar
   * \sa class CwiseUnaryOp, Cwise::cube()
@@ -734,6 +759,19 @@ struct scalar_cube_op {
 template<typename Scalar>
 struct functor_traits<scalar_cube_op<Scalar> >
 { enum { Cost = 2*NumTraits<Scalar>::MulCost, PacketAccess = packet_traits<Scalar>::HasMul }; };
+
+// Boolean specialization to avoid -Wint-in-bool-context warnings on GCC.
+template<>
+struct scalar_cube_op<bool> {
+  EIGEN_EMPTY_STRUCT_CTOR(scalar_cube_op)
+  EIGEN_DEPRECATED EIGEN_DEVICE_FUNC inline bool operator() (const bool& a) const { return a; }
+  template<typename Packet>
+  EIGEN_DEPRECATED EIGEN_DEVICE_FUNC inline const Packet packetOp(const Packet& a) const
+  { return a; }
+};
+template<>
+struct functor_traits<scalar_cube_op<bool> >
+{ enum { Cost = 0, PacketAccess = packet_traits<bool>::Vectorizable }; };
 
 /** \internal
   * \brief Template functor to compute the rounded value of a scalar
