@@ -1001,8 +1001,9 @@ void packetmath_scatter_gather() {
 
   int stride = internal::random<int>(1, 20);
 
-  EIGEN_ALIGN_MAX Scalar buffer[PacketSize * 20];
-  memset(buffer, 0, 20 * PacketSize * sizeof(Scalar));
+  // Buffer of zeros.
+  EIGEN_ALIGN_MAX Scalar buffer[PacketSize * 20] = {};
+
   Packet packet = internal::pload<Packet>(data1);
   internal::pscatter<Scalar, Packet>(buffer, packet, stride);
 
@@ -1073,7 +1074,12 @@ EIGEN_DECLARE_TEST(packetmath) {
     CALL_SUBTEST_10(test::runner<uint64_t>::run());
     CALL_SUBTEST_11(test::runner<std::complex<float> >::run());
     CALL_SUBTEST_12(test::runner<std::complex<double> >::run());
+#if defined(EIGEN_VECTORIZE_AVX)
+    // AVX half packets not fully implemented.
+    CALL_SUBTEST_13((packetmath<half, internal::packet_traits<half>::type>()));
+#else
     CALL_SUBTEST_13(test::runner<half>::run());
+#endif
     CALL_SUBTEST_14((packetmath<bool, internal::packet_traits<bool>::type>()));
     CALL_SUBTEST_15(test::runner<bfloat16>::run());
     g_first_pass = false;
