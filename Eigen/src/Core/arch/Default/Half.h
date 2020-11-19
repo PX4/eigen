@@ -162,15 +162,6 @@ struct half : public half_impl::half_base {
    EIGEN_DEVICE_FUNC operator float() const {  // NOLINT: Allow implicit conversion to float, because it is lossless.
     return half_impl::half_to_float(*this);
   }
-
-  EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(bool) const {
-    // +0.0 and -0.0 become false, everything else becomes true.
-  #if defined(EIGEN_HAS_ARM64_FP16_SCALAR_ARITHMETIC)
-    return (numext::bit_cast<numext::uint16_t>(x) & 0x7fff) != 0;
-  #else
-    return (x & 0x7fff) != 0;
-  #endif
-  }
 };
 
 } // end namespace Eigen

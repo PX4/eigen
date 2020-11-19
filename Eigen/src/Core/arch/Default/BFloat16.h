@@ -82,14 +82,6 @@ struct bfloat16 : public bfloat16_impl::bfloat16_base {
   EIGEN_DEVICE_FUNC operator float() const {  // NOLINT: Allow implicit conversion to float, because it is lossless.
     return bfloat16_impl::bfloat16_to_float(*this);
   }
-
-#if EIGEN_HAS_CXX11
-  EIGEN_DEVICE_FUNC EIGEN_EXPLICIT_CAST(bool) const {
-    // +0.0 and -0.0 become false, everything else becomes true.
-    return (value & 0x7fff) != 0;
-  }
-#endif
-
 };
 } // namespace Eigen
 
