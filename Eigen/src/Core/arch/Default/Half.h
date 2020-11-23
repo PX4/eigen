@@ -200,7 +200,7 @@ struct numeric_limits<Eigen::half> {
   static Eigen::half round_error() { return Eigen::half(0.5); }
   static Eigen::half infinity() { return Eigen::half_impl::raw_uint16_to_half(0x7c00); }
   static Eigen::half quiet_NaN() { return Eigen::half_impl::raw_uint16_to_half(0x7e00); }
-  static Eigen::half signaling_NaN() { return Eigen::half_impl::raw_uint16_to_half(0x7e00); }
+  static Eigen::half signaling_NaN() { return Eigen::half_impl::raw_uint16_to_half(0x7d00); }
   static Eigen::half denorm_min() { return Eigen::half_impl::raw_uint16_to_half(0x1); }
 };
 
@@ -744,7 +744,7 @@ template<> struct NumTraits<Eigen::half>
     return half_impl::raw_uint16_to_half(0x7c00);
   }
   EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR static EIGEN_STRONG_INLINE Eigen::half quiet_NaN() {
-    return half_impl::raw_uint16_to_half(0x7c01);
+    return half_impl::raw_uint16_to_half(0x7e00);
   }
 };
 

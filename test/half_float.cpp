@@ -136,12 +136,22 @@ void test_numtraits()
   VERIFY_IS_EQUAL(
     numext::bit_cast<numext::uint16_t>(std::numeric_limits<half>::infinity()),
     numext::bit_cast<numext::uint16_t>(half(std::numeric_limits<float>::infinity())) );
-  VERIFY_IS_EQUAL(
-    numext::bit_cast<numext::uint16_t>(std::numeric_limits<half>::quiet_NaN()),
-    numext::bit_cast<numext::uint16_t>(half(std::numeric_limits<float>::quiet_NaN())) );
-  VERIFY_IS_EQUAL(
-    numext::bit_cast<numext::uint16_t>(std::numeric_limits<half>::signaling_NaN()),
-    numext::bit_cast<numext::uint16_t>(half(std::numeric_limits<float>::signaling_NaN())) );
+  // There is no guarantee that casting a 32-bit NaN to 16-bit has a precise
+  // bit pattern.  We test that it is in fact a NaN, then test the signaling
+  // bit (msb of significand is 1 for quiet, 0 for signaling).
+  const numext::uint16_t HALF_QUIET_BIT = 0x0200;
+  VERIFY(
+    (numext::isnan)(std::numeric_limits<half>::quiet_NaN())
+    && (numext::isnan)(half(std::numeric_limits<float>::quiet_NaN()))
+    && ((numext::bit_cast<numext::uint16_t>(std::numeric_limits<half>::quiet_NaN()) & HALF_QUIET_BIT) > 0)
+    && ((numext::bit_cast<numext::uint16_t>(half(std::numeric_limits<float>::quiet_NaN())) & HALF_QUIET_BIT) > 0) );
+  // After a cast to half, a signaling NaN may become non-signaling
+  // (e.g. in the case of casting float to native __fp16). Thus, we check that
+  // both are NaN, and that only the `numeric_limits` version is signaling.
+  VERIFY(
+    (numext::isnan)(std::numeric_limits<half>::signaling_NaN())
+    && (numext::isnan)(half(std::numeric_limits<float>::signaling_NaN()))
+    && ((numext::bit_cast<numext::uint16_t>(std::numeric_limits<half>::signaling_NaN()) & HALF_QUIET_BIT) == 0) );
 
   VERIFY( (std::numeric_limits<half>::min)() > half(0.f) );
   VERIFY( (std::numeric_limits<half>::denorm_min)() > half(0.f) );
