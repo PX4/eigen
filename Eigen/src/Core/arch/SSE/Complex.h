@@ -40,6 +40,7 @@ template<> struct packet_traits<std::complex<float> >  : default_packet_traits
     HasMul    = 1,
     HasDiv    = 1,
     HasNegate = 1,
+    HasSqrt   = 1,
     HasAbs    = 0,
     HasAbs2   = 0,
     HasMin    = 0,
@@ -50,7 +51,18 @@ template<> struct packet_traits<std::complex<float> >  : default_packet_traits
 };
 #endif
 
-template<> struct unpacket_traits<Packet2cf> { typedef std::complex<float> type; enum {size=2, alignment=Aligned16, vectorizable=true, masked_load_available=false, masked_store_available=false}; typedef Packet2cf half; };
+template<> struct unpacket_traits<Packet2cf> {
+  typedef std::complex<float> type;
+  typedef Packet2cf half;
+  typedef Packet4f real;
+  enum {
+    size=2,
+    alignment=Aligned16,
+    vectorizable=true,
+    masked_load_available=false,
+    masked_store_available=false
+  };
+};
 
 template<> EIGEN_STRONG_INLINE Packet2cf padd<Packet2cf>(const Packet2cf& a, const Packet2cf& b) { return Packet2cf(_mm_add_ps(a.v,b.v)); }
 template<> EIGEN_STRONG_INLINE Packet2cf psub<Packet2cf>(const Packet2cf& a, const Packet2cf& b) { return Packet2cf(_mm_sub_ps(a.v,b.v)); }
@@ -83,7 +95,6 @@ template<> EIGEN_STRONG_INLINE Packet2cf pmul<Packet2cf>(const Packet2cf& a, con
 }
 
 template<> EIGEN_STRONG_INLINE Packet2cf ptrue  <Packet2cf>(const Packet2cf& a) { return Packet2cf(ptrue(Packet4f(a.v))); }
-
 template<> EIGEN_STRONG_INLINE Packet2cf pand   <Packet2cf>(const Packet2cf& a, const Packet2cf& b) { return Packet2cf(_mm_and_ps(a.v,b.v)); }
 template<> EIGEN_STRONG_INLINE Packet2cf por    <Packet2cf>(const Packet2cf& a, const Packet2cf& b) { return Packet2cf(_mm_or_ps(a.v,b.v)); }
 template<> EIGEN_STRONG_INLINE Packet2cf pxor   <Packet2cf>(const Packet2cf& a, const Packet2cf& b) { return Packet2cf(_mm_xor_ps(a.v,b.v)); }
@@ -255,6 +266,7 @@ template<> struct packet_traits<std::complex<double> >  : default_packet_traits
     HasMul    = 1,
     HasDiv    = 1,
     HasNegate = 1,
+    HasSqrt   = 1,
     HasAbs    = 0,
     HasAbs2   = 0,
     HasMin    = 0,
@@ -264,7 +276,18 @@ template<> struct packet_traits<std::complex<double> >  : default_packet_traits
 };
 #endif
 
-template<> struct unpacket_traits<Packet1cd> { typedef std::complex<double> type; enum {size=1, alignment=Aligned16, vectorizable=true, masked_load_available=false, masked_store_available=false}; typedef Packet1cd half; };
+template<> struct unpacket_traits<Packet1cd> {
+  typedef std::complex<double> type;
+  typedef Packet1cd half;
+  typedef Packet2d real;
+  enum {
+    size=1,
+    alignment=Aligned16,
+    vectorizable=true,
+    masked_load_available=false,
+    masked_store_available=false
+  };
+};
 
 template<> EIGEN_STRONG_INLINE Packet1cd padd<Packet1cd>(const Packet1cd& a, const Packet1cd& b) { return Packet1cd(_mm_add_pd(a.v,b.v)); }
 template<> EIGEN_STRONG_INLINE Packet1cd psub<Packet1cd>(const Packet1cd& a, const Packet1cd& b) { return Packet1cd(_mm_sub_pd(a.v,b.v)); }
@@ -426,8 +449,15 @@ template<>  EIGEN_STRONG_INLINE Packet2cf pblend(const Selector<2>& ifPacket, co
   return Packet2cf(_mm_castpd_ps(result));
 }
 
-} // end namespace internal
+template<> EIGEN_STRONG_INLINE Packet1cd psqrt<Packet1cd>(const Packet1cd& a) {
+  return psqrt_complex<Packet1cd>(a);
+}
 
+template<> EIGEN_STRONG_INLINE Packet2cf psqrt<Packet2cf>(const Packet2cf& a) {
+  return psqrt_complex<Packet2cf>(a);
+}
+
+} // end namespace internal
 } // end namespace Eigen
 
 #endif // EIGEN_COMPLEX_SSE_H

@@ -37,6 +37,7 @@ template<> struct packet_traits<std::complex<float> >  : default_packet_traits
     HasMul    = 1,
     HasDiv    = 1,
     HasNegate = 1,
+    HasSqrt   = 1,
     HasAbs    = 0,
     HasAbs2   = 0,
     HasMin    = 0,
@@ -47,6 +48,8 @@ template<> struct packet_traits<std::complex<float> >  : default_packet_traits
 
 template<> struct unpacket_traits<Packet8cf> {
   typedef std::complex<float> type;
+  typedef Packet4cf half;
+  typedef Packet16f real;
   enum {
     size = 8,
     alignment=unpacket_traits<Packet16f>::alignment,
@@ -54,7 +57,6 @@ template<> struct unpacket_traits<Packet8cf> {
     masked_load_available=false,
     masked_store_available=false
   };
-  typedef Packet4cf half;
 };
 
 template<> EIGEN_STRONG_INLINE Packet8cf ptrue<Packet8cf>(const Packet8cf& a) { return Packet8cf(ptrue(Packet16f(a.v))); }
@@ -223,6 +225,7 @@ template<> struct packet_traits<std::complex<double> >  : default_packet_traits
     HasMul    = 1,
     HasDiv    = 1,
     HasNegate = 1,
+    HasSqrt   = 1,
     HasAbs    = 0,
     HasAbs2   = 0,
     HasMin    = 0,
@@ -233,6 +236,8 @@ template<> struct packet_traits<std::complex<double> >  : default_packet_traits
 
 template<> struct unpacket_traits<Packet4cd> {
   typedef std::complex<double> type;
+  typedef Packet2cd half;
+  typedef Packet8d real;
   enum {
     size = 4,
     alignment = unpacket_traits<Packet8d>::alignment,
@@ -240,7 +245,6 @@ template<> struct unpacket_traits<Packet4cd> {
     masked_load_available=false,
     masked_store_available=false
   };
-  typedef Packet2cd half;
 };
 
 template<> EIGEN_STRONG_INLINE Packet4cd padd<Packet4cd>(const Packet4cd& a, const Packet4cd& b) { return Packet4cd(_mm512_add_pd(a.v,b.v)); }
@@ -437,8 +441,15 @@ ptranspose(PacketBlock<Packet4cd,4>& kernel) {
   kernel.packet[0] = Packet4cd(_mm512_shuffle_f64x2(T0, T2, (shuffle_mask<0,2,0,2>::mask))); // [a0 b0 c0 d0]
 }
 
-} // end namespace internal
+template<> EIGEN_STRONG_INLINE Packet4cd psqrt<Packet4cd>(const Packet4cd& a) {
+  return psqrt_complex<Packet4cd>(a);
+}
 
+template<> EIGEN_STRONG_INLINE Packet8cf psqrt<Packet8cf>(const Packet8cf& a) {
+  return psqrt_complex<Packet8cf>(a);
+}
+
+} // end namespace internal
 } // end namespace Eigen
 
 #endif // EIGEN_COMPLEX_AVX512_H

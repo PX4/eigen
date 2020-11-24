@@ -473,8 +473,6 @@ void packetmath() {
     CHECK_CWISE3_IF(true, internal::pselect, internal::pselect);
   }
 
-  CHECK_CWISE1_IF(PacketTraits::HasSqrt, numext::sqrt, internal::psqrt);
-
   for (int i = 0; i < size; ++i) {
     data1[i] = internal::random<Scalar>();
   }
@@ -486,6 +484,11 @@ void packetmath() {
   packetmath_boolean_mask_ops<Scalar, Packet>();
   packetmath_pcast_ops_runner<Scalar, Packet>::run();
   packetmath_minus_zero_add<Scalar, Packet>();
+
+  for (int i = 0; i < size; ++i) {
+    data1[i] = numext::abs(internal::random<Scalar>());
+  }
+  CHECK_CWISE1_IF(PacketTraits::HasSqrt, numext::sqrt, internal::psqrt);
 }
 
 template <typename Scalar, typename Packet>
@@ -966,6 +969,8 @@ void test_conj_helper(Scalar* data1, Scalar* data2, Scalar* ref, Scalar* pval) {
 
 template <typename Scalar, typename Packet>
 void packetmath_complex() {
+  typedef internal::packet_traits<Scalar> PacketTraits;
+  typedef typename Scalar::value_type RealScalar;
   const int PacketSize = internal::unpacket_traits<Packet>::size;
 
   const int size = PacketSize * 4;
@@ -984,11 +989,17 @@ void packetmath_complex() {
   test_conj_helper<Scalar, Packet, true, false>(data1, data2, ref, pval);
   test_conj_helper<Scalar, Packet, true, true>(data1, data2, ref, pval);
 
+  // Test pcplxflip.
   {
     for (int i = 0; i < PacketSize; ++i) ref[i] = Scalar(std::imag(data1[i]), std::real(data1[i]));
     internal::pstore(pval, internal::pcplxflip(internal::pload<Packet>(data1)));
     VERIFY(test::areApprox(ref, pval, PacketSize) && "pcplxflip");
   }
+
+  for (int i = 0; i < size; ++i) {
+    data1[i] = Scalar(internal::random<RealScalar>(), internal::random<RealScalar>());
+  }
+  CHECK_CWISE1_IF(PacketTraits::HasSqrt, numext::sqrt, internal::psqrt);
 }
 
 template <typename Scalar, typename Packet>

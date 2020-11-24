@@ -539,6 +539,20 @@ inline void pbroadcast2(const typename unpacket_traits<Packet>::type *a,
 template<typename Packet> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet
 plset(const typename unpacket_traits<Packet>::type& a) { return a; }
 
+/** \internal \returns a packet with constant coefficients \a a, e.g.: (x, 0, x, 0),
+     where x is the value of all 1-bits. */
+template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
+peven_mask(const Packet& /*a*/) {
+  typedef typename unpacket_traits<Packet>::type Scalar;
+  const size_t n = unpacket_traits<Packet>::size;
+  Scalar elements[n];
+  for(size_t i = 0; i < n; ++i) {
+    memset(elements+i, ((i & 1) == 0 ? 0xff : 0), sizeof(Scalar));
+  }
+  return ploadu<Packet>(elements);
+}
+
+
 /** \internal copy the packet \a from to \a *to, \a to must be 16 bytes aligned */
 template<typename Scalar, typename Packet> EIGEN_DEVICE_FUNC inline void pstore(Scalar* to, const Packet& from)
 { (*to) = from; }
