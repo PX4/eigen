@@ -158,6 +158,16 @@ Packet4d prsqrt<Packet4d>(const Packet4d& _x) {
   return _mm256_div_pd(p4d_one, _mm256_sqrt_pd(_x));
 }
 
+F16_PACKET_FUNCTION(Packet8f, Packet8h, psin)
+F16_PACKET_FUNCTION(Packet8f, Packet8h, pcos)
+F16_PACKET_FUNCTION(Packet8f, Packet8h, plog)
+F16_PACKET_FUNCTION(Packet8f, Packet8h, plog1p)
+F16_PACKET_FUNCTION(Packet8f, Packet8h, pexpm1)
+F16_PACKET_FUNCTION(Packet8f, Packet8h, pexp)
+F16_PACKET_FUNCTION(Packet8f, Packet8h, ptanh)
+F16_PACKET_FUNCTION(Packet8f, Packet8h, psqrt)
+F16_PACKET_FUNCTION(Packet8f, Packet8h, prsqrt)
+
 BF16_PACKET_FUNCTION(Packet8f, Packet8bf, psin)
 BF16_PACKET_FUNCTION(Packet8f, Packet8bf, pcos)
 BF16_PACKET_FUNCTION(Packet8f, Packet8bf, plog)

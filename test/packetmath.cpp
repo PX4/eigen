@@ -556,7 +556,7 @@ void packetmath_real() {
     VERIFY((numext::isnan)(data2[0]));
     // TODO(rmlarsen): Re-enable for bfloat16.
     if (!internal::is_same<Scalar, bfloat16>::value) {
-      VERIFY_IS_EQUAL(std::exp(small), data2[1]);
+      VERIFY_IS_APPROX(std::exp(small), data2[1]);
     }
 
     data1[0] = -small;
@@ -564,21 +564,21 @@ void packetmath_real() {
     h.store(data2, internal::pexp(h.load(data1)));
     // TODO(rmlarsen): Re-enable for bfloat16.
     if (!internal::is_same<Scalar, bfloat16>::value) {
-      VERIFY_IS_EQUAL(std::exp(-small), data2[0]);
+      VERIFY_IS_APPROX(std::exp(-small), data2[0]);
     }
     VERIFY_IS_EQUAL(std::exp(Scalar(0)), data2[1]);
 
     data1[0] = (std::numeric_limits<Scalar>::min)();
     data1[1] = -(std::numeric_limits<Scalar>::min)();
     h.store(data2, internal::pexp(h.load(data1)));
-    VERIFY_IS_EQUAL(std::exp((std::numeric_limits<Scalar>::min)()), data2[0]);
-    VERIFY_IS_EQUAL(std::exp(-(std::numeric_limits<Scalar>::min)()), data2[1]);
+    VERIFY_IS_APPROX(std::exp((std::numeric_limits<Scalar>::min)()), data2[0]);
+    VERIFY_IS_APPROX(std::exp(-(std::numeric_limits<Scalar>::min)()), data2[1]);
 
     data1[0] = std::numeric_limits<Scalar>::denorm_min();
     data1[1] = -std::numeric_limits<Scalar>::denorm_min();
     h.store(data2, internal::pexp(h.load(data1)));
-    VERIFY_IS_EQUAL(std::exp(std::numeric_limits<Scalar>::denorm_min()), data2[0]);
-    VERIFY_IS_EQUAL(std::exp(-std::numeric_limits<Scalar>::denorm_min()), data2[1]);
+    VERIFY_IS_APPROX(std::exp(std::numeric_limits<Scalar>::denorm_min()), data2[0]);
+    VERIFY_IS_APPROX(std::exp(-std::numeric_limits<Scalar>::denorm_min()), data2[1]);
   }
 
   if (PacketTraits::HasTanh) {
@@ -618,7 +618,7 @@ void packetmath_real() {
       test::packet_helper<PacketTraits::HasLog, Packet> h;
       h.store(data2, internal::plog(h.load(data1)));
       VERIFY((numext::isnan)(data2[0]));
-      VERIFY_IS_EQUAL(std::log(std::numeric_limits<Scalar>::epsilon()), data2[1]);
+      VERIFY_IS_APPROX(std::log(std::numeric_limits<Scalar>::epsilon()), data2[1]);
 
       data1[0] = -std::numeric_limits<Scalar>::epsilon();
       data1[1] = Scalar(0);
@@ -629,7 +629,7 @@ void packetmath_real() {
       data1[0] = (std::numeric_limits<Scalar>::min)();
       data1[1] = -(std::numeric_limits<Scalar>::min)();
       h.store(data2, internal::plog(h.load(data1)));
-      VERIFY_IS_EQUAL(std::log((std::numeric_limits<Scalar>::min)()), data2[0]);
+      VERIFY_IS_APPROX(std::log((std::numeric_limits<Scalar>::min)()), data2[0]);
       VERIFY((numext::isnan)(data2[1]));
 
       // Note: 32-bit arm always flushes denorms to zero.
@@ -672,8 +672,10 @@ void packetmath_real() {
       VERIFY((numext::isnan)(data2[0]));
       VERIFY((numext::isnan)(data2[1]));
     }
-    // TODO(rmlarsen): Re-enable for bfloat16.
-    if (PacketTraits::HasCos && !internal::is_same<Scalar, bfloat16>::value) {
+    // TODO(rmlarsen): Re-enable for half and bfloat16.
+    if (PacketTraits::HasCos
+        && !internal::is_same<Scalar, half>::value
+        && !internal::is_same<Scalar, bfloat16>::value) {
       test::packet_helper<PacketTraits::HasCos, Packet> h;
       for (Scalar k = Scalar(1); k < Scalar(10000) / std::numeric_limits<Scalar>::epsilon(); k *= Scalar(2)) {
         for (int k1 = 0; k1 <= 1; ++k1) {
@@ -1074,12 +1076,7 @@ EIGEN_DECLARE_TEST(packetmath) {
     CALL_SUBTEST_10(test::runner<uint64_t>::run());
     CALL_SUBTEST_11(test::runner<std::complex<float> >::run());
     CALL_SUBTEST_12(test::runner<std::complex<double> >::run());
-#if defined(EIGEN_VECTORIZE_AVX)
-    // AVX half packets not fully implemented.
-    CALL_SUBTEST_13((packetmath<half, internal::packet_traits<half>::type>()));
-#else
     CALL_SUBTEST_13(test::runner<half>::run());
-#endif
     CALL_SUBTEST_14((packetmath<bool, internal::packet_traits<bool>::type>()));
     CALL_SUBTEST_15(test::runner<bfloat16>::run());
     g_first_pass = false;
