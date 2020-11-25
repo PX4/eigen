@@ -14,6 +14,22 @@ namespace Eigen {
 
 namespace internal {
 
+template<> EIGEN_STRONG_INLINE Packet16i pcast<Packet16f, Packet16i>(const Packet16f& a) {
+  return _mm512_cvttps_epi32(a);
+}
+
+template<> EIGEN_STRONG_INLINE Packet16f pcast<Packet16i, Packet16f>(const Packet16i& a) {
+  return _mm512_cvtepi32_ps(a);
+}
+
+template<> EIGEN_STRONG_INLINE Packet16i preinterpret<Packet16i, Packet16f>(const Packet16f& a) {
+  return _mm512_castps_si512(a);
+}
+
+template<> EIGEN_STRONG_INLINE Packet16f preinterpret<Packet16f, Packet16i>(const Packet16i& a) {
+  return _mm512_castsi512_ps(a);
+}
+
 template <>
 struct type_casting_traits<half, float> {
   enum {

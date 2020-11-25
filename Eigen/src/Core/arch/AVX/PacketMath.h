@@ -105,7 +105,8 @@ template<> struct packet_traits<double> : default_packet_traits
     HasBlend = 1,
     HasRound = 1,
     HasFloor = 1,
-    HasCeil = 1
+    HasCeil = 1,
+    HasRint = 1
   };
 };
 
@@ -278,7 +279,15 @@ template<> EIGEN_STRONG_INLINE Packet8i pconj(const Packet8i& a) { return a; }
 
 template<> EIGEN_STRONG_INLINE Packet8f pmul<Packet8f>(const Packet8f& a, const Packet8f& b) { return _mm256_mul_ps(a,b); }
 template<> EIGEN_STRONG_INLINE Packet4d pmul<Packet4d>(const Packet4d& a, const Packet4d& b) { return _mm256_mul_pd(a,b); }
-
+template<> EIGEN_STRONG_INLINE Packet8i pmul<Packet8i>(const Packet8i& a, const Packet8i& b) {
+#ifdef EIGEN_VECTORIZE_AVX2
+  return _mm256_mullo_epi32(a,b);
+#else
+  const __m128i lo = _mm_mullo_epi32(_mm256_extractf128_si256(a, 0), _mm256_extractf128_si256(b, 0));
+  const __m128i hi = _mm_mullo_epi32(_mm256_extractf128_si256(a, 1), _mm256_extractf128_si256(b, 1));
+  return _mm256_insertf128_si256(_mm256_castsi128_si256(lo), (hi), 1);
+#endif
+}
 
 template<> EIGEN_STRONG_INLINE Packet8f pdiv<Packet8f>(const Packet8f& a, const Packet8f& b) { return _mm256_div_ps(a,b); }
 template<> EIGEN_STRONG_INLINE Packet4d pdiv<Packet4d>(const Packet4d& a, const Packet4d& b) { return _mm256_div_pd(a,b); }
@@ -499,14 +508,14 @@ template<> EIGEN_STRONG_INLINE Packet8i pandnot<Packet8i>(const Packet8i& a, con
 
 template<> EIGEN_STRONG_INLINE Packet8f pround<Packet8f>(const Packet8f& a)
 {
-  const Packet8f mask = pset1frombits<Packet8f>(0x80000000u);
-  const Packet8f prev0dot5 = pset1frombits<Packet8f>(0x3EFFFFFFu);
+  const Packet8f mask = pset1frombits<Packet8f>(static_cast<numext::uint32_t>(0x80000000u));
+  const Packet8f prev0dot5 = pset1frombits<Packet8f>(static_cast<numext::uint32_t>(0x3EFFFFFFu));
   return _mm256_round_ps(padd(por(pand(a, mask), prev0dot5), a), _MM_FROUND_TO_ZERO);
 }
 template<> EIGEN_STRONG_INLINE Packet4d pround<Packet4d>(const Packet4d& a)
 {
-  const Packet4d mask = _mm256_castsi256_pd(_mm256_set_epi64x(0x8000000000000000ull, 0x8000000000000000ull, 0x8000000000000000ull, 0x8000000000000000ull));
-  const Packet4d prev0dot5 = _mm256_castsi256_pd(_mm256_set_epi64x(0x3FDFFFFFFFFFFFFFull, 0x3FDFFFFFFFFFFFFFull, 0x3FDFFFFFFFFFFFFFull, 0x3FDFFFFFFFFFFFFFull));
+  const Packet4d mask = pset1frombits<Packet4d>(static_cast<numext::uint64_t>(0x8000000000000000ull));
+  const Packet4d prev0dot5 = pset1frombits<Packet4d>(static_cast<numext::uint64_t>(0x3FDFFFFFFFFFFFFFull));
   return _mm256_round_pd(padd(por(pand(a, mask), prev0dot5), a), _MM_FROUND_TO_ZERO);
 }
 

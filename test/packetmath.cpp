@@ -618,7 +618,10 @@ void packetmath_real() {
       test::packet_helper<PacketTraits::HasLog, Packet> h;
       h.store(data2, internal::plog(h.load(data1)));
       VERIFY((numext::isnan)(data2[0]));
-      VERIFY_IS_APPROX(std::log(std::numeric_limits<Scalar>::epsilon()), data2[1]);
+      // TODO(cantonios): Re-enable for bfloat16.
+      if (!internal::is_same<Scalar, bfloat16>::value) {
+        VERIFY_IS_APPROX(std::log(data1[1]), data2[1]);
+      }
 
       data1[0] = -std::numeric_limits<Scalar>::epsilon();
       data1[1] = Scalar(0);
@@ -629,7 +632,10 @@ void packetmath_real() {
       data1[0] = (std::numeric_limits<Scalar>::min)();
       data1[1] = -(std::numeric_limits<Scalar>::min)();
       h.store(data2, internal::plog(h.load(data1)));
-      VERIFY_IS_APPROX(std::log((std::numeric_limits<Scalar>::min)()), data2[0]);
+      // TODO(cantonios): Re-enable for bfloat16.
+      if (!internal::is_same<Scalar, bfloat16>::value) {
+        VERIFY_IS_APPROX(std::log((std::numeric_limits<Scalar>::min)()), data2[0]);
+      }
       VERIFY((numext::isnan)(data2[1]));
 
       // Note: 32-bit arm always flushes denorms to zero.
@@ -731,54 +737,6 @@ void packetmath_real() {
   VERIFY(test::areApprox(ref, data2, PacketSize) && #POP); \
 }
 
-template <>
-void packetmath_real<bfloat16, typename internal::packet_traits<bfloat16>::type>(){
-  typedef internal::packet_traits<bfloat16> PacketTraits;
-  typedef internal::packet_traits<bfloat16>::type Packet;
-
-  const int PacketSize = internal::unpacket_traits<Packet>::size;
-  const int size = PacketSize * 4;
-  EIGEN_ALIGN_MAX bfloat16 data1[PacketSize * 4];
-  EIGEN_ALIGN_MAX bfloat16 data2[PacketSize * 4];
-  EIGEN_ALIGN_MAX bfloat16 ref[PacketSize * 4];
-
-  for (int i = 0; i < size; ++i) {
-    data1[i] = bfloat16(internal::random<float>(0, 1) * std::pow(float(10), internal::random<float>(-6, 6)));
-    data2[i] = bfloat16(internal::random<float>(0, 1) * std::pow(float(10), internal::random<float>(-6, 6)));
-    data1[i] = bfloat16(0);
-  }
-
-  if (internal::random<float>(0, 1) < 0.1f) data1[internal::random<int>(0, PacketSize)] = bfloat16(0);
-
-  CAST_CHECK_CWISE1_IF(PacketTraits::HasLog, std::log, internal::plog, bfloat16, float);
-  CAST_CHECK_CWISE1_IF(PacketTraits::HasRsqrt, float(1) / std::sqrt, internal::prsqrt, bfloat16, float);
-
-  for (int i = 0; i < size; ++i) {
-    data1[i] = bfloat16(internal::random<float>(-1, 1) * std::pow(float(10), internal::random<float>(-3, 3)));
-    data2[i] = bfloat16(internal::random<float>(-1, 1) * std::pow(float(10), internal::random<float>(-3, 3)));
-  }
-  CAST_CHECK_CWISE1_IF(PacketTraits::HasSin, std::sin, internal::psin, bfloat16, float);
-  CAST_CHECK_CWISE1_IF(PacketTraits::HasCos, std::cos, internal::pcos, bfloat16, float);
-  CAST_CHECK_CWISE1_IF(PacketTraits::HasTan, std::tan, internal::ptan, bfloat16, float);
-
-  CAST_CHECK_CWISE1_IF(PacketTraits::HasRound, numext::round, internal::pround, bfloat16, float);
-  CAST_CHECK_CWISE1_IF(PacketTraits::HasCeil, numext::ceil, internal::pceil, bfloat16, float);
-  CAST_CHECK_CWISE1_IF(PacketTraits::HasFloor, numext::floor, internal::pfloor, bfloat16, float);
-
-  for (int i = 0; i < size; ++i) {
-    data1[i] = bfloat16(-1.5 + i);
-    data2[i] = bfloat16(-1.5 + i);
-  }
-  CAST_CHECK_CWISE1_IF(PacketTraits::HasRound, numext::round, internal::pround, bfloat16, float);
-
-  for (int i = 0; i < size; ++i) {
-    data1[i] = bfloat16(internal::random<float>(-87, 88));
-    data2[i] = bfloat16(internal::random<float>(-87, 88));
-  }
-  CAST_CHECK_CWISE1_IF(PacketTraits::HasExp, std::exp, internal::pexp, bfloat16, float);
-
-}
-
 template <typename Scalar>
 Scalar propagate_nan_max(const Scalar& a, const Scalar& b) {
   if ((numext::isnan)(a)) return a;
@@ -790,6 +748,20 @@ template <typename Scalar>
 Scalar propagate_nan_min(const Scalar& a, const Scalar& b) {
   if ((numext::isnan)(a)) return a;
   if ((numext::isnan)(b)) return b;
+  return (numext::mini)(a,b);
+}
+
+template <typename Scalar>
+Scalar propagate_number_max(const Scalar& a, const Scalar& b) {
+  if ((numext::isnan)(a)) return b;
+  if ((numext::isnan)(b)) return a;
+  return (numext::maxi)(a,b);
+}
+
+template <typename Scalar>
+Scalar propagate_number_min(const Scalar& a, const Scalar& b) {
+  if ((numext::isnan)(a)) return b;
+  if ((numext::isnan)(b)) return a;
   return (numext::mini)(a,b);
 }
 
@@ -809,15 +781,9 @@ void packetmath_notcomplex() {
 
   CHECK_CWISE2_IF(PacketTraits::HasMin, (std::min), internal::pmin);
   CHECK_CWISE2_IF(PacketTraits::HasMax, (std::max), internal::pmax);
-#if EIGEN_HAS_CXX11_MATH
-  using std::fmin;
-  using std::fmax;
-#else
-  using ::fmin;
-  using ::fmax;
-#endif
-  CHECK_CWISE2_IF(PacketTraits::HasMin, fmin, (internal::pmin<PropagateNumbers>));
-  CHECK_CWISE2_IF(PacketTraits::HasMax, fmax, internal::pmax<PropagateNumbers>);
+
+  CHECK_CWISE2_IF(PacketTraits::HasMin, propagate_number_min, internal::pmin<PropagateNumbers>);
+  CHECK_CWISE2_IF(PacketTraits::HasMax, propagate_number_max, internal::pmax<PropagateNumbers>);
   CHECK_CWISE1(numext::abs, internal::pabs);
   CHECK_CWISE2_IF(PacketTraits::HasAbsDiff, REF_ABS_DIFF, internal::pabsdiff);
 
@@ -890,51 +856,10 @@ void packetmath_notcomplex() {
       data1[i + PacketSize] = internal::random<bool>() ? std::numeric_limits<Scalar>::quiet_NaN() : Scalar(0);
     }
     // Note: NaN propagation is implementation defined for pmin/pmax, so we do not test it here.
-    CHECK_CWISE2_IF(PacketTraits::HasMin, fmin, (internal::pmin<PropagateNumbers>));
-    CHECK_CWISE2_IF(PacketTraits::HasMax, fmax, internal::pmax<PropagateNumbers>);
+    CHECK_CWISE2_IF(PacketTraits::HasMin, propagate_number_min, (internal::pmin<PropagateNumbers>));
+    CHECK_CWISE2_IF(PacketTraits::HasMax, propagate_number_max, internal::pmax<PropagateNumbers>);
     CHECK_CWISE2_IF(PacketTraits::HasMin, propagate_nan_min, (internal::pmin<PropagateNaN>));
     CHECK_CWISE2_IF(PacketTraits::HasMax, propagate_nan_max, internal::pmax<PropagateNaN>);
-  }
-}
-
-template <>
-void packetmath_notcomplex<bfloat16, typename internal::packet_traits<bfloat16>::type>(){
-  typedef bfloat16 Scalar;
-  typedef internal::packet_traits<bfloat16>::type Packet;
-  typedef internal::packet_traits<Scalar> PacketTraits;
-  const int PacketSize = internal::unpacket_traits<Packet>::size;
-
-  EIGEN_ALIGN_MAX Scalar data1[PacketSize * 4];
-  EIGEN_ALIGN_MAX Scalar data2[PacketSize * 4];
-  EIGEN_ALIGN_MAX Scalar ref[PacketSize * 4];
-  Array<Scalar, Dynamic, 1>::Map(data1, PacketSize * 4).setRandom();
-
-  ref[0] = data1[0];
-  for (int i = 0; i < PacketSize; ++i) ref[0] = (std::min)(ref[0], data1[i]);
-  VERIFY(internal::isApprox(ref[0], internal::predux_min(internal::pload<Packet>(data1))) && "internal::predux_min");
-
-  VERIFY((!PacketTraits::Vectorizable) || PacketTraits::HasMin);
-  VERIFY((!PacketTraits::Vectorizable) || PacketTraits::HasMax);
-
-  CHECK_CWISE2_IF(PacketTraits::HasMin, (std::min), internal::pmin);
-  CHECK_CWISE2_IF(PacketTraits::HasMax, (std::max), internal::pmax);
-  CHECK_CWISE1(numext::abs, internal::pabs);
-  CHECK_CWISE2_IF(PacketTraits::HasAbsDiff, REF_ABS_DIFF, internal::pabsdiff);
-
-  ref[0] = data1[0];
-  for (int i = 0; i < PacketSize; ++i) ref[0] = (std::max)(ref[0], data1[i]);
-  VERIFY(internal::isApprox(ref[0], internal::predux_max(internal::pload<Packet>(data1))) && "internal::predux_max");
-
-  {
-    unsigned char* data1_bits = reinterpret_cast<unsigned char*>(data1);
-    // predux_any
-    for (unsigned int i = 0; i < PacketSize * sizeof(Scalar); ++i) data1_bits[i] = 0x0;
-    VERIFY((!internal::predux_any(internal::pload<Packet>(data1))) && "internal::predux_any(0000)");
-    for (int k = 0; k < PacketSize; ++k) {
-      for (unsigned int i = 0; i < sizeof(Scalar); ++i) data1_bits[k * sizeof(Scalar) + i] = 0xff;
-      VERIFY(internal::predux_any(internal::pload<Packet>(data1)) && "internal::predux_any(0101)");
-      for (unsigned int i = 0; i < sizeof(Scalar); ++i) data1_bits[k * sizeof(Scalar) + i] = 0x00;
-    }
   }
 }
 
