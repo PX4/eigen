@@ -140,7 +140,6 @@ template<> EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED
 Packet4f pexp<Packet4f>(const Packet4f& _x)
 {
 #if !defined(__ARCH__) || (defined(__ARCH__) && __ARCH__ >= 12)
-/*
   Packet4f x = _x;
 
   Packet4f tmp, fx;
@@ -171,16 +170,11 @@ Packet4f pexp<Packet4f>(const Packet4f& _x)
   y = padd(y, p4f_1);
 
   // build 2^n
-  emm0 = vec_cts(fx, 0);
+  emm0 = (Packet4i){ (int)fx[0], (int)fx[1], (int)fx[2], (int)fx[3] };
   emm0 = emm0 + p4i_0x7f;
   emm0 = emm0 << reinterpret_cast<Packet4i>(p4i_23);
 
-  // Altivec's max & min operators just drop silent NaNs. Check NaNs in 
-  // inputs and return them unmodified.
-  Packet4ui isnumber_mask = reinterpret_cast<Packet4ui>(vec_cmpeq(_x, _x));
-  return vec_sel(_x, pmax(pmul(y, reinterpret_cast<Packet4f>(emm0)), _x),
-                 isnumber_mask);*/
-  return _x;
+  return pmax(pmul(y, reinterpret_cast<Packet4f>(emm0)), _x);
 #else
   Packet4f res;
   res.v4f[0] = pexp<Packet2d>(_x.v4f[0]);

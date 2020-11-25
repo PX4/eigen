@@ -140,6 +140,11 @@ template<> EIGEN_STRONG_INLINE Packet1cd por     <Packet1cd>(const Packet1cd& a,
 template<> EIGEN_STRONG_INLINE Packet1cd pxor    <Packet1cd>(const Packet1cd& a, const Packet1cd& b) { return Packet1cd(vec_xor(a.v,b.v)); }
 template<> EIGEN_STRONG_INLINE Packet1cd pandnot <Packet1cd>(const Packet1cd& a, const Packet1cd& b) { return Packet1cd(vec_and(a.v, vec_nor(b.v,b.v))); }
 template<> EIGEN_STRONG_INLINE Packet1cd ploaddup<Packet1cd>(const std::complex<double>*     from) {  return pset1<Packet1cd>(*from); }
+template<> EIGEN_STRONG_INLINE Packet1cd pcmp_eq(const Packet1cd& a, const Packet1cd& b) {
+  Packet2d eq = vec_cmpeq (a.v, b.v);
+  Packet2d tmp = { eq[1], eq[0] };
+  return (Packet1cd)pand<Packet2d>(eq, tmp);
+}
 
 template<> EIGEN_STRONG_INLINE void prefetch<std::complex<double> >(const std::complex<double> *   addr) { EIGEN_ZVECTOR_PREFETCH(addr); }
 
@@ -281,6 +286,17 @@ template<> EIGEN_STRONG_INLINE void prefetch<std::complex<float> >(const std::co
 
 
 #if !defined(__ARCH__) || (defined(__ARCH__) && __ARCH__ < 12)
+
+template<> EIGEN_STRONG_INLINE Packet2cf pcmp_eq(const Packet2cf& a, const Packet2cf& b) {
+  Packet4f eq = pcmp_eq<Packet4f> (a.v, b.v);
+  Packet2cf res;
+  Packet2d tmp1 = { eq.v4f[0][1], eq.v4f[0][0] };
+  Packet2d tmp2 = { eq.v4f[1][1], eq.v4f[1][0] };
+  res.v.v4f[0] = pand<Packet2d>(eq.v4f[0], tmp1);
+  res.v.v4f[1] = pand<Packet2d>(eq.v4f[1], tmp2);
+  return res;
+}
+
 template<> EIGEN_STRONG_INLINE Packet2cf pconj(const Packet2cf& a)
 {
   Packet2cf res;
@@ -387,6 +403,11 @@ template<> EIGEN_STRONG_INLINE Packet2cf pblend(const Selector<2>& ifPacket, con
   return result;
 }
 #else
+template<> EIGEN_STRONG_INLINE Packet2cf pcmp_eq(const Packet2cf& a, const Packet2cf& b) {
+  Packet4f eq = vec_cmpeq (a.v, b.v);
+  Packet4f tmp = { eq[1], eq[0], eq[3], eq[2] };
+  return (Packet2cf)pand<Packet4f>(eq, tmp);
+}
 template<> EIGEN_STRONG_INLINE Packet2cf pconj(const Packet2cf& a) { return Packet2cf(pxor<Packet4f>(a.v, reinterpret_cast<Packet4f>(p4ui_CONJ_XOR))); }
 template<> EIGEN_STRONG_INLINE Packet2cf pmul<Packet2cf>(const Packet2cf& a, const Packet2cf& b)
 {
