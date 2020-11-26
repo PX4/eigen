@@ -12,7 +12,6 @@
 #define EIGEN_RESHAPED_H
 
 namespace Eigen {
-namespace internal {
 
 /** \class Reshaped
   * \ingroup Core_Module
@@ -43,6 +42,8 @@ namespace internal {
   *
   * \sa DenseBase::reshaped(NRowsType,NColsType)
   */
+
+namespace internal {
 
 template<typename XprType, int Rows, int Cols, int Order>
 struct traits<Reshaped<XprType, Rows, Cols, Order> > : traits<XprType>
