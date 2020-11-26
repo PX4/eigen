@@ -737,6 +737,14 @@ EXCLUDE                = "${Eigen_SOURCE_DIR}/Eigen/src/Core/products" \
                          "${Eigen_SOURCE_DIR}/unsupported/doc/examples" \
                          "${Eigen_SOURCE_DIR}/unsupported/doc/snippets"
 
+# Forward declarations of class templates cause the title of the main page for
+# the class template to not contain the template signature.  This only happens
+# when the \class command is used to document the class.  Possibly caused
+# by https://github.com/doxygen/doxygen/issues/7698.  Confirmed fixed by
+# doxygen release 1.8.19.
+
+EXCLUDE += "${Eigen_SOURCE_DIR}/Eigen/src/Core/util/ForwardDeclarations.h"
+
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
 # from the input.
