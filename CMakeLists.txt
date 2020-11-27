@@ -57,6 +57,7 @@ endif()
 
 include(CheckCXXCompilerFlag)
 include(GNUInstallDirs)
+include(CMakeDependentOption)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
