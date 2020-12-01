@@ -87,14 +87,12 @@ struct __half_raw {
   // Nothing to do here
   // HIP fp16 header file has a definition for __half_raw
 #elif defined(EIGEN_HAS_CUDA_FP16)
- #if defined(EIGEN_CUDA_SDK_VER) && EIGEN_CUDA_SDK_VER < 90000
-// In CUDA < 9.0, __half is the equivalent of CUDA 9's __half_raw
- typedef __half __half_raw;
- #endif // defined(EIGEN_HAS_CUDA_FP16)
-
+  #if EIGEN_CUDA_SDK_VER < 90000
+    // In CUDA < 9.0, __half is the equivalent of CUDA 9's __half_raw
+    typedef __half __half_raw;
+  #endif // defined(EIGEN_HAS_CUDA_FP16)
 #elif defined(SYCL_DEVICE_ONLY)
-typedef cl::sycl::half __half_raw;
-
+  typedef cl::sycl::half __half_raw;
 #endif
 
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR __half_raw raw_uint16_to_half(numext::uint16_t x);
@@ -109,7 +107,7 @@ struct half_base : public __half_raw {
  #if defined(EIGEN_HAS_HIP_FP16)
   EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR half_base(const __half& h) { x = __half_as_ushort(h); }
  #elif defined(EIGEN_HAS_CUDA_FP16)
-  #if (defined(EIGEN_CUDA_SDK_VER) && EIGEN_CUDA_SDK_VER >= 90000)
+  #if EIGEN_CUDA_SDK_VER >= 90000
   EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR half_base(const __half& h) : __half_raw(*(__half_raw*)&h) {}
   #endif
  #endif
@@ -774,22 +772,53 @@ struct hash<Eigen::half> {
 
 } // end namespace std
 
-// Add the missing shfl_xor intrinsic
-#if (defined(EIGEN_CUDA_ARCH) && EIGEN_CUDA_ARCH >= 300) || \
-  defined(EIGEN_HIPCC)
+// Add the missing shfl* intrinsics.
+// HIP and CUDA prior to 9.0 define
+//    __shfl, __shfl_up, __shfl_down, __shfl_xor for int, float
+// CUDA since 9.0 deprecates those and instead defines
+//    __shfl_sync, __shfl_up_sync, __shfl_down_sync, __shfl_xor_sync
+//    for int, long, long long, float, double, __half, __half2, __nv_bfloat16, __nv_bfloat162
 
-__device__ EIGEN_STRONG_INLINE Eigen::half __shfl_xor(Eigen::half var, int laneMask, int width=warpSize) {
-  #if (EIGEN_CUDA_SDK_VER < 90000) || \
-    defined(EIGEN_HAS_HIP_FP16)
-  return static_cast<Eigen::half>(__shfl_xor(static_cast<float>(var), laneMask, width));
-  #else
-  return static_cast<Eigen::half>(__shfl_xor_sync(0xFFFFFFFF, static_cast<float>(var), laneMask, width));
-  #endif
+#if defined(EIGEN_HAS_HIP_FP16) || (defined(EIGEN_HAS_CUDA_FP16) && EIGEN_CUDA_SDK_VER < 90000)
+
+EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Eigen::half __shfl(Eigen::half var, int srcLane, int width=warpSize) {
+  return static_cast<Eigen::half>(__shfl(static_cast<float>(var), srcLane, width));
 }
-#endif
+
+EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Eigen::half __shfl_up(Eigen::half var, unsigned int delta, int width=warpSize) {
+  return static_cast<Eigen::half>(__shfl_up(static_cast<float>(var), delta, width));
+}
+
+EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Eigen::half __shfl_down(Eigen::half var, unsigned int delta, int width=warpSize) {
+  return static_cast<Eigen::half>(__shfl_down(static_cast<float>(var), delta, width));
+}
+
+EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Eigen::half __shfl_xor(Eigen::half var, int laneMask, int width=warpSize) {
+  return static_cast<Eigen::half>(__shfl_xor(static_cast<float>(var), laneMask, width));
+}
+
+#elif defined(EIGEN_HAS_CUDA_FP16) && EIGEN_CUDA_SDK_VER >= 90000
+
+EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Eigen::half __shfl_sync(unsigned mask, Eigen::half var, int srcLane, int width=warpSize) {
+  return static_cast<Eigen::half>(__shfl_sync(mask, static_cast<__half>(var), srcLane, width));
+}
+
+EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Eigen::half __shfl_up_sync(unsigned mask, Eigen::half var, unsigned int delta, int width=warpSize) {
+  return static_cast<Eigen::half>(__shfl_up_sync(mask, static_cast<__half>(var), delta, width));
+}
+
+EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Eigen::half __shfl_down_sync(unsigned mask, Eigen::half var, unsigned int delta, int width=warpSize) {
+  return static_cast<Eigen::half>(__shfl_down_sync(mask, static_cast<__half>(var), delta, width));
+}
+
+EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Eigen::half __shfl_xor_sync(unsigned mask, Eigen::half var, int laneMask, int width=warpSize) {
+  return static_cast<Eigen::half>(__shfl_xor_sync(mask, static_cast<__half>(var), laneMask, width));
+}
+
+#endif // shfl
 
 // ldg() has an overload for __half_raw, but we also need one for Eigen::half.
-#if (defined(EIGEN_CUDA_ARCH) && EIGEN_CUDA_ARCH >= 350) || defined(EIGEN_HIPCC)
+#if (defined(EIGEN_CUDA_ARCH) && EIGEN_CUDA_ARCH >= 350) || defined(EIGEN_HAS_HIP_FP16)
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC Eigen::half __ldg(const Eigen::half* ptr) {
   return Eigen::half_impl::raw_uint16_to_half(__ldg(reinterpret_cast<const Eigen::numext::uint16_t*>(ptr)));
 }
