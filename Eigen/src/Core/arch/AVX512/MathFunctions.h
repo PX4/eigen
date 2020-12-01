@@ -35,7 +35,6 @@ namespace internal {
 #define _EIGEN_DECLARE_CONST_Packet16bf_FROM_INT(NAME, X) \
   const Packet16bf p16bf_##NAME =  preinterpret<Packet16bf,Packet16i>(pset1<Packet16i>(X))
 
-#if defined(EIGEN_VECTORIZE_AVX512DQ)
 template <>
 EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED Packet16f
 plog<Packet16f>(const Packet16f& _x) {
@@ -50,7 +49,6 @@ plog<Packet8d>(const Packet8d& _x) {
 
 F16_PACKET_FUNCTION(Packet16f, Packet16h, plog)
 BF16_PACKET_FUNCTION(Packet16f, Packet16bf, plog)
-#endif
 
 // Exponential function. Works by writing "x = m*log(2) + r" where
 // "m = floor(x/log(2)+1/2)" and "r" is the remainder. The result is then
@@ -334,7 +332,6 @@ EIGEN_STRONG_INLINE Packet8d prsqrt<Packet8d>(const Packet8d& x) {
 }
 #endif
 
-#if defined(EIGEN_VECTORIZE_AVX512DQ)
 template<> EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED
 Packet16f plog1p<Packet16f>(const Packet16f& _x) {
   return generic_plog1p(_x);
@@ -350,7 +347,6 @@ Packet16f pexpm1<Packet16f>(const Packet16f& _x) {
 
 F16_PACKET_FUNCTION(Packet16f, Packet16h, pexpm1)
 BF16_PACKET_FUNCTION(Packet16f, Packet16bf, pexpm1)
-#endif
 
 #endif
 

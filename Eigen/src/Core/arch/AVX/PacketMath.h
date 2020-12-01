@@ -232,6 +232,7 @@ EIGEN_STRONG_INLINE __m128i Pack16To8(Packet8f rf) {
                          _mm256_extractf128_si256(_mm256_castps_si256(rf), 1));
 }
 
+
 template<> EIGEN_STRONG_INLINE Packet8f pset1<Packet8f>(const float&  from) { return _mm256_set1_ps(from); }
 template<> EIGEN_STRONG_INLINE Packet4d pset1<Packet4d>(const double& from) { return _mm256_set1_pd(from); }
 template<> EIGEN_STRONG_INLINE Packet8i pset1<Packet8i>(const int&    from) { return _mm256_set1_epi32(from); }
@@ -724,13 +725,11 @@ template<> EIGEN_STRONG_INLINE Packet4d pfrexp<Packet4d>(const Packet4d& a, Pack
   __m256i a_expo = _mm256_castpd_si256(pand(a, cst_exp_mask));
 #ifdef EIGEN_VECTORIZE_AVX2
   a_expo = _mm256_srli_epi64(a_expo, 52);
-#endif
-#if defined(EIGEN_VECTORIZE_AVX2) && defined(EIGEN_VECTORIZE_AVX512DQ)
-  exponent =  _mm256_cvtepi64_pd(a_expo);
+  __m128i lo = _mm256_extractf128_si256(a_expo, 0);
+  __m128i hi = _mm256_extractf128_si256(a_expo, 1);
 #else
   __m128i lo = _mm256_extractf128_si256(a_expo, 0);
   __m128i hi = _mm256_extractf128_si256(a_expo, 1);
-#ifndef EIGEN_VECTORIZE_AVX2
   lo = _mm_srli_epi64(lo, 52);
   hi = _mm_srli_epi64(hi, 52);
 #endif
@@ -738,7 +737,6 @@ template<> EIGEN_STRONG_INLINE Packet4d pfrexp<Packet4d>(const Packet4d& a, Pack
   Packet2d exponent_hi = _mm_cvtepi32_pd(vec4i_swizzle1(hi, 0, 2, 1, 3));
   exponent = _mm256_insertf128_pd(exponent, exponent_lo, 0);
   exponent = _mm256_insertf128_pd(exponent, exponent_hi, 1);
-#endif  // EIGEN_VECTORIZE_AVX512DQ
   exponent = psub(exponent, cst_1022d);
   const Packet4d cst_mant_mask  = pset1frombits<Packet4d>(static_cast<uint64_t>(~0x7ff0000000000000ull));
   return por(pand(a, cst_mant_mask), cst_half);

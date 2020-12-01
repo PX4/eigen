@@ -108,13 +108,11 @@ template<> struct packet_traits<float>  : default_packet_traits
     HasSin = EIGEN_FAST_MATH,
     HasCos = EIGEN_FAST_MATH,
 #if EIGEN_GNUC_AT_LEAST(5, 3) || (!EIGEN_COMP_GNUC_STRICT)
-#ifdef EIGEN_VECTORIZE_AVX512DQ
     HasLog = 1,
     HasLog1p  = 1,
     HasExpm1  = 1,
     HasNdtri = 1,
     HasBessel  = 1,
-#endif
     HasExp = 1,
     HasSqrt = EIGEN_FAST_MATH,
     HasRsqrt = EIGEN_FAST_MATH,
@@ -139,9 +137,7 @@ template<> struct packet_traits<double> : default_packet_traits
     size = 8,
     HasHalfPacket = 1,
 #if EIGEN_GNUC_AT_LEAST(5, 3) || (!EIGEN_COMP_GNUC_STRICT)
-#ifdef EIGEN_VECTORIZE_AVX512DQ
     HasLog  = 1,
-#endif
     HasSqrt = EIGEN_FAST_MATH,
     HasRsqrt = EIGEN_FAST_MATH,
 #endif
@@ -888,11 +884,16 @@ EIGEN_STRONG_INLINE Packet16f pfrexp<Packet16f>(const Packet16f& a, Packet16f& e
 }
 
 template<>
-EIGEN_STRONG_INLINE Packet8d pfrexp<Packet8d>(const Packet8d& a, Packet8d& exponent){
+EIGEN_STRONG_INLINE Packet8d pfrexp<Packet8d>(const Packet8d& a, Packet8d& exponent) {
   const Packet8d cst_1022d = pset1<Packet8d>(1022.0);
+#ifdef EIGEN_TEST_AVX512DQ
+  exponent = psub(_mm512_cvtepi64_pd(_mm512_srli_epi64(_mm512_castpd_si512(a), 52)), cst_1022d);
+#else
+  exponent = psub(_mm512_cvtepi32_pd(_mm512_cvtepi64_epi32(_mm512_srli_epi64(_mm512_castpd_si512(a), 52))),
+                                     cst_1022d);
+#endif
   const Packet8d cst_half = pset1<Packet8d>(0.5);
   const Packet8d cst_inv_mant_mask  = pset1frombits<Packet8d>(static_cast<uint64_t>(~0x7ff0000000000000ull));
-  exponent = psub(_mm512_cvtepi64_pd(_mm512_srli_epi64(_mm512_castpd_si512(a), 52)), cst_1022d);
   return por(pand(a, cst_inv_mant_mask), cst_half);
 }
 
