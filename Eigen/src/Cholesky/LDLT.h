@@ -53,7 +53,7 @@ namespace internal {
   * decomposition to determine whether a system of equations has a solution.
   *
   * This class supports the \link InplaceDecomposition inplace decomposition \endlink mechanism.
-  * 
+  *
   * \sa MatrixBase::ldlt(), SelfAdjointView::ldlt(), class LLT
   */
 template<typename _MatrixType, int _UpLo> class LDLT
@@ -246,8 +246,8 @@ template<typename _MatrixType, int _UpLo> class LDLT
       */
     const LDLT& adjoint() const { return *this; };
 
-    inline Index rows() const { return m_matrix.rows(); }
-    inline Index cols() const { return m_matrix.cols(); }
+    EIGEN_DEVICE_FUNC inline Index rows() const { return m_matrix.rows(); }
+    EIGEN_DEVICE_FUNC inline Index cols() const { return m_matrix.cols(); }
 
     /** \brief Reports whether previous computation was successful.
       *

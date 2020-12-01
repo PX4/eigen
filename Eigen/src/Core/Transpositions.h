@@ -47,6 +47,7 @@ class TranspositionsBase
     Index cols() const { return indices().size(); }
 
     /** Direct access to the underlying index vector */
+    EIGEN_DEVICE_FUNC
     inline const StorageIndex& coeff(Index i) const { return indices().coeff(i); }
     /** Direct access to the underlying index vector */
     inline StorageIndex& coeffRef(Index i) { return indices().coeffRef(i); }
@@ -373,6 +374,7 @@ class Transpose<TranspositionsBase<TranspositionsDerived> >
       return Product<Transpose, OtherDerived, AliasFreeProduct>(*this, matrix.derived());
     }
 
+    EIGEN_DEVICE_FUNC
     const TranspositionType& nestedExpression() const { return m_transpositions; }
 
   protected:
