@@ -3372,7 +3372,7 @@ EIGEN_STRONG_INLINE Packet4f Bf16ToF32(const Packet4bf& p)
 }
 
 EIGEN_STRONG_INLINE Packet4bf F32MaskToBf16Mask(const Packet4f& p) {
-  return vmovn_u32(vreinterpretq_f32_u32(p));
+  return vmovn_u32(vreinterpretq_u32_f32(p));
 }
 
 template<> EIGEN_STRONG_INLINE Packet4bf pset1<Packet4bf>(const bfloat16& from) {
