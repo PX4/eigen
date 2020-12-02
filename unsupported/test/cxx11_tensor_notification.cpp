@@ -23,7 +23,7 @@ static void test_notification_single()
   Eigen::Notification n;
   auto func = [&n, &counter](){ n.Wait(); ++counter;};
   thread_pool.Schedule(func);
-  EIGEN_SLEEP(1000);
+  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
   // The thread should be waiting for the notification.
   VERIFY_IS_EQUAL(counter, 0);
@@ -31,7 +31,7 @@ static void test_notification_single()
   // Unblock the thread
   n.Notify();
 
-  EIGEN_SLEEP(1000);
+  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
   // Verify the counter has been incremented
   VERIFY_IS_EQUAL(counter, 1);
@@ -50,10 +50,10 @@ static void test_notification_multiple()
   thread_pool.Schedule(func);
   thread_pool.Schedule(func);
   thread_pool.Schedule(func);
-  EIGEN_SLEEP(1000);
+  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   VERIFY_IS_EQUAL(counter, 0);
   n.Notify();
-  EIGEN_SLEEP(1000);
+  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   VERIFY_IS_EQUAL(counter, 4);
 }
 

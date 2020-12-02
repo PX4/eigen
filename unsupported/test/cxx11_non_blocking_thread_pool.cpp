@@ -109,7 +109,9 @@ static void test_cancel()
   // Schedule a large number of closure that each sleeps for one second. This
   // will keep the thread pool busy for much longer than the default test timeout.
   for (int i = 0; i < 1000; ++i) {
-    tp.Schedule([]() { EIGEN_SLEEP(2000); });
+    tp.Schedule([]() {
+      std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    });
   }
 
   // Cancel the processing of all the closures that are still pending.
