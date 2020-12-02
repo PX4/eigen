@@ -8,6 +8,7 @@
 // Public License v. 2.0. If a copy of the MPL was not distributed
 // with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <limits>
 #include "packetmath_test_shared.h"
 #include "../Eigen/SpecialFunctions"
 
@@ -43,42 +44,48 @@ template<typename Scalar,typename Packet> void packetmath_real()
   }
   {
     for (int i=0; i<size; ++i) {
-      data1[i] = internal::random<Scalar>(0,1);
+      data1[i] = internal::random<Scalar>(Scalar(0),Scalar(1));
     }
     CHECK_CWISE1_IF(internal::packet_traits<Scalar>::HasNdtri, numext::ndtri, internal::pndtri);
   }
 #endif  // EIGEN_HAS_C99_MATH
 
   // For bessel_i*e and bessel_j*, the valid range is negative reals.
-  for (int i=0; i<size; ++i)
   {
-    data1[i] = internal::random<Scalar>(-1,1) * std::pow(Scalar(10), internal::random<Scalar>(-6,6));
-    data2[i] = internal::random<Scalar>(-1,1) * std::pow(Scalar(10), internal::random<Scalar>(-6,6));
-  }
+    const int max_exponent = numext::mini(std::numeric_limits<Scalar>::max_exponent10-1, 6);
+    for (int i=0; i<size; ++i)
+    {
+      data1[i] = internal::random<Scalar>(Scalar(-1),Scalar(1)) * Scalar(std::pow(Scalar(10), internal::random<Scalar>(Scalar(-max_exponent),Scalar(max_exponent))));
+      data2[i] = internal::random<Scalar>(Scalar(-1),Scalar(1)) * Scalar(std::pow(Scalar(10), internal::random<Scalar>(Scalar(-max_exponent),Scalar(max_exponent))));
+    }
 
-  CHECK_CWISE1_IF(PacketTraits::HasBessel, numext::bessel_i0e, internal::pbessel_i0e);
-  CHECK_CWISE1_IF(PacketTraits::HasBessel, numext::bessel_i1e, internal::pbessel_i1e);
-  CHECK_CWISE1_IF(PacketTraits::HasBessel, numext::bessel_j0, internal::pbessel_j0);
-  CHECK_CWISE1_IF(PacketTraits::HasBessel, numext::bessel_j1, internal::pbessel_j1);
+    CHECK_CWISE1_IF(PacketTraits::HasBessel, numext::bessel_i0e, internal::pbessel_i0e);
+    CHECK_CWISE1_IF(PacketTraits::HasBessel, numext::bessel_i1e, internal::pbessel_i1e);
+    CHECK_CWISE1_IF(PacketTraits::HasBessel, numext::bessel_j0, internal::pbessel_j0);
+    CHECK_CWISE1_IF(PacketTraits::HasBessel, numext::bessel_j1, internal::pbessel_j1);
+  }
 
   // Use a smaller data range for the bessel_i* as these can become very large.
   // Following #1693, we also restrict this range further to avoid inf's due to
   // differences in pexp and exp.
   for (int i=0; i<size; ++i) {
-      data1[i] = internal::random<Scalar>(0.01,1) * std::pow(
-          Scalar(9), internal::random<Scalar>(-1,2));
-      data2[i] = internal::random<Scalar>(0.01,1) * std::pow(
-          Scalar(9), internal::random<Scalar>(-1,2));
+      data1[i] = internal::random<Scalar>(Scalar(0.01),Scalar(1)) *
+                  Scalar(std::pow(Scalar(9), internal::random<Scalar>(Scalar(-1),Scalar(2))));
+      data2[i] = internal::random<Scalar>(Scalar(0.01),Scalar(1)) *
+                  Scalar(std::pow(Scalar(9), internal::random<Scalar>(Scalar(-1),Scalar(2))));
   }
   CHECK_CWISE1_IF(PacketTraits::HasBessel, numext::bessel_i0, internal::pbessel_i0);
   CHECK_CWISE1_IF(PacketTraits::HasBessel, numext::bessel_i1, internal::pbessel_i1);
 
 
   // y_i, and k_i are valid for x > 0.
-  for (int i=0; i<size; ++i)
   {
-    data1[i] = internal::random<Scalar>(0.01,1) * std::pow(Scalar(10), internal::random<Scalar>(-2,5));
-    data2[i] = internal::random<Scalar>(0.01,1) * std::pow(Scalar(10), internal::random<Scalar>(-2,5));
+    const int max_exponent = numext::mini(std::numeric_limits<Scalar>::max_exponent10-1, 5);
+    for (int i=0; i<size; ++i)
+    {
+      data1[i] = internal::random<Scalar>(Scalar(0.01),Scalar(1)) * Scalar(std::pow(Scalar(10), internal::random<Scalar>(Scalar(-2),Scalar(max_exponent))));
+      data2[i] = internal::random<Scalar>(Scalar(0.01),Scalar(1)) * Scalar(std::pow(Scalar(10), internal::random<Scalar>(Scalar(-2),Scalar(max_exponent))));
+    }
   }
 
   // TODO(srvasude): Re-enable this test once properly investigated why the
@@ -91,20 +98,20 @@ template<typename Scalar,typename Packet> void packetmath_real()
   // Following #1693, we restrict the range for exp to avoid zeroing out too
   // fast.
   for (int i=0; i<size; ++i) {
-      data1[i] = internal::random<Scalar>(0.01,1) * std::pow(
-          Scalar(9), internal::random<Scalar>(-1,2));
-      data2[i] = internal::random<Scalar>(0.01,1) * std::pow(
-          Scalar(9), internal::random<Scalar>(-1,2));
+      data1[i] = internal::random<Scalar>(Scalar(0.01),Scalar(1)) *
+                  Scalar(std::pow(Scalar(9), internal::random<Scalar>(Scalar(-1),Scalar(2))));
+      data2[i] = internal::random<Scalar>(Scalar(0.01),Scalar(1)) *
+                  Scalar(std::pow(Scalar(9), internal::random<Scalar>(Scalar(-1),Scalar(2))));
   }
   CHECK_CWISE1_IF(PacketTraits::HasBessel, numext::bessel_k0, internal::pbessel_k0);
   CHECK_CWISE1_IF(PacketTraits::HasBessel, numext::bessel_k1, internal::pbessel_k1);
 
 
   for (int i=0; i<size; ++i) {
-      data1[i] = internal::random<Scalar>(0.01,1) * std::pow(
-          Scalar(10), internal::random<Scalar>(-1,2));
-      data2[i] = internal::random<Scalar>(0.01,1) * std::pow(
-          Scalar(10), internal::random<Scalar>(-1,2));
+      data1[i] = internal::random<Scalar>(Scalar(0.01),Scalar(1)) *
+                  Scalar(std::pow(Scalar(10), internal::random<Scalar>(Scalar(-1),Scalar(2))));
+      data2[i] = internal::random<Scalar>(Scalar(0.01),Scalar(1)) *
+                  Scalar(std::pow(Scalar(10), internal::random<Scalar>(Scalar(-1),Scalar(2))));
   }
 
 #if EIGEN_HAS_C99_MATH && (__cplusplus > 199711L)
@@ -135,6 +142,8 @@ EIGEN_DECLARE_TEST(special_packetmath)
 
     CALL_SUBTEST_1( test::runner<float>::run() );
     CALL_SUBTEST_2( test::runner<double>::run() );
+    CALL_SUBTEST_3( test::runner<Eigen::half>::run() );
+    CALL_SUBTEST_4( test::runner<Eigen::bfloat16>::run() );
     g_first_pass = false;
   }
 }

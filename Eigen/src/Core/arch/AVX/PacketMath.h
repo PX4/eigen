@@ -147,7 +147,9 @@ struct packet_traits<Eigen::half> : default_packet_traits {
     HasRound  = 1,
     HasFloor  = 1,
     HasCeil   = 1,
-    HasRint   = 1
+    HasRint   = 1,
+    HasBessel = 1,
+    HasNdtri  = 1,
   };
 };
 
@@ -189,7 +191,9 @@ struct packet_traits<bfloat16> : default_packet_traits {
     HasRound = 1,
     HasFloor = 1,
     HasCeil = 1,
-    HasRint = 1
+    HasRint = 1,
+    HasBessel = 1,
+    HasNdtri  = 1,
   };
 };
 #endif

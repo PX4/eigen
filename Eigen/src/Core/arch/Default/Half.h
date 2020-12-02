@@ -58,7 +58,7 @@
 
 #define F16_PACKET_FUNCTION(PACKET_F, PACKET_F16, METHOD)           \
   template <>                                                       \
-  EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED  \
+  EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC EIGEN_UNUSED                \
   PACKET_F16 METHOD<PACKET_F16>(const PACKET_F16& _x) {             \
     return float2half(METHOD<PACKET_F>(half2float(_x)));            \
   }

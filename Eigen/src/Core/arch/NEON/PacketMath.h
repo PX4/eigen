@@ -192,7 +192,9 @@ struct packet_traits<float> : default_packet_traits
     HasExp  = 1,
     HasSqrt = 1,
     HasTanh = EIGEN_FAST_MATH,
-    HasErf  = EIGEN_FAST_MATH
+    HasErf  = EIGEN_FAST_MATH,
+    HasBessel = 0,  // Issues with accuracy.
+    HasNdtri = 0
   };
 };
 
@@ -3321,7 +3323,9 @@ template<> struct packet_traits<bfloat16> : default_packet_traits
     HasExp  = 1,
     HasSqrt = 0,
     HasTanh = EIGEN_FAST_MATH,
-    HasErf  = EIGEN_FAST_MATH
+    HasErf  = EIGEN_FAST_MATH,
+    HasBessel = 0,  // Issues with accuracy.
+    HasNdtri = 0,
   };
 };
 
@@ -3887,7 +3891,10 @@ struct packet_traits<Eigen::half> : default_packet_traits {
     HasCos = 0,
     HasLog = 0,
     HasExp = 0,
-    HasSqrt = 1
+    HasSqrt = 1,
+    HasErf = EIGEN_FAST_MATH,
+    HasBessel = 0,  // Issues with accuracy.
+    HasNdtri = 0,
   };
 };
 

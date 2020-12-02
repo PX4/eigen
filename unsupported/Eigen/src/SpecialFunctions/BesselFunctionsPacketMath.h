@@ -19,8 +19,7 @@ namespace internal {
 template <typename Packet>
 EIGEN_DEVICE_FUNC EIGEN_DECLARE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS
 Packet pbessel_i0(const Packet& x) {
-  typedef typename unpacket_traits<Packet>::type ScalarType;
-  using internal::generic_i0; return generic_i0<Packet, ScalarType>::run(x);
+  return numext::bessel_i0(x);
 }
 
 /** \internal \returns the exponentially scaled modified Bessel function of
@@ -28,8 +27,7 @@ Packet pbessel_i0(const Packet& x) {
 template <typename Packet>
 EIGEN_DEVICE_FUNC EIGEN_DECLARE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS
 Packet pbessel_i0e(const Packet& x) {
-  typedef typename unpacket_traits<Packet>::type ScalarType;
-  using internal::generic_i0e; return generic_i0e<Packet, ScalarType>::run(x);
+  return numext::bessel_i0e(x);
 }
 
 /** \internal \returns the exponentially scaled modified Bessel function of
@@ -37,8 +35,7 @@ Packet pbessel_i0e(const Packet& x) {
 template <typename Packet>
 EIGEN_DEVICE_FUNC EIGEN_DECLARE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS
 Packet pbessel_i1(const Packet& x) {
-  typedef typename unpacket_traits<Packet>::type ScalarType;
-  using internal::generic_i1; return generic_i1<Packet, ScalarType>::run(x);
+  return numext::bessel_i1(x);
 }
 
 /** \internal \returns the exponentially scaled modified Bessel function of
@@ -46,8 +43,7 @@ Packet pbessel_i1(const Packet& x) {
 template <typename Packet>
 EIGEN_DEVICE_FUNC EIGEN_DECLARE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS
 Packet pbessel_i1e(const Packet& x) {
-  typedef typename unpacket_traits<Packet>::type ScalarType;
-  using internal::generic_i1e; return generic_i1e<Packet, ScalarType>::run(x);
+  return numext::bessel_i1e(x);
 }
 
 /** \internal \returns the exponentially scaled modified Bessel function of
@@ -55,8 +51,7 @@ Packet pbessel_i1e(const Packet& x) {
 template <typename Packet>
 EIGEN_DEVICE_FUNC EIGEN_DECLARE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS
 Packet pbessel_j0(const Packet& x) {
-  typedef typename unpacket_traits<Packet>::type ScalarType;
-  using internal::generic_j0; return generic_j0<Packet, ScalarType>::run(x);
+  return numext::bessel_j0(x);
 }
 
 /** \internal \returns the exponentially scaled modified Bessel function of
@@ -64,8 +59,7 @@ Packet pbessel_j0(const Packet& x) {
 template <typename Packet>
 EIGEN_DEVICE_FUNC EIGEN_DECLARE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS
 Packet pbessel_j1(const Packet& x) {
-  typedef typename unpacket_traits<Packet>::type ScalarType;
-  using internal::generic_j1; return generic_j1<Packet, ScalarType>::run(x);
+  return numext::bessel_j1(x);
 }
 
 /** \internal \returns the exponentially scaled modified Bessel function of
@@ -73,8 +67,7 @@ Packet pbessel_j1(const Packet& x) {
 template <typename Packet>
 EIGEN_DEVICE_FUNC EIGEN_DECLARE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS
 Packet pbessel_y0(const Packet& x) {
-  typedef typename unpacket_traits<Packet>::type ScalarType;
-  using internal::generic_y0; return generic_y0<Packet, ScalarType>::run(x);
+  return numext::bessel_y0(x);
 }
 
 /** \internal \returns the exponentially scaled modified Bessel function of
@@ -82,8 +75,7 @@ Packet pbessel_y0(const Packet& x) {
 template <typename Packet>
 EIGEN_DEVICE_FUNC EIGEN_DECLARE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS
 Packet pbessel_y1(const Packet& x) {
-  typedef typename unpacket_traits<Packet>::type ScalarType;
-  using internal::generic_y1; return generic_y1<Packet, ScalarType>::run(x);
+  return numext::bessel_y1(x);
 }
 
 /** \internal \returns the exponentially scaled modified Bessel function of
@@ -91,8 +83,7 @@ Packet pbessel_y1(const Packet& x) {
 template <typename Packet>
 EIGEN_DEVICE_FUNC EIGEN_DECLARE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS
 Packet pbessel_k0(const Packet& x) {
-  typedef typename unpacket_traits<Packet>::type ScalarType;
-  using internal::generic_k0; return generic_k0<Packet, ScalarType>::run(x);
+  return numext::bessel_k0(x);
 }
 
 /** \internal \returns the exponentially scaled modified Bessel function of
@@ -100,8 +91,7 @@ Packet pbessel_k0(const Packet& x) {
 template <typename Packet>
 EIGEN_DEVICE_FUNC EIGEN_DECLARE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS
 Packet pbessel_k0e(const Packet& x) {
-  typedef typename unpacket_traits<Packet>::type ScalarType;
-  using internal::generic_k0e; return generic_k0e<Packet, ScalarType>::run(x);
+  return numext::bessel_k0e(x);
 }
 
 /** \internal \returns the exponentially scaled modified Bessel function of
@@ -109,8 +99,7 @@ Packet pbessel_k0e(const Packet& x) {
 template <typename Packet>
 EIGEN_DEVICE_FUNC EIGEN_DECLARE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS
 Packet pbessel_k1(const Packet& x) {
-  typedef typename unpacket_traits<Packet>::type ScalarType;
-  using internal::generic_k1; return generic_k1<Packet, ScalarType>::run(x);
+  return numext::bessel_k1(x);
 }
 
 /** \internal \returns the exponentially scaled modified Bessel function of
@@ -118,8 +107,7 @@ Packet pbessel_k1(const Packet& x) {
 template <typename Packet>
 EIGEN_DEVICE_FUNC EIGEN_DECLARE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS
 Packet pbessel_k1e(const Packet& x) {
-  typedef typename unpacket_traits<Packet>::type ScalarType;
-  using internal::generic_k1e; return generic_k1e<Packet, ScalarType>::run(x);
+  return numext::bessel_k1e(x);
 }
 
 } // end namespace internal

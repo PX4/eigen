@@ -86,7 +86,9 @@ struct packet_traits<half> : default_packet_traits {
     HasRound  = 1,
     HasFloor  = 1,
     HasCeil   = 1,
-    HasRint   = 1
+    HasRint   = 1,
+    HasBessel = 1,
+    HasNdtri  = 1,
   };
 };
 
