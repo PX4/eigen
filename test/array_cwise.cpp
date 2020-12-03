@@ -319,6 +319,7 @@ template<typename ArrayType> void array_real(const ArrayType& m)
   VERIFY_IS_APPROX(m3.log(), log(m3));
   VERIFY_IS_APPROX(m3.log1p(), log1p(m3));
   VERIFY_IS_APPROX(m3.log10(), log10(m3));
+  VERIFY_IS_APPROX(m3.log2(), log2(m3));
 
 
   VERIFY((!(m1>m2) == (m1<=m2)).all());
@@ -372,6 +373,7 @@ template<typename ArrayType> void array_real(const ArrayType& m)
   VERIFY_IS_APPROX(pow(m3,RealScalar(-0.5)), m3.rsqrt());
 
   VERIFY_IS_APPROX(log10(m3), log(m3)/log(10));
+  VERIFY_IS_APPROX(log2(m3), log(m3)/log(2));
 
   // scalar by array division
   const RealScalar tiny = sqrt(std::numeric_limits<RealScalar>::epsilon());
@@ -423,6 +425,7 @@ template<typename ArrayType> void array_complex(const ArrayType& m)
   VERIFY_IS_APPROX(m1.inverse(), inverse(m1));
   VERIFY_IS_APPROX(m1.log(), log(m1));
   VERIFY_IS_APPROX(m1.log10(), log10(m1));
+  VERIFY_IS_APPROX(m1.log2(), log2(m1));
   VERIFY_IS_APPROX(m1.abs(), abs(m1));
   VERIFY_IS_APPROX(m1.abs2(), abs2(m1));
   VERIFY_IS_APPROX(m1.sqrt(), sqrt(m1));
@@ -478,6 +481,7 @@ template<typename ArrayType> void array_complex(const ArrayType& m)
   VERIFY_IS_APPROX(abs(m1), sqrt(square(m1.real())+square(m1.imag())));
   VERIFY_IS_APPROX(abs(m1), sqrt(abs2(m1)));
   VERIFY_IS_APPROX(log10(m1), log(m1)/log(10));
+  VERIFY_IS_APPROX(log2(m1), log(m1)/log(2));
 
   VERIFY_IS_APPROX( m1.sign(), -(-m1).sign() );
   VERIFY_IS_APPROX( m1.sign() * m1.abs(), m1);

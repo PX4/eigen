@@ -650,6 +650,13 @@ Packet plog1p(const Packet& a) { return numext::log1p(a); }
 template<typename Packet> EIGEN_DECLARE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS
 Packet plog10(const Packet& a) { EIGEN_USING_STD(log10); return log10(a); }
 
+/** \internal \returns the log10 of \a a (coeff-wise) */
+template<typename Packet> EIGEN_DECLARE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS
+Packet plog2(const Packet& a) {
+  typedef typename internal::unpacket_traits<Packet>::type Scalar;
+  return pmul(pset1<Packet>(Scalar(M_LOG2E)), plog(a)); 
+}
+
 /** \internal \returns the square-root of \a a (coeff-wise) */
 template<typename Packet> EIGEN_DECLARE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS
 Packet psqrt(const Packet& a) { EIGEN_USING_STD(sqrt); return sqrt(a); }
