@@ -47,6 +47,7 @@
 #include <list>
 #if __cplusplus >= 201103L
 #include <random>
+#include <chrono>
 #ifdef EIGEN_USE_THREADS
 #include <future>
 #endif
