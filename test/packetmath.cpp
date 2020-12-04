@@ -488,6 +488,13 @@ void packetmath() {
   packetmath_minus_zero_add<Scalar, Packet>();
 }
 
+// Notice that this definition works for complex types as well.
+// c++11 has std::log2 for real, but not for complex types.
+template <typename Scalar>
+Scalar log2(Scalar x) {
+  return Scalar(M_LOG2E) * std::log(x);
+}
+
 template <typename Scalar, typename Packet>
 void packetmath_real() {
   typedef internal::packet_traits<Scalar> PacketTraits;
@@ -506,6 +513,7 @@ void packetmath_real() {
   if (internal::random<float>(0, 1) < 0.1f) data1[internal::random<int>(0, PacketSize)] = Scalar(0);
 
   CHECK_CWISE1_IF(PacketTraits::HasLog, std::log, internal::plog);
+  CHECK_CWISE1_IF(PacketTraits::HasLog, log2, internal::plog2);
   CHECK_CWISE1_IF(PacketTraits::HasRsqrt, 1 / std::sqrt, internal::prsqrt);
 
   for (int i = 0; i < size; ++i) {

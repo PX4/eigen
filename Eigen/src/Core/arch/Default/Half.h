@@ -622,6 +622,10 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half log1p(const half& a) {
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half log10(const half& a) {
   return half(::log10f(float(a)));
 }
+EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half log2(const half& a) {
+  return half(static_cast<float>(M_LOG2E) * ::logf(float(a)));
+}
+
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half sqrt(const half& a) {
 #if (EIGEN_CUDA_SDK_VER >= 80000 && defined EIGEN_CUDA_ARCH && EIGEN_CUDA_ARCH >= 530) || \
   defined(EIGEN_HIP_DEVICE_COMPILE)
