@@ -4,7 +4,7 @@
 namespace Eigen {
 namespace internal {
 
-#ifdef EIGEN_HAS_ARM64_FP16_VECTOR_ARITHMETIC
+#if EIGEN_HAS_ARM64_FP16_VECTOR_ARITHMETIC
 
 #define NEON_HALF_TO_FLOAT_FUNCTIONS(METHOD)                            \
 template <> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE                       \
