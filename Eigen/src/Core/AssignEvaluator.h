@@ -325,7 +325,7 @@ struct dense_assignment_loop;
 template<typename Kernel, int Unrolling>
 struct dense_assignment_loop<Kernel, AllAtOnceTraversal, Unrolling>
 {
-  EIGEN_DEVICE_FUNC static void EIGEN_STRONG_INLINE run(Kernel &kernel)
+  EIGEN_DEVICE_FUNC static void EIGEN_STRONG_INLINE run(Kernel& /*kernel*/)
   {
     typedef typename Kernel::DstEvaluatorType::XprType DstXprType;
     EIGEN_STATIC_ASSERT(int(DstXprType::SizeAtCompileTime) == 0,
