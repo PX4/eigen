@@ -82,7 +82,14 @@ EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS
 EIGEN_UNUSED
 Packet pcos_float(const Packet& x);
 
+/** \internal \returns sqrt(x) for complex types */
+template<typename Packet>
+EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS
+EIGEN_UNUSED
+Packet psqrt_complex(const Packet& a);
+
 template <typename Packet, int N> struct ppolevl;
+
 
 } // end namespace internal
 } // end namespace Eigen

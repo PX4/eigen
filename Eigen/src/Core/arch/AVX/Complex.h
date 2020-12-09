@@ -38,6 +38,7 @@ template<> struct packet_traits<std::complex<float> >  : default_packet_traits
     HasMul    = 1,
     HasDiv    = 1,
     HasNegate = 1,
+    HasSqrt   = 1,
     HasAbs    = 0,
     HasAbs2   = 0,
     HasMin    = 0,
@@ -47,7 +48,18 @@ template<> struct packet_traits<std::complex<float> >  : default_packet_traits
 };
 #endif
 
-template<> struct unpacket_traits<Packet4cf> { typedef std::complex<float> type; enum {size=4, alignment=Aligned32, vectorizable=true, masked_load_available=false, masked_store_available=false}; typedef Packet2cf half; };
+template<> struct unpacket_traits<Packet4cf> {
+  typedef std::complex<float> type;
+  typedef Packet2cf half;
+  typedef Packet8f as_real;
+  enum {
+    size=4,
+    alignment=Aligned32,
+    vectorizable=true,
+    masked_load_available=false,
+    masked_store_available=false
+  };
+};
 
 template<> EIGEN_STRONG_INLINE Packet4cf padd<Packet4cf>(const Packet4cf& a, const Packet4cf& b) { return Packet4cf(_mm256_add_ps(a.v,b.v)); }
 template<> EIGEN_STRONG_INLINE Packet4cf psub<Packet4cf>(const Packet4cf& a, const Packet4cf& b) { return Packet4cf(_mm256_sub_ps(a.v,b.v)); }
@@ -228,6 +240,7 @@ template<> struct packet_traits<std::complex<double> >  : default_packet_traits
     HasMul    = 1,
     HasDiv    = 1,
     HasNegate = 1,
+    HasSqrt   = 1,
     HasAbs    = 0,
     HasAbs2   = 0,
     HasMin    = 0,
@@ -237,7 +250,18 @@ template<> struct packet_traits<std::complex<double> >  : default_packet_traits
 };
 #endif
 
-template<> struct unpacket_traits<Packet2cd> { typedef std::complex<double> type; enum {size=2, alignment=Aligned32, vectorizable=true, masked_load_available=false, masked_store_available=false}; typedef Packet1cd half; };
+template<> struct unpacket_traits<Packet2cd> {
+  typedef std::complex<double> type;
+  typedef Packet1cd half;
+  typedef Packet4d as_real;
+  enum {
+    size=2,
+    alignment=Aligned32,
+    vectorizable=true,
+    masked_load_available=false,
+    masked_store_available=false
+  };
+};
 
 template<> EIGEN_STRONG_INLINE Packet2cd padd<Packet2cd>(const Packet2cd& a, const Packet2cd& b) { return Packet2cd(_mm256_add_pd(a.v,b.v)); }
 template<> EIGEN_STRONG_INLINE Packet2cd psub<Packet2cd>(const Packet2cd& a, const Packet2cd& b) { return Packet2cd(_mm256_sub_pd(a.v,b.v)); }
@@ -397,6 +421,14 @@ ptranspose(PacketBlock<Packet2cd,2>& kernel) {
   __m256d tmp = _mm256_permute2f128_pd(kernel.packet[0].v, kernel.packet[1].v, 0+(2<<4));
   kernel.packet[1].v = _mm256_permute2f128_pd(kernel.packet[0].v, kernel.packet[1].v, 1+(3<<4));
  kernel.packet[0].v = tmp;
+}
+
+template<> EIGEN_STRONG_INLINE Packet2cd psqrt<Packet2cd>(const Packet2cd& a) {
+  return psqrt_complex<Packet2cd>(a);
+}
+
+template<> EIGEN_STRONG_INLINE Packet4cf psqrt<Packet4cf>(const Packet4cf& a) {
+  return psqrt_complex<Packet4cf>(a);
 }
 
 } // end namespace internal

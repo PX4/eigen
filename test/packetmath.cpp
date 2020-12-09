@@ -473,8 +473,6 @@ void packetmath() {
     CHECK_CWISE3_IF(true, internal::pselect, internal::pselect);
   }
 
-  CHECK_CWISE1_IF(PacketTraits::HasSqrt, numext::sqrt, internal::psqrt);
-
   for (int i = 0; i < size; ++i) {
     data1[i] = internal::random<Scalar>();
   }
@@ -486,6 +484,11 @@ void packetmath() {
   packetmath_boolean_mask_ops<Scalar, Packet>();
   packetmath_pcast_ops_runner<Scalar, Packet>::run();
   packetmath_minus_zero_add<Scalar, Packet>();
+
+  for (int i = 0; i < size; ++i) {
+    data1[i] = numext::abs(internal::random<Scalar>());
+  }
+  CHECK_CWISE1_IF(PacketTraits::HasSqrt, numext::sqrt, internal::psqrt);
 }
 
 // Notice that this definition works for complex types as well.
@@ -899,6 +902,8 @@ void test_conj_helper(Scalar* data1, Scalar* data2, Scalar* ref, Scalar* pval) {
 
 template <typename Scalar, typename Packet>
 void packetmath_complex() {
+  typedef internal::packet_traits<Scalar> PacketTraits;
+  typedef typename Scalar::value_type RealScalar;
   const int PacketSize = internal::unpacket_traits<Packet>::size;
 
   const int size = PacketSize * 4;
@@ -917,10 +922,54 @@ void packetmath_complex() {
   test_conj_helper<Scalar, Packet, true, false>(data1, data2, ref, pval);
   test_conj_helper<Scalar, Packet, true, true>(data1, data2, ref, pval);
 
+  // Test pcplxflip.
   {
     for (int i = 0; i < PacketSize; ++i) ref[i] = Scalar(std::imag(data1[i]), std::real(data1[i]));
     internal::pstore(pval, internal::pcplxflip(internal::pload<Packet>(data1)));
     VERIFY(test::areApprox(ref, pval, PacketSize) && "pcplxflip");
+  }
+
+  if (PacketTraits::HasSqrt) {
+    for (int i = 0; i < size; ++i) {
+      data1[i] = Scalar(internal::random<RealScalar>(), internal::random<RealScalar>());
+    }
+    CHECK_CWISE1(numext::sqrt, internal::psqrt);
+
+    // Test misc. corner cases.
+    const RealScalar zero = RealScalar(0);
+    const RealScalar one = RealScalar(1);
+    const RealScalar inf = std::numeric_limits<RealScalar>::infinity();
+    const RealScalar nan = std::numeric_limits<RealScalar>::quiet_NaN();
+    data1[0] = Scalar(zero, zero);
+    data1[1] = Scalar(-zero, zero);
+    data1[2] = Scalar(one, zero);
+    data1[3] = Scalar(zero, one);
+    CHECK_CWISE1(numext::sqrt, internal::psqrt);
+    data1[0] = Scalar(-one, zero);
+    data1[1] = Scalar(zero, -one);
+    data1[2] = Scalar(one, one);
+    data1[3] = Scalar(-one, -one);
+    CHECK_CWISE1(numext::sqrt, internal::psqrt);
+    data1[0] = Scalar(inf, zero);
+    data1[1] = Scalar(zero, inf);
+    data1[2] = Scalar(-inf, zero);
+    data1[3] = Scalar(zero, -inf);
+    CHECK_CWISE1(numext::sqrt, internal::psqrt);
+    data1[0] = Scalar(inf, inf);
+    data1[1] = Scalar(-inf, inf);
+    data1[2] = Scalar(inf, -inf);
+    data1[3] = Scalar(-inf, -inf);
+    CHECK_CWISE1(numext::sqrt, internal::psqrt);
+    data1[0] = Scalar(nan, zero);
+    data1[1] = Scalar(zero, nan);
+    data1[2] = Scalar(nan, one);
+    data1[3] = Scalar(one, nan);
+    CHECK_CWISE1(numext::sqrt, internal::psqrt);
+    data1[0] = Scalar(nan, nan);
+    data1[1] = Scalar(inf, nan);
+    data1[2] = Scalar(nan, inf);
+    data1[3] = Scalar(-inf, nan);
+    CHECK_CWISE1(numext::sqrt, internal::psqrt);
   }
 }
 

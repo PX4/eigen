@@ -219,6 +219,19 @@ template<> EIGEN_STRONG_INLINE Packet16f pzero(const Packet16f& /*a*/) { return 
 template<> EIGEN_STRONG_INLINE Packet8d pzero(const Packet8d& /*a*/) { return _mm512_setzero_pd(); }
 template<> EIGEN_STRONG_INLINE Packet16i pzero(const Packet16i& /*a*/) { return _mm512_setzero_si512(); }
 
+template<> EIGEN_STRONG_INLINE Packet16f peven_mask(const Packet16f& /*a*/) {
+  return Packet16f(_mm512_set_epi32(0, -1, 0, -1, 0, -1, 0, -1,
+                                    0, -1, 0, -1, 0, -1, 0, -1));
+}
+template<> EIGEN_STRONG_INLINE Packet16i peven_mask(const Packet16i& /*a*/) {
+  return Packet16i(_mm512_set_epi32(0, -1, 0, -1, 0, -1, 0, -1,
+                                    0, -1, 0, -1, 0, -1, 0, -1));
+}
+template<> EIGEN_STRONG_INLINE Packet8d peven_mask(const Packet8d& /*a*/) {
+  return Packet8d(_mm512_set_epi32(0, 0, -1, -1, 0, 0, -1, -1,
+                                   0, 0, -1, -1, 0, 0, -1, -1));
+}
+
 template <>
 EIGEN_STRONG_INLINE Packet16f pload1<Packet16f>(const float* from) {
   return _mm512_broadcastss_ps(_mm_load_ps1(from));
