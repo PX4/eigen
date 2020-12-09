@@ -1086,7 +1086,7 @@ void set_from_triplets(const InputIterator& begin, const InputIterator& end, Spa
   * \code
     typedef Triplet<double> T;
     std::vector<T> tripletList;
-    triplets.reserve(estimation_of_entries);
+    tripletList.reserve(estimation_of_entries);
     for(...)
     {
       // ...
