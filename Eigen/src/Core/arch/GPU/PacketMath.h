@@ -552,9 +552,7 @@ EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE __half get_half2_high(const half2& a) {
 
 template<>
 EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE half2 pset1<half2>(const Eigen::half& from) {
-#if defined(EIGEN_HIP_DEVICE_COMPILE)
-  return half2half2(from);
-#elif defined(EIGEN_CUDA_ARCH)
+#if defined(EIGEN_GPU_COMPILE_PHASE)
   return __half2half2(from);
 #else
   const float f = __half2float(from);
