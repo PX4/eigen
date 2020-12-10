@@ -3339,7 +3339,7 @@ template<> struct packet_traits<bfloat16> : default_packet_traits
     HasTanh = EIGEN_FAST_MATH,
     HasErf  = EIGEN_FAST_MATH,
     HasBessel = 0,  // Issues with accuracy.
-    HasNdtri = 0,
+    HasNdtri = 0
   };
 };
 
