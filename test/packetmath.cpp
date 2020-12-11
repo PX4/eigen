@@ -495,7 +495,7 @@ void packetmath() {
 // c++11 has std::log2 for real, but not for complex types.
 template <typename Scalar>
 Scalar log2(Scalar x) {
-  return Scalar(M_LOG2E) * std::log(x);
+  return Scalar(EIGEN_LOG2E) * std::log(x);
 }
 
 template <typename Scalar, typename Packet>

@@ -668,7 +668,7 @@ Packet plog10(const Packet& a) { EIGEN_USING_STD(log10); return log10(a); }
 template<typename Packet> EIGEN_DECLARE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS
 Packet plog2(const Packet& a) {
   typedef typename internal::unpacket_traits<Packet>::type Scalar;
-  return pmul(pset1<Packet>(Scalar(M_LOG2E)), plog(a)); 
+  return pmul(pset1<Packet>(Scalar(EIGEN_LOG2E)), plog(a)); 
 }
 
 /** \internal \returns the square-root of \a a (coeff-wise) */
