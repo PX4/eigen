@@ -220,16 +220,16 @@ template<> EIGEN_STRONG_INLINE Packet8d pzero(const Packet8d& /*a*/) { return _m
 template<> EIGEN_STRONG_INLINE Packet16i pzero(const Packet16i& /*a*/) { return _mm512_setzero_si512(); }
 
 template<> EIGEN_STRONG_INLINE Packet16f peven_mask(const Packet16f& /*a*/) {
-  return Packet16f(_mm512_set_epi32(0, -1, 0, -1, 0, -1, 0, -1,
-                                    0, -1, 0, -1, 0, -1, 0, -1));
+  return _mm512_castsi512_ps(_mm512_set_epi32(0, -1, 0, -1, 0, -1, 0, -1,
+                                              0, -1, 0, -1, 0, -1, 0, -1));
 }
 template<> EIGEN_STRONG_INLINE Packet16i peven_mask(const Packet16i& /*a*/) {
-  return Packet16i(_mm512_set_epi32(0, -1, 0, -1, 0, -1, 0, -1,
-                                    0, -1, 0, -1, 0, -1, 0, -1));
+  return _mm512_set_epi32(0, -1, 0, -1, 0, -1, 0, -1,
+                          0, -1, 0, -1, 0, -1, 0, -1);
 }
 template<> EIGEN_STRONG_INLINE Packet8d peven_mask(const Packet8d& /*a*/) {
-  return Packet8d(_mm512_set_epi32(0, 0, -1, -1, 0, 0, -1, -1,
-                                   0, 0, -1, -1, 0, 0, -1, -1));
+  return _m512_castsi512_pd(_mm512_set_epi32(0, 0, -1, -1, 0, 0, -1, -1,
+                                             0, 0, -1, -1, 0, 0, -1, -1));
 }
 
 template <>

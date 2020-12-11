@@ -249,9 +249,9 @@ template<> EIGEN_STRONG_INLINE Packet4d pzero(const Packet4d& /*a*/) { return _m
 template<> EIGEN_STRONG_INLINE Packet8i pzero(const Packet8i& /*a*/) { return _mm256_setzero_si256(); }
 
 
-template<> EIGEN_STRONG_INLINE Packet8f peven_mask(const Packet8f& /*a*/) { return Packet8f(_mm256_set_epi32(0, -1, 0, -1, 0, -1, 0, -1)); }
-template<> EIGEN_STRONG_INLINE Packet8i peven_mask(const Packet8i& /*a*/) { return Packet8i(_mm256_set_epi32(0, -1, 0, -1, 0, -1, 0, -1)); }
-template<> EIGEN_STRONG_INLINE Packet4d peven_mask(const Packet4d& /*a*/) { return Packet4d(_mm256_set_epi32(0, 0, -1, -1, 0, 0, -1, -1)); }
+template<> EIGEN_STRONG_INLINE Packet8f peven_mask(const Packet8f& /*a*/) { return _mm256_castsi256_ps(_mm256_set_epi32(0, -1, 0, -1, 0, -1, 0, -1)); }
+template<> EIGEN_STRONG_INLINE Packet8i peven_mask(const Packet8i& /*a*/) { return _mm256_set_epi32(0, -1, 0, -1, 0, -1, 0, -1); }
+template<> EIGEN_STRONG_INLINE Packet4d peven_mask(const Packet4d& /*a*/) { return _mm256_castsi256_pd(_mm256_set_epi32(0, 0, -1, -1, 0, 0, -1, -1)); }
 
 template<> EIGEN_STRONG_INLINE Packet8f pload1<Packet8f>(const float*  from) { return _mm256_broadcast_ss(from); }
 template<> EIGEN_STRONG_INLINE Packet4d pload1<Packet4d>(const double* from) { return _mm256_broadcast_sd(from); }
