@@ -36,12 +36,6 @@
 #ifndef EIGEN_HALF_H
 #define EIGEN_HALF_H
 
-#if EIGEN_HAS_CXX11
-#define EIGEN_EXPLICIT_CAST(tgt_type) explicit operator tgt_type()
-#else
-#define EIGEN_EXPLICIT_CAST(tgt_type) operator tgt_type()
-#endif
-
 #include <sstream>
 
 #if defined(EIGEN_HAS_GPU_FP16) || defined(EIGEN_HAS_ARM64_FP16_SCALAR_ARITHMETIC)
