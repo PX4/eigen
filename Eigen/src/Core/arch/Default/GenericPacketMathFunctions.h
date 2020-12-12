@@ -253,10 +253,10 @@ Packet plog_impl_double(const Packet _x)
 
   // Add the logarithm of the exponent back to the result of the interpolation.
   if (base2) {
-    const Packet cst_log2e = pset1<Packet>(EIGEN_LOG2E);
+    const Packet cst_log2e = pset1<Packet>(static_cast<double>(EIGEN_LOG2E));
     x = pmadd(x, cst_log2e, e);
   } else {
-    const Packet cst_ln2 = pset1<Packet>(EIGEN_LN2);
+    const Packet cst_ln2 = pset1<Packet>(static_cast<double>(EIGEN_LN2));
     x = pmadd(e, cst_ln2, x);
   }
 
