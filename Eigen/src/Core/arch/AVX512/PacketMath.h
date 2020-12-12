@@ -228,8 +228,8 @@ template<> EIGEN_STRONG_INLINE Packet16i peven_mask(const Packet16i& /*a*/) {
                           0, -1, 0, -1, 0, -1, 0, -1);
 }
 template<> EIGEN_STRONG_INLINE Packet8d peven_mask(const Packet8d& /*a*/) {
-  return _m512_castsi512_pd(_mm512_set_epi32(0, 0, -1, -1, 0, 0, -1, -1,
-                                             0, 0, -1, -1, 0, 0, -1, -1));
+  return _mm512_castsi512_pd(_mm512_set_epi32(0, 0, -1, -1, 0, 0, -1, -1,
+                                              0, 0, -1, -1, 0, 0, -1, -1));
 }
 
 template <>
