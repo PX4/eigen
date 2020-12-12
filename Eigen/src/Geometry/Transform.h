@@ -1331,7 +1331,7 @@ struct transform_right_product_impl< TransformType, MatrixType, 0, RhsCols>
 {
   typedef typename MatrixType::PlainObject ResultType;
 
-  static EIGEN_STRONG_INLINE ResultType run(const TransformType& T, const MatrixType& other)
+  static EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE ResultType run(const TransformType& T, const MatrixType& other)
   {
     return T.matrix() * other;
   }
@@ -1349,7 +1349,7 @@ struct transform_right_product_impl< TransformType, MatrixType, 1, RhsCols>
 
   typedef typename MatrixType::PlainObject ResultType;
 
-  static EIGEN_STRONG_INLINE ResultType run(const TransformType& T, const MatrixType& other)
+  static EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE ResultType run(const TransformType& T, const MatrixType& other)
   {
     EIGEN_STATIC_ASSERT(OtherRows==HDim, YOU_MIXED_MATRICES_OF_DIFFERENT_SIZES);
 
@@ -1375,7 +1375,7 @@ struct transform_right_product_impl< TransformType, MatrixType, 2, RhsCols>
 
   typedef typename MatrixType::PlainObject ResultType;
 
-  static EIGEN_STRONG_INLINE ResultType run(const TransformType& T, const MatrixType& other)
+  static EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE ResultType run(const TransformType& T, const MatrixType& other)
   {
     EIGEN_STATIC_ASSERT(OtherRows==Dim, YOU_MIXED_MATRICES_OF_DIFFERENT_SIZES);
 
@@ -1400,7 +1400,7 @@ struct transform_right_product_impl< TransformType, MatrixType, 2, 1> // rhs is 
 
   typedef typename MatrixType::PlainObject ResultType;
 
-  static EIGEN_STRONG_INLINE ResultType run(const TransformType& T, const MatrixType& other)
+  static EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE ResultType run(const TransformType& T, const MatrixType& other)
   {
     EIGEN_STATIC_ASSERT(OtherRows==Dim, YOU_MIXED_MATRICES_OF_DIFFERENT_SIZES);
 
