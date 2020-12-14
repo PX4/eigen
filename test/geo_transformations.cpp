@@ -672,11 +672,39 @@ template<typename Scalar, int Mode, int Options> void transformations_no_scale()
     VERIFY(t3.rotation().data()==t3.linear().data());
 }
 
+template<typename Scalar, int Mode, int Options> void transformations_computed_scaling_continuity()
+{
+  typedef Matrix<Scalar, 3, 1> Vector3;
+  typedef Transform<Scalar, 3, Mode, Options> Transform3;
+  typedef Matrix<Scalar, 3, 3> Matrix3;
+
+  // Given: two transforms that differ by '2*eps'.
+  Scalar eps(1e-3);
+  Vector3 v0 = Vector3::Random().normalized(),
+    v1 = Vector3::Random().normalized(),
+    v3 = Vector3::Random().normalized();
+  Transform3 t0, t1;
+  // The interesting case is when their determinants have different signs.
+  Matrix3 rank2 = 50 * v0 * v0.adjoint() + 20 * v1 * v1.adjoint();
+  t0.linear() = rank2 + eps * v3 * v3.adjoint();
+  t1.linear() = rank2 - eps * v3 * v3.adjoint();
+
+  // When: computing the rotation-scaling parts
+  Matrix3 r0, s0, r1, s1;
+  t0.computeRotationScaling(&r0, &s0);
+  t1.computeRotationScaling(&r1, &s1);
+
+  // Then: the scaling parts should differ by no more than '2*eps'.
+  const Scalar c(2.1); // 2 + room for rounding errors
+  VERIFY((s0 - s1).norm() < c * eps);
+}
+
 EIGEN_DECLARE_TEST(geo_transformations)
 {
   for(int i = 0; i < g_repeat; i++) {
     CALL_SUBTEST_1(( transformations<double,Affine,AutoAlign>() ));
     CALL_SUBTEST_1(( non_projective_only<double,Affine,AutoAlign>() ));
+    CALL_SUBTEST_1(( transformations_computed_scaling_continuity<double,Affine,AutoAlign>() ));   
     
     CALL_SUBTEST_2(( transformations<float,AffineCompact,AutoAlign>() ));
     CALL_SUBTEST_2(( non_projective_only<float,AffineCompact,AutoAlign>() ));
