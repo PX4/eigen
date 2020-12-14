@@ -592,82 +592,48 @@ set ( EIGEN_DEFINITIONS "")
 set ( EIGEN_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/${INCLUDE_INSTALL_DIR}" )
 set ( EIGEN_ROOT_DIR ${CMAKE_INSTALL_PREFIX} )
 
-# Interface libraries require at least CMake 3.0
-if (NOT CMAKE_VERSION VERSION_LESS 3.0)
-  include (CMakePackageConfigHelpers)
+include (CMakePackageConfigHelpers)
 
-  # Imported target support
-  add_library (eigen INTERFACE)
-  add_library (Eigen3::Eigen ALIAS eigen)
-  target_compile_definitions (eigen INTERFACE ${EIGEN_DEFINITIONS})
-  target_include_directories (eigen INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-    $<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}>
-  )
+# Imported target support
+add_library (eigen INTERFACE)
+add_library (Eigen3::Eigen ALIAS eigen)
+target_compile_definitions (eigen INTERFACE ${EIGEN_DEFINITIONS})
+target_include_directories (eigen INTERFACE
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+  $<INSTALL_INTERFACE:${INCLUDE_INSTALL_DIR}>
+)
 
-  # Export as title case Eigen
-  set_target_properties (eigen PROPERTIES EXPORT_NAME Eigen)
+# Export as title case Eigen
+set_target_properties (eigen PROPERTIES EXPORT_NAME Eigen)
 
-  install (TARGETS eigen EXPORT Eigen3Targets)
+install (TARGETS eigen EXPORT Eigen3Targets)
 
-  configure_package_config_file (
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Eigen3Config.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/Eigen3Config.cmake
-    PATH_VARS EIGEN_INCLUDE_DIR EIGEN_ROOT_DIR
-    INSTALL_DESTINATION ${CMAKEPACKAGE_INSTALL_DIR}
-    NO_CHECK_REQUIRED_COMPONENTS_MACRO # Eigen does not provide components
-  )
-  # Remove CMAKE_SIZEOF_VOID_P from Eigen3ConfigVersion.cmake since Eigen does
-  # not depend on architecture specific settings or libraries. More
-  # specifically, an Eigen3Config.cmake generated from a 64 bit target can be
-  # used for 32 bit targets as well (and vice versa).
-  set (_Eigen3_CMAKE_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
-  unset (CMAKE_SIZEOF_VOID_P)
-  write_basic_package_version_file (Eigen3ConfigVersion.cmake
-                                    VERSION ${EIGEN_VERSION_NUMBER}
-                                    COMPATIBILITY SameMajorVersion)
-  set (CMAKE_SIZEOF_VOID_P ${_Eigen3_CMAKE_SIZEOF_VOID_P})
+configure_package_config_file (
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Eigen3Config.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/Eigen3Config.cmake
+  PATH_VARS EIGEN_INCLUDE_DIR EIGEN_ROOT_DIR
+  INSTALL_DESTINATION ${CMAKEPACKAGE_INSTALL_DIR}
+  NO_CHECK_REQUIRED_COMPONENTS_MACRO # Eigen does not provide components
+)
+# Remove CMAKE_SIZEOF_VOID_P from Eigen3ConfigVersion.cmake since Eigen does
+# not depend on architecture specific settings or libraries. More
+# specifically, an Eigen3Config.cmake generated from a 64 bit target can be
+# used for 32 bit targets as well (and vice versa).
+set (_Eigen3_CMAKE_SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
+unset (CMAKE_SIZEOF_VOID_P)
+write_basic_package_version_file (Eigen3ConfigVersion.cmake
+                                  VERSION ${EIGEN_VERSION_NUMBER}
+                                  COMPATIBILITY SameMajorVersion)
+set (CMAKE_SIZEOF_VOID_P ${_Eigen3_CMAKE_SIZEOF_VOID_P})
 
-  # The Eigen target will be located in the Eigen3 namespace. Other CMake
-  # targets can refer to it using Eigen3::Eigen.
-  export (TARGETS eigen NAMESPACE Eigen3:: FILE Eigen3Targets.cmake)
-  # Export Eigen3 package to CMake registry such that it can be easily found by
-  # CMake even if it has not been installed to a standard directory.
-  export (PACKAGE Eigen3)
+# The Eigen target will be located in the Eigen3 namespace. Other CMake
+# targets can refer to it using Eigen3::Eigen.
+export (TARGETS eigen NAMESPACE Eigen3:: FILE Eigen3Targets.cmake)
+# Export Eigen3 package to CMake registry such that it can be easily found by
+# CMake even if it has not been installed to a standard directory.
+export (PACKAGE Eigen3)
 
-  install (EXPORT Eigen3Targets NAMESPACE Eigen3:: DESTINATION ${CMAKEPACKAGE_INSTALL_DIR})
-
-else ()
-  # Fallback to legacy Eigen3Config.cmake without the imported target
-
-  # If CMakePackageConfigHelpers module is available (CMake >= 2.8.8)
-  # create a relocatable Config file, otherwise leave the hardcoded paths
-  include(CMakePackageConfigHelpers OPTIONAL RESULT_VARIABLE CPCH_PATH)
-
-  if(CPCH_PATH)
-    configure_package_config_file (
-      ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Eigen3ConfigLegacy.cmake.in
-      ${CMAKE_CURRENT_BINARY_DIR}/Eigen3Config.cmake
-      PATH_VARS EIGEN_INCLUDE_DIR EIGEN_ROOT_DIR
-      INSTALL_DESTINATION ${CMAKEPACKAGE_INSTALL_DIR}
-      NO_CHECK_REQUIRED_COMPONENTS_MACRO # Eigen does not provide components
-    )
-  else()
-    # The PACKAGE_* variables are defined by the configure_package_config_file
-    # but without it we define them manually to the hardcoded paths
-    set(PACKAGE_INIT "")
-    set(PACKAGE_EIGEN_INCLUDE_DIR ${EIGEN_INCLUDE_DIR})
-    set(PACKAGE_EIGEN_ROOT_DIR ${EIGEN_ROOT_DIR})
-    configure_file ( ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Eigen3ConfigLegacy.cmake.in
-                     ${CMAKE_CURRENT_BINARY_DIR}/Eigen3Config.cmake
-                     @ONLY ESCAPE_QUOTES )
-  endif()
-
-  write_basic_package_version_file( Eigen3ConfigVersion.cmake
-                                    VERSION ${EIGEN_VERSION_NUMBER}
-                                    COMPATIBILITY SameMajorVersion )
-
-endif ()
+install (EXPORT Eigen3Targets NAMESPACE Eigen3:: DESTINATION ${CMAKEPACKAGE_INSTALL_DIR})
 
 install ( FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/UseEigen3.cmake
                 ${CMAKE_CURRENT_BINARY_DIR}/Eigen3Config.cmake
