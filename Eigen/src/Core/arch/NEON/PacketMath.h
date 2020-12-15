@@ -3896,7 +3896,8 @@ template<> EIGEN_STRONG_INLINE Packet2d psqrt(const Packet2d& _x){
   // Do a single step of Newton's iteration.
   //the number 1.5f was set reference to Quake3's fast inverse square root
   x = vmulq_f64(x, psub(pset1<Packet2d>(1.5), pmul(half, pmul(x, x))));
-  // Do one more Newton's iteration to get more accurate result.
+  // Do two more Newton's iteration to get a result accurate to 1 ulp.
+  x = vmulq_f64(x, psub(pset1<Packet2d>(1.5), pmul(half, pmul(x, x))));
   x = vmulq_f64(x, psub(pset1<Packet2d>(1.5), pmul(half, pmul(x, x))));
   // Flush results for denormals to zero.
   return vreinterpretq_f64_u64(vbicq_u64(vreinterpretq_u64_f64(pmul(_x, x)), denormal_mask));
