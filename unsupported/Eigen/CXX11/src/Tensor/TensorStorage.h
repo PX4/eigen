@@ -55,13 +55,16 @@ class TensorStorage
   EIGEN_DEVICE_FUNC
   EIGEN_STRONG_INLINE const T *data() const { return m_data; }
 
-  EIGEN_DEVICE_FUNC
-  EIGEN_STRONG_INLINE const FixedDimensions dimensions() const { return FixedDimensions(); }
+  static EIGEN_DEVICE_FUNC
+  EIGEN_STRONG_INLINE const FixedDimensions& dimensions()
+  {
+    static const FixedDimensions* singleton_dimensions = new FixedDimensions();
+    return *singleton_dimensions;
+  }
 
   EIGEN_DEVICE_FUNC
   EIGEN_STRONG_INLINE DenseIndex size() const { return Size; }
 };
-
 
 // pure dynamic
 template<typename T, typename IndexType, int NumIndices_, int Options_>
