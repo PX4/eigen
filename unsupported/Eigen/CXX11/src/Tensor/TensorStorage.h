@@ -45,8 +45,6 @@ class TensorStorage
   static const std::size_t MinSize = max_n_1<Size>::size;
   EIGEN_ALIGN_MAX T m_data[MinSize];
 
-  FixedDimensions m_dimensions;
-
  public:
   EIGEN_DEVICE_FUNC
   EIGEN_STRONG_INLINE TensorStorage() {
@@ -57,13 +55,16 @@ class TensorStorage
   EIGEN_DEVICE_FUNC
   EIGEN_STRONG_INLINE const T *data() const { return m_data; }
 
-  EIGEN_DEVICE_FUNC
-  EIGEN_STRONG_INLINE const FixedDimensions& dimensions() const { return m_dimensions; }
+  static EIGEN_DEVICE_FUNC
+  EIGEN_STRONG_INLINE const FixedDimensions& dimensions()
+  {
+    static const FixedDimensions* singleton_dimensions = new FixedDimensions();
+    return *singleton_dimensions;
+  }
 
   EIGEN_DEVICE_FUNC
-  EIGEN_STRONG_INLINE DenseIndex size() const { return m_dimensions.TotalSize(); }
+  EIGEN_STRONG_INLINE DenseIndex size() const { return Size; }
 };
-
 
 // pure dynamic
 template<typename T, typename IndexType, int NumIndices_, int Options_>
