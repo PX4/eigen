@@ -703,8 +703,8 @@ Packet psqrt_complex(const Packet& a) {
   //    u = sqrt(0.5 * (x + sqrt(x^2 + y^2)))
   //    v = 0.5 * (y / u)
   // and for x < 0,
-  //    v = sign(y) * sqrt(0.5 * (x + sqrt(x^2 + y^2)))
-  //    u = |0.5 * (y / v)|
+  //    v = sign(y) * sqrt(0.5 * (-x + sqrt(x^2 + y^2)))
+  //    u = 0.5 * (y / v)
   //
   //  To avoid unnecessary over- and underflow, we compute sqrt(x^2 + y^2) as
   //     l = max(|x|, |y|) * sqrt(1 + (min(|x|, |y|) / max(|x|, |y|))^2) ,

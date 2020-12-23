@@ -68,8 +68,20 @@ void run_on_gpu(const Kernel& ker, int n, const Input& in, Output& out)
 #else
   run_on_gpu_meta_kernel<<<Grids,Blocks>>>(ker, n, d_in, d_out);
 #endif
+  // Pre-launch errors.
+  gpuError_t err = gpuGetLastError();
+  if (err != gpuSuccess) {
+    printf("%s: %s\n", gpuGetErrorName(err), gpuGetErrorString(err));
+    gpu_assert(false);
+  }
   
-  gpuDeviceSynchronize();
+  // Kernel execution errors.
+  err = gpuDeviceSynchronize();
+  if (err != gpuSuccess) {
+    printf("%s: %s\n", gpuGetErrorName(err), gpuGetErrorString(err));
+    gpu_assert(false);
+  }
+  
   
   // check inputs have not been modified
   gpuMemcpy(const_cast<typename Input::Scalar*>(in.data()),  d_in,  in_bytes,  gpuMemcpyDeviceToHost);
@@ -85,7 +97,7 @@ void run_and_compare_to_gpu(const Kernel& ker, int n, const Input& in, Output& o
 {
   Input  in_ref,  in_gpu;
   Output out_ref, out_gpu;
-  #if !defined(__CUDA_ARCH__) && !defined(__HIP_DEVICE_COMPILE__)
+  #if !defined(EIGEN_GPU_COMPILE_PHASE)
   in_ref = in_gpu = in;
   out_ref = out_gpu = out;
   #else
@@ -94,7 +106,7 @@ void run_and_compare_to_gpu(const Kernel& ker, int n, const Input& in, Output& o
   #endif
   run_on_cpu (ker, n, in_ref,  out_ref);
   run_on_gpu(ker, n, in_gpu, out_gpu);
-  #if !defined(__CUDA_ARCH__) && !defined(__HIP_DEVICE_COMPILE__)
+  #if !defined(EIGEN_GPU_COMPILE_PHASE)
   VERIFY_IS_APPROX(in_ref, in_gpu);
   VERIFY_IS_APPROX(out_ref, out_gpu);
   #endif
@@ -102,14 +114,16 @@ void run_and_compare_to_gpu(const Kernel& ker, int n, const Input& in, Output& o
 
 struct compile_time_device_info {
   EIGEN_DEVICE_FUNC
-  void operator()(int /*i*/, const int* /*in*/, int* info) const
+  void operator()(int i, const int* /*in*/, int* info) const
   {
-    #if defined(__CUDA_ARCH__)
-    info[0] = int(__CUDA_ARCH__ +0);
-    #endif
-    #if defined(EIGEN_HIP_DEVICE_COMPILE)
-    info[1] = int(EIGEN_HIP_DEVICE_COMPILE +0);
-    #endif
+    if (i == 0) {
+      #if defined(__CUDA_ARCH__)
+      info[0] = int(__CUDA_ARCH__ +0);
+      #endif
+      #if defined(EIGEN_HIP_DEVICE_COMPILE)
+      info[1] = int(EIGEN_HIP_DEVICE_COMPILE +0);
+      #endif
+    }
   }
 };
 

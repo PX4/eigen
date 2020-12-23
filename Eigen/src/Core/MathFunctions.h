@@ -324,6 +324,27 @@ struct abs2_retval
 };
 
 /****************************************************************************
+* Implementation of sqrt                                                 *
+****************************************************************************/
+
+template<typename Scalar>
+struct sqrt_impl
+{
+  EIGEN_DEVICE_FUNC
+  static EIGEN_ALWAYS_INLINE Scalar run(const Scalar& x)
+  {
+    EIGEN_USING_STD(sqrt);
+    return sqrt(x);
+  }
+};
+
+template<typename Scalar>
+struct sqrt_retval
+{
+  typedef Scalar type;
+};
+
+/****************************************************************************
 * Implementation of norm1                                                *
 ****************************************************************************/
 
@@ -1368,12 +1389,11 @@ inline int log2(int x)
   *
   * It's usage is justified in performance critical functions, like norm/normalize.
   */
-template<typename T>
-EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE
-T sqrt(const T &x)
+template<typename Scalar>
+EIGEN_DEVICE_FUNC
+EIGEN_ALWAYS_INLINE EIGEN_MATHFUNC_RETVAL(sqrt, Scalar) sqrt(const Scalar& x)
 {
-  EIGEN_USING_STD(sqrt);
-  return sqrt(x);
+  return EIGEN_MATHFUNC_IMPL(sqrt, Scalar)::run(x);
 }
 
 // Boolean specialization, avoids implicit float to bool conversion (-Wimplicit-conversion-floating-point-to-bool).

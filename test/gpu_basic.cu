@@ -14,7 +14,6 @@
 #endif
 
 #define EIGEN_TEST_NO_LONGDOUBLE
-#define EIGEN_TEST_NO_COMPLEX
 #define EIGEN_DEFAULT_DENSE_INDEX_TYPE int
 
 #include "main.h"
@@ -51,6 +50,59 @@ struct coeff_wise {
     Map<T> res(out+i*T::MaxSizeAtCompileTime);
     
     res.array() += (in[0] * x1 + x2).array() * x3.array();
+  }
+};
+
+template<typename T>
+struct complex_sqrt {
+  EIGEN_DEVICE_FUNC
+  void operator()(int i, const typename T::Scalar* in, typename T::Scalar* out) const
+  {
+    using namespace Eigen;
+    typedef typename T::Scalar ComplexType;
+    typedef typename T::Scalar::value_type ValueType;
+    const int num_special_inputs = 18;
+    
+    if (i == 0) {
+      const ValueType nan = std::numeric_limits<ValueType>::quiet_NaN();
+      typedef Eigen::Vector<ComplexType, num_special_inputs> SpecialInputs;
+      SpecialInputs special_in;
+      special_in.setZero();
+      int idx = 0;
+      special_in[idx++] = ComplexType(0, 0);
+      special_in[idx++] = ComplexType(-0, 0);
+      special_in[idx++] = ComplexType(0, -0);
+      special_in[idx++] = ComplexType(-0, -0);
+      // GCC's fallback sqrt implementation fails for inf inputs.
+      // It is called when _GLIBCXX_USE_C99_COMPLEX is false or if
+      // clang includes the GCC header (which temporarily disables
+      // _GLIBCXX_USE_C99_COMPLEX)
+      #if !defined(_GLIBCXX_COMPLEX) || \
+        (_GLIBCXX_USE_C99_COMPLEX && !defined(__CLANG_CUDA_WRAPPERS_COMPLEX))
+      const ValueType inf = std::numeric_limits<ValueType>::infinity();
+      special_in[idx++] = ComplexType(1.0, inf);
+      special_in[idx++] = ComplexType(nan, inf);
+      special_in[idx++] = ComplexType(1.0, -inf);
+      special_in[idx++] = ComplexType(nan, -inf);
+      special_in[idx++] = ComplexType(-inf, 1.0);
+      special_in[idx++] = ComplexType(inf, 1.0);
+      special_in[idx++] = ComplexType(-inf, -1.0);
+      special_in[idx++] = ComplexType(inf, -1.0);
+      special_in[idx++] = ComplexType(-inf, nan);
+      special_in[idx++] = ComplexType(inf, nan);
+      #endif
+      special_in[idx++] = ComplexType(1.0, nan);
+      special_in[idx++] = ComplexType(nan, 1.0);
+      special_in[idx++] = ComplexType(nan, -1.0);
+      special_in[idx++] = ComplexType(nan, nan);
+      
+      Map<SpecialInputs> special_out(out);
+      special_out = special_in.cwiseSqrt();
+    }
+    
+    T x1(in + i);
+    Map<T> res(out + num_special_inputs + i*T::MaxSizeAtCompileTime);
+    res = x1.cwiseSqrt();
   }
 };
 
@@ -161,17 +213,58 @@ struct matrix_inverse {
   }
 };
 
+template<typename Type1, typename Type2>
+bool verifyIsApproxWithInfsNans(const Type1& a, const Type2& b, typename Type1::Scalar* = 0) // Enabled for Eigen's type only
+{
+  if (a.rows() != b.rows()) {
+    return false;
+  }
+  if (a.cols() != b.cols()) {
+    return false;
+  }
+  for (Index r = 0; r < a.rows(); ++r) {
+    for (Index c = 0; c < a.cols(); ++c) {
+      if (a(r, c) != b(r, c)
+          && !((numext::isnan)(a(r, c)) && (numext::isnan)(b(r, c))) 
+          && !test_isApprox(a(r, c), b(r, c))) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+template<typename Kernel, typename Input, typename Output>
+void test_with_infs_nans(const Kernel& ker, int n, const Input& in, Output& out)
+{
+  Output out_ref, out_gpu;
+  #if !defined(EIGEN_GPU_COMPILE_PHASE)
+  out_ref = out_gpu = out;
+  #else
+  EIGEN_UNUSED_VARIABLE(in);
+  EIGEN_UNUSED_VARIABLE(out);
+  #endif
+  run_on_cpu (ker, n, in,  out_ref);
+  run_on_gpu(ker, n, in, out_gpu);
+  #if !defined(EIGEN_GPU_COMPILE_PHASE)
+  verifyIsApproxWithInfsNans(out_ref, out_gpu);
+  #endif
+}
+
 EIGEN_DECLARE_TEST(gpu_basic)
 {
   ei_test_init_gpu();
   
   int nthreads = 100;
   Eigen::VectorXf in, out;
+  Eigen::VectorXcf cfin, cfout;
   
-  #if !defined(__CUDA_ARCH__) && !defined(__HIP_DEVICE_COMPILE__)
+  #if !defined(EIGEN_GPU_COMPILE_PHASE)
   int data_size = nthreads * 512;
   in.setRandom(data_size);
-  out.setRandom(data_size);
+  out.setConstant(data_size, -1);
+  cfin.setRandom(data_size);
+  cfout.setConstant(data_size, -1);
   #endif
   
   CALL_SUBTEST( run_and_compare_to_gpu(coeff_wise<Vector3f>(), nthreads, in, out) );
@@ -203,6 +296,8 @@ EIGEN_DECLARE_TEST(gpu_basic)
   
   CALL_SUBTEST( run_and_compare_to_gpu(eigenvalues_direct<Matrix3f>(), nthreads, in, out) );
   CALL_SUBTEST( run_and_compare_to_gpu(eigenvalues_direct<Matrix2f>(), nthreads, in, out) );
+
+  CALL_SUBTEST( test_with_infs_nans(complex_sqrt<Vector3cf>(), nthreads, cfin, cfout) );
 
 #if defined(__NVCC__)
   // FIXME
