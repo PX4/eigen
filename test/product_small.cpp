@@ -56,18 +56,17 @@ test_lazy_single(int rows, int cols, int depth)
   VERIFY_IS_APPROX(C+=A.lazyProduct(B), ref_prod(D,A,B));
 }
 
-template<typename T>
-void test_dynamic_exact()
+void test_dynamic_bool()
 {
   int rows = internal::random<int>(1,64);
   int cols = internal::random<int>(1,64);
   int depth = internal::random<int>(1,65);
 
-  typedef Matrix<T,Dynamic,Dynamic> MatrixX;
+  typedef Matrix<bool,Dynamic,Dynamic> MatrixX;
   MatrixX A(rows,depth); A.setRandom();
   MatrixX B(depth,cols); B.setRandom();
-  MatrixX  C(rows,cols);  C.setRandom();
-  MatrixX  D(C);
+  MatrixX C(rows,cols);  C.setRandom();
+  MatrixX D(C);
   for(Index i=0;i<C.rows();++i)
     for(Index j=0;j<C.cols();++j)
       for(Index k=0;k<A.cols();++k)
@@ -317,7 +316,7 @@ EIGEN_DECLARE_TEST(product_small)
     CALL_SUBTEST_6( bug_1311<3>() );
     CALL_SUBTEST_6( bug_1311<5>() );
 
-    CALL_SUBTEST_9( test_dynamic_exact<bool>() );
+    CALL_SUBTEST_9( test_dynamic_bool() );
   }
 
   CALL_SUBTEST_6( product_small_regressions<0>() );

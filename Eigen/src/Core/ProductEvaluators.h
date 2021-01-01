@@ -441,8 +441,8 @@ struct generic_product_impl<Lhs,Rhs,DenseShape,DenseShape,CoeffBasedProductMode>
     };
     // FIXME: in c++11 this should be auto, and extractScalarFactor should also return auto
     //        this is important for real*complex_mat
-    Scalar actualAlpha =    blas_traits<Lhs>::extractScalarFactor(lhs)
-                          * blas_traits<Rhs>::extractScalarFactor(rhs);
+    Scalar actualAlpha = combine_scalar_factors<Scalar>(lhs, rhs);
+
     eval_dynamic_impl(dst,
                       blas_traits<Lhs>::extract(lhs).template conjugateIf<ConjLhs>(),
                       blas_traits<Rhs>::extract(rhs).template conjugateIf<ConjRhs>(),
