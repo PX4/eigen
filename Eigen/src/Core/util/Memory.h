@@ -1048,20 +1048,32 @@ inline void queryCacheSizes_intel(int& l1, int& l2, int& l3, int max_std_funcs)
 {
   if(max_std_funcs>=4)
     queryCacheSizes_intel_direct(l1,l2,l3);
-  else
+  else if(max_std_funcs>=2)
     queryCacheSizes_intel_codes(l1,l2,l3);
+  else
+    l1 = l2 = l3 = 0;
 }
 
 inline void queryCacheSizes_amd(int& l1, int& l2, int& l3)
 {
   int abcd[4];
   abcd[0] = abcd[1] = abcd[2] = abcd[3] = 0;
-  EIGEN_CPUID(abcd,0x80000005,0);
-  l1 = (abcd[2] >> 24) * 1024; // C[31:24] = L1 size in KB
-  abcd[0] = abcd[1] = abcd[2] = abcd[3] = 0;
-  EIGEN_CPUID(abcd,0x80000006,0);
-  l2 = (abcd[2] >> 16) * 1024; // C[31;16] = l2 cache size in KB
-  l3 = ((abcd[3] & 0xFFFC000) >> 18) * 512 * 1024; // D[31;18] = l3 cache size in 512KB
+  
+  // First query the max supported function.
+  EIGEN_CPUID(abcd,0x80000000,0);
+  if(abcd[0] >= 0x80000006)
+  {
+    EIGEN_CPUID(abcd,0x80000005,0);
+    l1 = (abcd[2] >> 24) * 1024; // C[31:24] = L1 size in KB
+    abcd[0] = abcd[1] = abcd[2] = abcd[3] = 0;
+    EIGEN_CPUID(abcd,0x80000006,0);
+    l2 = (abcd[2] >> 16) * 1024; // C[31;16] = l2 cache size in KB
+    l3 = ((abcd[3] & 0xFFFC000) >> 18) * 512 * 1024; // D[31;18] = l3 cache size in 512KB
+  }
+  else
+  {
+    l1 = l2 = l3 = 0;
+  }
 }
 #endif
 
@@ -1077,7 +1089,7 @@ inline void queryCacheSizes(int& l1, int& l2, int& l3)
 
   // identify the CPU vendor
   EIGEN_CPUID(abcd,0x0,0);
-  int max_std_funcs = abcd[1];
+  int max_std_funcs = abcd[0];
   if(cpuid_is_vendor(abcd,GenuineIntel))
     queryCacheSizes_intel(l1,l2,l3,max_std_funcs);
   else if(cpuid_is_vendor(abcd,AuthenticAMD) || cpuid_is_vendor(abcd,AMDisbetter_))
