@@ -94,7 +94,7 @@ protected:
   typedef Stride<StrideType::OuterStrideAtCompileTime,StrideType::InnerStrideAtCompileTime> StrideBase;
 
   // Resolves inner stride if default 0.
-  static Index resolveInnerStride(Index inner) {
+  static EIGEN_DEVICE_FUNC Index resolveInnerStride(Index inner) {
     if (inner == 0) {
       return 1;
     }
@@ -102,7 +102,7 @@ protected:
   }
   
   // Resolves outer stride if default 0.
-  static Index resolveOuterStride(Index inner, Index outer, Index rows, Index cols, bool isVectorAtCompileTime, bool isRowMajor) {
+  static EIGEN_DEVICE_FUNC Index resolveOuterStride(Index inner, Index outer, Index rows, Index cols, bool isVectorAtCompileTime, bool isRowMajor) {
     if (outer == 0) {
       if (isVectorAtCompileTime) {
         outer = inner * rows * cols;
@@ -311,7 +311,9 @@ template<typename PlainObjectType, int Options, typename StrideType> class Ref
     {
       EIGEN_STATIC_ASSERT(bool(Traits::template match<Derived>::MatchAtCompileTime), STORAGE_LAYOUT_DOES_NOT_MATCH);
       // Construction must pass since we will not create temprary storage in the non-const case.
-      eigen_assert(Base::construct(expr.derived()));
+      const bool success = Base::construct(expr.derived());
+      EIGEN_UNUSED_VARIABLE(success)
+      eigen_assert(success);
     }
     template<typename Derived>
     EIGEN_DEVICE_FUNC inline Ref(const DenseBase<Derived>& expr,
@@ -326,7 +328,9 @@ template<typename PlainObjectType, int Options, typename StrideType> class Ref
       EIGEN_STATIC_ASSERT(bool(Traits::template match<Derived>::MatchAtCompileTime), STORAGE_LAYOUT_DOES_NOT_MATCH);
       EIGEN_STATIC_ASSERT(!Derived::IsPlainObjectBase,THIS_EXPRESSION_IS_NOT_A_LVALUE__IT_IS_READ_ONLY);
       // Construction must pass since we will not create temporary storage in the non-const case.
-      eigen_assert(Base::construct(expr.const_cast_derived()));
+      const bool success = Base::construct(expr.const_cast_derived());
+      EIGEN_UNUSED_VARIABLE(success)
+      eigen_assert(success);
     }
 
     EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Ref)
