@@ -117,6 +117,7 @@ struct compile_time_device_info {
   void operator()(int i, const int* /*in*/, int* info) const
   {
     if (i == 0) {
+      EIGEN_UNUSED_VARIABLE(info)
       #if defined(__CUDA_ARCH__)
       info[0] = int(__CUDA_ARCH__ +0);
       #endif
