@@ -51,7 +51,7 @@ template<typename Scalar> void check_histogram(Scalar x, Scalar y, int bins)
     Scalar r = check_in_range(x,y);
     hist( int((int64(r)-int64(x))/divisor) )++;
   }
-  VERIFY( (((hist.cast<double>()/double(f))-1.0).abs()<0.02).all() );
+  VERIFY( (((hist.cast<double>()/double(f))-1.0).abs()<0.025).all() );
 }
 
 EIGEN_DECLARE_TEST(rand)
