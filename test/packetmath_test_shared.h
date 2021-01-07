@@ -115,6 +115,17 @@ template<typename Scalar> bool areApprox(const Scalar* a, const Scalar* b, int s
   VERIFY(test::areApprox(ref, data2, PacketSize) && #POP); \
 }
 
+// Checks component-wise for input of size N. All of data1, data2, and ref
+// should have size at least ceil(N/PacketSize)*PacketSize to avoid memory
+// access errors.
+#define CHECK_CWISE1_N(REFOP, POP, N) { \
+  for (int i=0; i<N; ++i) \
+    ref[i] = REFOP(data1[i]); \
+  for (int j=0; j<N; j+=PacketSize) \
+    internal::pstore(data2 + j, POP(internal::pload<Packet>(data1 + j))); \
+  VERIFY(test::areApprox(ref, data2, N) && #POP); \
+}
+
 template<bool Cond,typename Packet>
 struct packet_helper
 {

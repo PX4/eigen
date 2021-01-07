@@ -933,7 +933,7 @@ void packetmath_complex() {
     for (int i = 0; i < size; ++i) {
       data1[i] = Scalar(internal::random<RealScalar>(), internal::random<RealScalar>());
     }
-    CHECK_CWISE1(numext::sqrt, internal::psqrt);
+    CHECK_CWISE1_N(numext::sqrt, internal::psqrt, size);
 
     // Test misc. corner cases.
     const RealScalar zero = RealScalar(0);
@@ -944,32 +944,32 @@ void packetmath_complex() {
     data1[1] = Scalar(-zero, zero);
     data1[2] = Scalar(one, zero);
     data1[3] = Scalar(zero, one);
-    CHECK_CWISE1(numext::sqrt, internal::psqrt);
+    CHECK_CWISE1_N(numext::sqrt, internal::psqrt, 4);
     data1[0] = Scalar(-one, zero);
     data1[1] = Scalar(zero, -one);
     data1[2] = Scalar(one, one);
     data1[3] = Scalar(-one, -one);
-    CHECK_CWISE1(numext::sqrt, internal::psqrt);
+    CHECK_CWISE1_N(numext::sqrt, internal::psqrt, 4);
     data1[0] = Scalar(inf, zero);
     data1[1] = Scalar(zero, inf);
     data1[2] = Scalar(-inf, zero);
     data1[3] = Scalar(zero, -inf);
-    CHECK_CWISE1(numext::sqrt, internal::psqrt);
+    CHECK_CWISE1_N(numext::sqrt, internal::psqrt, 4);
     data1[0] = Scalar(inf, inf);
     data1[1] = Scalar(-inf, inf);
     data1[2] = Scalar(inf, -inf);
     data1[3] = Scalar(-inf, -inf);
-    CHECK_CWISE1(numext::sqrt, internal::psqrt);
+    CHECK_CWISE1_N(numext::sqrt, internal::psqrt, 4);
     data1[0] = Scalar(nan, zero);
     data1[1] = Scalar(zero, nan);
     data1[2] = Scalar(nan, one);
     data1[3] = Scalar(one, nan);
-    CHECK_CWISE1(numext::sqrt, internal::psqrt);
+    CHECK_CWISE1_N(numext::sqrt, internal::psqrt, 4);
     data1[0] = Scalar(nan, nan);
     data1[1] = Scalar(inf, nan);
     data1[2] = Scalar(nan, inf);
     data1[3] = Scalar(-inf, nan);
-    CHECK_CWISE1(numext::sqrt, internal::psqrt);
+    CHECK_CWISE1_N(numext::sqrt, internal::psqrt, 4);
   }
 }
 

@@ -338,6 +338,22 @@ struct sqrt_impl
   }
 };
 
+// Complex sqrt defined in MathFunctionsImpl.h.
+template<typename T> std::complex<T> complex_sqrt(const std::complex<T>& a_x);
+
+// MSVC incorrectly handles inf cases.
+#if EIGEN_COMP_MSVC > 0
+template<typename T>
+struct sqrt_impl<std::complex<T> >
+{
+  EIGEN_DEVICE_FUNC
+  static EIGEN_ALWAYS_INLINE std::complex<T> run(const std::complex<T>& x)
+  {
+    return complex_sqrt<T>(x);
+  }
+};
+#endif
+
 template<typename Scalar>
 struct sqrt_retval
 {
