@@ -666,6 +666,7 @@
 #else
 #define EIGEN_HAS_STD_RESULT_OF 0
 #endif
+#endif
 
 #ifndef EIGEN_HAS_ALIGNAS
 #if EIGEN_MAX_CPP_VER>=11 && EIGEN_HAS_CXX11 &&   \
