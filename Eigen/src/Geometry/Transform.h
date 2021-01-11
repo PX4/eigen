@@ -1097,16 +1097,17 @@ template<typename Scalar, int Dim, int Mode, int Options>
 template<typename RotationMatrixType, typename ScalingMatrixType>
 EIGEN_DEVICE_FUNC void Transform<Scalar,Dim,Mode,Options>::computeRotationScaling(RotationMatrixType *rotation, ScalingMatrixType *scaling) const
 {
+  // TODO: investigate BDCSVD implementation.
   JacobiSVD<LinearMatrixType> svd(linear(), ComputeFullU | ComputeFullV);
 
-  Scalar x = (svd.matrixU() * svd.matrixV().adjoint()).determinant(); // so x has absolute value 1
+  Scalar x = (svd.matrixU() * svd.matrixV().adjoint()).determinant() < Scalar(0) ? Scalar(-1) : Scalar(1); // so x has absolute value 1
   VectorType sv(svd.singularValues());
   sv.coeffRef(Dim-1) *= x;
   if(scaling) *scaling = svd.matrixV() * sv.asDiagonal() * svd.matrixV().adjoint();
   if(rotation)
   {
     LinearMatrixType m(svd.matrixU());
-    m.col(Dim-1) /= x;
+    m.col(Dim-1) *= x;
     *rotation = m * svd.matrixV().adjoint();
   }
 }
@@ -1126,16 +1127,17 @@ template<typename Scalar, int Dim, int Mode, int Options>
 template<typename ScalingMatrixType, typename RotationMatrixType>
 EIGEN_DEVICE_FUNC void Transform<Scalar,Dim,Mode,Options>::computeScalingRotation(ScalingMatrixType *scaling, RotationMatrixType *rotation) const
 {
+  // TODO: investigate BDCSVD implementation.
   JacobiSVD<LinearMatrixType> svd(linear(), ComputeFullU | ComputeFullV);
 
-  Scalar x = (svd.matrixU() * svd.matrixV().adjoint()).determinant(); // so x has absolute value 1
+  Scalar x = (svd.matrixU() * svd.matrixV().adjoint()).determinant() < Scalar(0) ? Scalar(-1) : Scalar(1); // so x has absolute value 1
   VectorType sv(svd.singularValues());
   sv.coeffRef(Dim-1) *= x;
   if(scaling) *scaling = svd.matrixU() * sv.asDiagonal() * svd.matrixU().adjoint();
   if(rotation)
   {
     LinearMatrixType m(svd.matrixU());
-    m.col(Dim-1) /= x;
+    m.col(Dim-1) *= x;
     *rotation = m * svd.matrixV().adjoint();
   }
 }
