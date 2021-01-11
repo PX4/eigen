@@ -94,6 +94,8 @@ template<typename T> struct scalar_quotient_op<const std::complex<T>, const std:
 
 template<typename T> struct scalar_quotient_op<std::complex<T>, std::complex<T> > : scalar_quotient_op<const std::complex<T>, const std::complex<T> > {};
 
+// Complex sqrt is already specialized on Windows.
+#if EIGEN_COMP_MSVC == 0
 template<typename T>
 struct sqrt_impl<std::complex<T> >
 {
@@ -103,6 +105,7 @@ struct sqrt_impl<std::complex<T> >
     return complex_sqrt<T>(x);
   }
 };
+#endif
 
 }  // namespace internal
 }  // namespace Eigen
