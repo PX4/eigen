@@ -132,8 +132,7 @@ EIGEN_DEVICE_FUNC std::complex<T> complex_sqrt(const std::complex<T>& z) {
 
   // Special case of isinf(y)
   if ((numext::isinf)(y)) {
-    const T inf = std::numeric_limits<T>::infinity();
-    return std::complex<T>(inf, y);
+    return std::complex<T>(std::numeric_limits<T>::infinity(), y);
   }
 
   T w = numext::sqrt(cst_half * (numext::abs(x) + numext::abs(z)));
