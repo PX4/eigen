@@ -19,6 +19,12 @@
 namespace Eigen {
 namespace internal {
 
+template<typename Packet, int N> EIGEN_DEVICE_FUNC inline Packet
+pset(const typename unpacket_traits<Packet>::type (&a)[N] /* a */) {
+  EIGEN_STATIC_ASSERT(unpacket_traits<Packet>::size == N, THE_ARRAY_SIZE_SHOULD_EQUAL_WITH_PACKET_SIZE);
+  return pload<Packet>(a);
+}
+
 template<typename Packet> EIGEN_STRONG_INLINE Packet
 pfrexp_float(const Packet& a, Packet& exponent) {
   typedef typename unpacket_traits<Packet>::integer_packet PacketI;

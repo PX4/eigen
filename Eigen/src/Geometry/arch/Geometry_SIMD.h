@@ -8,15 +8,15 @@
 // Public License v. 2.0. If a copy of the MPL was not distributed
 // with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef EIGEN_GEOMETRY_SSE_H
-#define EIGEN_GEOMETRY_SSE_H
+#ifndef EIGEN_GEOMETRY_SIMD_H
+#define EIGEN_GEOMETRY_SIMD_H
 
 namespace Eigen { 
 
 namespace internal {
 
 template<class Derived, class OtherDerived>
-struct quat_product<Architecture::SSE, Derived, OtherDerived, float>
+struct quat_product<Architecture::Target, Derived, OtherDerived, float>
 {
   enum {
     AAlignment = traits<Derived>::Alignment,
@@ -28,7 +28,8 @@ struct quat_product<Architecture::SSE, Derived, OtherDerived, float>
     evaluator<typename Derived::Coefficients> ae(_a.coeffs());
     evaluator<typename OtherDerived::Coefficients> be(_b.coeffs());
     Quaternion<float> res;
-    const Packet4f mask = _mm_setr_ps(0.f,0.f,0.f,-0.f);
+    float arr[4] = {0.f, 0.f, 0.f, -0.f};
+    const Packet4f mask = pset<Packet4f>(arr);
     Packet4f a = ae.template packet<AAlignment,Packet4f>(0);
     Packet4f b = be.template packet<BAlignment,Packet4f>(0);
     Packet4f s1 = pmul(vec4f_swizzle1(a,1,2,0,2),vec4f_swizzle1(b,2,0,1,2));
@@ -45,7 +46,7 @@ struct quat_product<Architecture::SSE, Derived, OtherDerived, float>
 };
 
 template<class Derived>
-struct quat_conj<Architecture::SSE, Derived, float>
+struct quat_conj<Architecture::Target, Derived, float>
 {
   enum {
     ResAlignment = traits<Quaternion<float> >::Alignment
@@ -54,7 +55,8 @@ struct quat_conj<Architecture::SSE, Derived, float>
   {
     evaluator<typename Derived::Coefficients> qe(q.coeffs());
     Quaternion<float> res;
-    const Packet4f mask = _mm_setr_ps(-0.f,-0.f,-0.f,0.f);
+    float arr[4] = {-0.f,-0.f,-0.f,0.f};
+    const Packet4f mask = pset<Packet4f>(arr);
     pstoret<float,Packet4f,ResAlignment>(&res.x(), pxor(mask, qe.template packet<traits<Derived>::Alignment,Packet4f>(0)));
     return res;
   }
@@ -62,7 +64,7 @@ struct quat_conj<Architecture::SSE, Derived, float>
 
 
 template<typename VectorLhs,typename VectorRhs>
-struct cross3_impl<Architecture::SSE,VectorLhs,VectorRhs,float,true>
+struct cross3_impl<Architecture::Target,VectorLhs,VectorRhs,float,true>
 {
   enum {
     ResAlignment = traits<typename plain_matrix_type<VectorLhs>::type>::Alignment
@@ -84,9 +86,10 @@ struct cross3_impl<Architecture::SSE,VectorLhs,VectorRhs,float,true>
 
 
 
+#if (defined EIGEN_VECTORIZE_SSE) || (EIGEN_ARCH_ARM64)
 
 template<class Derived, class OtherDerived>
-struct quat_product<Architecture::SSE, Derived, OtherDerived, double>
+struct quat_product<Architecture::Target, Derived, OtherDerived, double>
 {
   enum {
     BAlignment = traits<OtherDerived>::Alignment,
@@ -95,8 +98,6 @@ struct quat_product<Architecture::SSE, Derived, OtherDerived, double>
 
   static inline Quaternion<double> run(const QuaternionBase<Derived>& _a, const QuaternionBase<OtherDerived>& _b)
   {
-  const Packet2d mask = _mm_castsi128_pd(_mm_set_epi32(0x0,0x0,0x80000000,0x0));
-
   Quaternion<double> res;
 
   evaluator<typename Derived::Coefficients> ae(_a.coeffs());
@@ -120,12 +121,7 @@ struct quat_product<Architecture::SSE, Derived, OtherDerived, double>
    */
   t1 = padd(pmul(a_ww, b_xy), pmul(a_yy, b_zw));
   t2 = psub(pmul(a_zz, b_xy), pmul(a_xx, b_zw));
-#ifdef EIGEN_VECTORIZE_SSE3
-  EIGEN_UNUSED_VARIABLE(mask)
-  pstoret<double,Packet2d,ResAlignment>(&res.x(), _mm_addsub_pd(t1, preverse(t2)));
-#else
-  pstoret<double,Packet2d,ResAlignment>(&res.x(), padd(t1, pxor(mask,preverse(t2))));
-#endif
+  pstoret<double,Packet2d,ResAlignment>(&res.x(), paddsub(t1, preverse(t2)));
   
   /*
    * t1 = ww*zw - yy*xy
@@ -134,19 +130,14 @@ struct quat_product<Architecture::SSE, Derived, OtherDerived, double>
    */
   t1 = psub(pmul(a_ww, b_zw), pmul(a_yy, b_xy));
   t2 = padd(pmul(a_zz, b_zw), pmul(a_xx, b_xy));
-#ifdef EIGEN_VECTORIZE_SSE3
-  EIGEN_UNUSED_VARIABLE(mask)
-  pstoret<double,Packet2d,ResAlignment>(&res.z(), preverse(_mm_addsub_pd(preverse(t1), t2)));
-#else
-  pstoret<double,Packet2d,ResAlignment>(&res.z(), psub(t1, pxor(mask,preverse(t2))));
-#endif
+  pstoret<double,Packet2d,ResAlignment>(&res.z(), preverse(paddsub(preverse(t1), t2)));
 
   return res;
 }
 };
 
 template<class Derived>
-struct quat_conj<Architecture::SSE, Derived, double>
+struct quat_conj<Architecture::Target, Derived, double>
 {
   enum {
     ResAlignment = traits<Quaternion<double> >::Alignment
@@ -155,16 +146,20 @@ struct quat_conj<Architecture::SSE, Derived, double>
   {
     evaluator<typename Derived::Coefficients> qe(q.coeffs());
     Quaternion<double> res;
-    const Packet2d mask0 = _mm_setr_pd(-0.,-0.);
-    const Packet2d mask2 = _mm_setr_pd(-0.,0.);
+    double arr1[2] = {-0.0, -0.0};
+    double arr2[2] = {-0.0,  0.0};
+    const Packet2d mask0 = pset<Packet2d>(arr1);
+    const Packet2d mask2 = pset<Packet2d>(arr2);
     pstoret<double,Packet2d,ResAlignment>(&res.x(), pxor(mask0, qe.template packet<traits<Derived>::Alignment,Packet2d>(0)));
     pstoret<double,Packet2d,ResAlignment>(&res.z(), pxor(mask2, qe.template packet<traits<Derived>::Alignment,Packet2d>(2)));
     return res;
   }
 };
 
+#endif // end EIGEN_VECTORIZE_SSE_OR_EIGEN_ARCH_ARM64
+
 } // end namespace internal
 
 } // end namespace Eigen
 
-#endif // EIGEN_GEOMETRY_SSE_H
+#endif // EIGEN_GEOMETRY_SIMD_H

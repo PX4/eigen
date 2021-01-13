@@ -84,12 +84,18 @@ typedef uint64x2_t                           Packet2ul;
 
 #endif // EIGEN_COMP_MSVC
 
+EIGEN_STRONG_INLINE Packet4f shuffle1(const Packet4f& m, int mask){
+  const float* a = reinterpret_cast<const float*>(&m);
+  Packet4f res = {*(a + (mask & 3)), *(a + ((mask >> 2) & 3)), *(a + ((mask >> 4) & 3 )), *(a + ((mask >> 6) & 3))};
+  return res;
+}
+
 // fuctionally equivalent to _mm_shuffle_ps in SSE when interleave
 // == false (i.e. shuffle<false>(m, n, mask) equals _mm_shuffle_ps(m, n, mask)),
 // interleave m and n when interleave == true. Currently used in LU/arch/InverseSize4.h
-// to enable a shared implementation for fast inversion of matrices of size 4.
-template<bool interleave>
-EIGEN_STRONG_INLINE Packet4f shuffle(const Packet4f &m, const Packet4f &n, int mask)
+// to enable a shared implementation for fast inversion of matrices of size 4. 
+template<bool interleave> 
+EIGEN_STRONG_INLINE Packet4f shuffle2(const Packet4f &m, const Packet4f &n, int mask)
 {
   const float* a = reinterpret_cast<const float*>(&m);
   const float* b = reinterpret_cast<const float*>(&n);
@@ -97,8 +103,8 @@ EIGEN_STRONG_INLINE Packet4f shuffle(const Packet4f &m, const Packet4f &n, int m
   return res;
 }
 
-template<>
-EIGEN_STRONG_INLINE Packet4f shuffle<true>(const Packet4f &m, const Packet4f &n, int mask)
+template<> 
+EIGEN_STRONG_INLINE Packet4f shuffle2<true>(const Packet4f &m, const Packet4f &n, int mask) 
 {
   const float* a = reinterpret_cast<const float*>(&m);
   const float* b = reinterpret_cast<const float*>(&n);
@@ -108,25 +114,29 @@ EIGEN_STRONG_INLINE Packet4f shuffle<true>(const Packet4f &m, const Packet4f &n,
 
 EIGEN_STRONG_INLINE static int eigen_neon_shuffle_mask(int p, int q, int r, int s) {return ((s)<<6|(r)<<4|(q)<<2|(p));}
 
+EIGEN_STRONG_INLINE Packet4f vec4f_swizzle1(const Packet4f& a, int p, int q, int r, int s)
+{ 
+  return shuffle1(a, eigen_neon_shuffle_mask(p, q, r, s));
+}
 EIGEN_STRONG_INLINE Packet4f vec4f_swizzle2(const Packet4f& a, const Packet4f& b, int p, int q, int r, int s)
-{
-  return shuffle<false>(a,b,eigen_neon_shuffle_mask(p, q, r, s));
+{ 
+  return shuffle2<false>(a,b,eigen_neon_shuffle_mask(p, q, r, s));
 }
 EIGEN_STRONG_INLINE Packet4f vec4f_movelh(const Packet4f& a, const Packet4f& b)
 {
-  return shuffle<false>(a,b,eigen_neon_shuffle_mask(0, 1, 0, 1));
+  return shuffle2<false>(a,b,eigen_neon_shuffle_mask(0, 1, 0, 1));
 }
 EIGEN_STRONG_INLINE Packet4f vec4f_movehl(const Packet4f& a, const Packet4f& b)
 {
-  return shuffle<false>(b,a,eigen_neon_shuffle_mask(2, 3, 2, 3));
+  return shuffle2<false>(b,a,eigen_neon_shuffle_mask(2, 3, 2, 3));
 }
 EIGEN_STRONG_INLINE Packet4f vec4f_unpacklo(const Packet4f& a, const Packet4f& b)
 {
-  return shuffle<true>(a,b,eigen_neon_shuffle_mask(0, 0, 1, 1));
+  return shuffle2<true>(a,b,eigen_neon_shuffle_mask(0, 0, 1, 1));
 }
 EIGEN_STRONG_INLINE Packet4f vec4f_unpackhi(const Packet4f& a, const Packet4f& b)
 {
-  return shuffle<true>(a,b,eigen_neon_shuffle_mask(2, 2, 3, 3));
+  return shuffle2<true>(a,b,eigen_neon_shuffle_mask(2, 2, 3, 3));
 }
 #define vec4f_duplane(a, p) \
   vdupq_lane_f32(vget_low_f32(a), p)
@@ -850,6 +860,17 @@ template<> EIGEN_STRONG_INLINE Packet2ui psub<Packet2ui>(const Packet2ui& a, con
 template<> EIGEN_STRONG_INLINE Packet4ui psub<Packet4ui>(const Packet4ui& a, const Packet4ui& b) { return vsubq_u32(a,b); }
 template<> EIGEN_STRONG_INLINE Packet2l psub<Packet2l>(const Packet2l& a, const Packet2l& b) { return vsubq_s64(a,b); }
 template<> EIGEN_STRONG_INLINE Packet2ul psub<Packet2ul>(const Packet2ul& a, const Packet2ul& b) { return vsubq_u64(a,b); }
+
+template<> EIGEN_STRONG_INLINE Packet2f pxor<Packet2f>(const Packet2f& a, const Packet2f& b);
+template<> EIGEN_STRONG_INLINE Packet2f paddsub<Packet2f>(const Packet2f& a, const Packet2f & b) {
+  Packet2f mask = {-0.0f, 0.0f};
+  return padd(a, pxor(mask, b));
+}
+template<> EIGEN_STRONG_INLINE Packet4f pxor<Packet4f>(const Packet4f& a, const Packet4f& b);
+template<> EIGEN_STRONG_INLINE Packet4f paddsub<Packet4f>(const Packet4f& a, const Packet4f& b) {
+  Packet4f mask = {-0.0f, 0.0f, -0.0f, 0.0f};
+  return padd(a, pxor(mask, b));
+}
 
 template<> EIGEN_STRONG_INLINE Packet2f pnegate(const Packet2f& a) { return vneg_f32(a); }
 template<> EIGEN_STRONG_INLINE Packet4f pnegate(const Packet4f& a) { return vnegq_f32(a); }
@@ -3716,6 +3737,12 @@ template<> EIGEN_STRONG_INLINE Packet2d plset<Packet2d>(const double& a)
 template<> EIGEN_STRONG_INLINE Packet2d padd<Packet2d>(const Packet2d& a, const Packet2d& b) { return vaddq_f64(a,b); }
 
 template<> EIGEN_STRONG_INLINE Packet2d psub<Packet2d>(const Packet2d& a, const Packet2d& b) { return vsubq_f64(a,b); }
+
+template<> EIGEN_STRONG_INLINE Packet2d pxor<Packet2d>(const Packet2d& , const Packet2d& );
+template<> EIGEN_STRONG_INLINE Packet2d paddsub<Packet2d>(const Packet2d& a, const Packet2d& b){
+  const Packet2d mask = {-0.0,0.0};
+  return padd(a, pxor(mask, b));
+}
 
 template<> EIGEN_STRONG_INLINE Packet2d pnegate(const Packet2d& a) { return vnegq_f64(a); }
 

@@ -407,6 +407,12 @@ pabs(const unsigned long& a) { return a; }
 template<> EIGEN_DEVICE_FUNC inline unsigned long long
 pabs(const unsigned long long& a) { return a; }
 
+/** \internal \returns the addsub value of \a a,b */
+template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
+paddsub(const Packet& a, const Packet& b) {
+  return pselect(peven_mask(a), padd(a, b), psub(a, b));
+ }
+
 /** \internal \returns the phase angle of \a a */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
 parg(const Packet& a) { using numext::arg; return arg(a); }
