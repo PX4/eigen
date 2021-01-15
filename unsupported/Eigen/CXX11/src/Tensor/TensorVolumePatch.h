@@ -258,12 +258,12 @@ struct TensorEvaluator<const TensorVolumePatchOp<Planes, Rows, Cols, ArgType>, D
           m_outputPlanes = numext::ceil(m_input_planes_eff / static_cast<float>(m_plane_strides));
           m_outputRows = numext::ceil(m_input_rows_eff / static_cast<float>(m_row_strides));
           m_outputCols = numext::ceil(m_input_cols_eff / static_cast<float>(m_col_strides));
-          const Index dz = m_outputPlanes * m_plane_strides + m_patch_planes_eff - 1 - m_input_planes_eff;
-          const Index dy = m_outputRows * m_row_strides + m_patch_rows_eff - 1 - m_input_rows_eff;
-          const Index dx = m_outputCols * m_col_strides + m_patch_cols_eff - 1 - m_input_cols_eff;
-          m_planePaddingTop = dz - dz / 2;
-          m_rowPaddingTop = dy - dy / 2;
-          m_colPaddingLeft = dx - dx / 2;
+          const Index dz = (m_outputPlanes - 1) * m_plane_strides + m_patch_planes_eff - m_input_planes_eff;
+          const Index dy = (m_outputRows - 1) * m_row_strides + m_patch_rows_eff - m_input_rows_eff;
+          const Index dx = (m_outputCols - 1) * m_col_strides + m_patch_cols_eff - m_input_cols_eff;
+          m_planePaddingTop = dz / 2;
+          m_rowPaddingTop = dy / 2;
+          m_colPaddingLeft = dx / 2;
           break;
         }
         default:
