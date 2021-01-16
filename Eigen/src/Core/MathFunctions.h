@@ -324,7 +324,7 @@ struct abs2_retval
 };
 
 /****************************************************************************
-* Implementation of sqrt                                                 *
+* Implementation of sqrt/rsqrt                                             *
 ****************************************************************************/
 
 template<typename Scalar>
@@ -341,8 +341,8 @@ struct sqrt_impl
 // Complex sqrt defined in MathFunctionsImpl.h.
 template<typename T> EIGEN_DEVICE_FUNC std::complex<T> complex_sqrt(const std::complex<T>& a_x);
 
-// MSVC incorrectly handles inf cases.
-#if EIGEN_COMP_MSVC > 0
+// Custom implementation is faster than `std::sqrt`, works on
+// GPU, and correctly handles special cases (unlike MSVC).
 template<typename T>
 struct sqrt_impl<std::complex<T> >
 {
@@ -352,10 +352,32 @@ struct sqrt_impl<std::complex<T> >
     return complex_sqrt<T>(x);
   }
 };
-#endif
 
 template<typename Scalar>
 struct sqrt_retval
+{
+  typedef Scalar type;
+};
+
+// Default implementation relies on numext::sqrt, at bottom of file.
+template<typename T>
+struct rsqrt_impl;
+
+// Complex rsqrt defined in MathFunctionsImpl.h.
+template<typename T> EIGEN_DEVICE_FUNC std::complex<T> complex_rsqrt(const std::complex<T>& a_x);
+
+template<typename T>
+struct rsqrt_impl<std::complex<T> >
+{
+  EIGEN_DEVICE_FUNC
+  static EIGEN_ALWAYS_INLINE std::complex<T> run(const std::complex<T>& x)
+  {
+    return complex_rsqrt<T>(x);
+  }
+};
+
+template<typename Scalar>
+struct rsqrt_retval
 {
   typedef Scalar type;
 };
@@ -620,36 +642,6 @@ struct expm1_impl {
     using std_fallback::expm1;
     #endif
     return expm1(x);
-  }
-};
-
-// Specialization for complex types that are not supported by std::expm1.
-template <typename RealScalar>
-struct expm1_impl<std::complex<RealScalar> > {
-  EIGEN_DEVICE_FUNC static inline std::complex<RealScalar> run(
-      const std::complex<RealScalar>& x) {
-    EIGEN_STATIC_ASSERT_NON_INTEGER(RealScalar)
-    RealScalar xr = x.real();
-    RealScalar xi = x.imag();
-    // expm1(z) = exp(z) - 1
-    //          = exp(x +  i * y) - 1
-    //          = exp(x) * (cos(y) + i * sin(y)) - 1
-    //          = exp(x) * cos(y) - 1 + i * exp(x) * sin(y)
-    // Imag(expm1(z)) = exp(x) * sin(y)
-    // Real(expm1(z)) = exp(x) * cos(y) - 1
-    //          = exp(x) * cos(y) - 1.
-    //          = expm1(x) + exp(x) * (cos(y) - 1)
-    //          = expm1(x) + exp(x) * (2 * sin(y / 2) ** 2)
-
-    // TODO better use numext::expm1 and numext::sin (but that would require forward declarations or moving this specialization down).
-    RealScalar erm1 = expm1_impl<RealScalar>::run(xr);
-    RealScalar er = erm1 + RealScalar(1.);
-    EIGEN_USING_STD(sin);
-    RealScalar sin2 = sin(xi / RealScalar(2.));
-    sin2 = sin2 * sin2;
-    RealScalar s = sin(xi);
-    RealScalar real_part = erm1 - RealScalar(2.) * er * sin2;
-    return std::complex<RealScalar>(real_part, er * s);
   }
 };
 
@@ -1421,6 +1413,14 @@ bool sqrt<bool>(const bool &x) { return x; }
 SYCL_SPECIALIZE_FLOATING_TYPES_UNARY(sqrt, sqrt)
 #endif
 
+/** \returns the reciprocal square root of \a x. **/
+template<typename T>
+EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE
+T rsqrt(const T& x)
+{
+  return internal::rsqrt_impl<T>::run(x);
+}
+
 template<typename T>
 EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE
 T log(const T &x) {
@@ -1936,6 +1936,45 @@ template<> struct scalar_fuzzy_impl<bool>
 
 };
 
+} // end namespace internal
+
+// Default implementations that rely on other numext implementations
+namespace internal {
+
+// Specialization for complex types that are not supported by std::expm1.
+template <typename RealScalar>
+struct expm1_impl<std::complex<RealScalar> > {
+  EIGEN_DEVICE_FUNC static inline std::complex<RealScalar> run(
+      const std::complex<RealScalar>& x) {
+    EIGEN_STATIC_ASSERT_NON_INTEGER(RealScalar)
+    RealScalar xr = x.real();
+    RealScalar xi = x.imag();
+    // expm1(z) = exp(z) - 1
+    //          = exp(x +  i * y) - 1
+    //          = exp(x) * (cos(y) + i * sin(y)) - 1
+    //          = exp(x) * cos(y) - 1 + i * exp(x) * sin(y)
+    // Imag(expm1(z)) = exp(x) * sin(y)
+    // Real(expm1(z)) = exp(x) * cos(y) - 1
+    //          = exp(x) * cos(y) - 1.
+    //          = expm1(x) + exp(x) * (cos(y) - 1)
+    //          = expm1(x) + exp(x) * (2 * sin(y / 2) ** 2)
+    RealScalar erm1 = numext::expm1<RealScalar>(xr);
+    RealScalar er = erm1 + RealScalar(1.);
+    RealScalar sin2 = numext::sin(xi / RealScalar(2.));
+    sin2 = sin2 * sin2;
+    RealScalar s = numext::sin(xi);
+    RealScalar real_part = erm1 - RealScalar(2.) * er * sin2;
+    return std::complex<RealScalar>(real_part, er * s);
+  }
+};
+
+template<typename T>
+struct rsqrt_impl {
+  EIGEN_DEVICE_FUNC
+  static EIGEN_ALWAYS_INLINE T run(const T& x) {
+    return T(1)/numext::sqrt(x);
+  }
+};
 
 } // end namespace internal
 

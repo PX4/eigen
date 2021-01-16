@@ -250,8 +250,7 @@ template<> EIGEN_DEVICE_FUNC inline double pzero<double>(const double& a) {
 
 template <typename RealScalar>
 EIGEN_DEVICE_FUNC inline std::complex<RealScalar> ptrue(const std::complex<RealScalar>& /*a*/) {
-  RealScalar b;
-  b = ptrue(b);
+  RealScalar b = ptrue(RealScalar(0));
   return std::complex<RealScalar>(b, b);
 }
 

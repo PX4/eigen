@@ -150,7 +150,7 @@ Packet4f prsqrt<Packet4f>(const Packet4f& _x) {
 
 template<> EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED
 Packet4f prsqrt<Packet4f>(const Packet4f& x) {
-  // Unfortunately we can't use the much faster mm_rqsrt_ps since it only provides an approximation.
+  // Unfortunately we can't use the much faster mm_rsqrt_ps since it only provides an approximation.
   return _mm_div_ps(pset1<Packet4f>(1.0f), _mm_sqrt_ps(x));
 }
 
@@ -158,7 +158,6 @@ Packet4f prsqrt<Packet4f>(const Packet4f& x) {
 
 template<> EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED
 Packet2d prsqrt<Packet2d>(const Packet2d& x) {
-  // Unfortunately we can't use the much faster mm_rqsrt_pd since it only provides an approximation.
   return _mm_div_pd(pset1<Packet2d>(1.0), _mm_sqrt_pd(x));
 }
 
