@@ -403,6 +403,7 @@ struct functor_traits<scalar_hypot_op<Scalar,Scalar> > {
 
 /** \internal
   * \brief Template functor to compute the pow of two scalars
+  * See the specification of pow in https://en.cppreference.com/w/cpp/numeric/math/pow
   */
 template<typename Scalar, typename Exponent>
 struct scalar_pow_op  : binary_op_base<Scalar,Exponent>
@@ -417,12 +418,25 @@ struct scalar_pow_op  : binary_op_base<Scalar,Exponent>
     EIGEN_SCALAR_BINARY_OP_PLUGIN
   }
 #endif
+
   EIGEN_DEVICE_FUNC
   inline result_type operator() (const Scalar& a, const Exponent& b) const { return numext::pow(a, b); }
+
+  template<typename Packet>
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Packet packetOp(const Packet& a, const Packet& b) const
+  {
+    return generic_pow(a,b);
+  }
 };
+
 template<typename Scalar, typename Exponent>
 struct functor_traits<scalar_pow_op<Scalar,Exponent> > {
-  enum { Cost = 5 * NumTraits<Scalar>::MulCost, PacketAccess = false };
+  enum {
+    Cost = 5 * NumTraits<Scalar>::MulCost,
+    PacketAccess = (!NumTraits<Scalar>::IsComplex && !NumTraits<Scalar>::IsInteger &&
+                    packet_traits<Scalar>::HasExp && packet_traits<Scalar>::HasLog &&
+                    packet_traits<Scalar>::HasRound && packet_traits<Scalar>::HasCmp)
+  };
 };
 
 

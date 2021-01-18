@@ -26,7 +26,7 @@ namespace internal {
 
 #ifdef EIGEN_VECTORIZE_FMA
 #ifndef EIGEN_HAS_SINGLE_INSTRUCTION_MADD
-#define EIGEN_HAS_SINGLE_INSTRUCTION_MADD 1
+#define EIGEN_HAS_SINGLE_INSTRUCTION_MADD
 #endif
 #endif
 
@@ -147,13 +147,13 @@ struct packet_traits<float> : default_packet_traits {
     HasTanh = EIGEN_FAST_MATH,
     HasErf = EIGEN_FAST_MATH,
     HasBlend = 1,
+    HasCeil = 1,
     HasFloor = 1
 
 #ifdef EIGEN_VECTORIZE_SSE4_1
     ,
     HasRint = 1,
-    HasRound = 1,
-    HasCeil = 1
+    HasRound = 1
 #endif
   };
 };
@@ -173,14 +173,14 @@ struct packet_traits<double> : default_packet_traits {
     HasExp  = 1,
     HasSqrt = 1,
     HasRsqrt = 1,
-    HasBlend = 1
+    HasBlend = 1,
+    HasFloor = 1,
+    HasCeil = 1
 
 #ifdef EIGEN_VECTORIZE_SSE4_1
     ,
     HasRound = 1,
-    HasRint = 1,
-    HasFloor = 1,
-    HasCeil = 1
+    HasRint = 1
 #endif
   };
 };
@@ -649,6 +649,30 @@ template<> EIGEN_STRONG_INLINE Packet2d pfloor<Packet2d>(const Packet2d& a)
   Packet2d mask = _mm_cmpgt_pd(tmp, a);
   mask = pand(mask, cst_1);
   return psub(tmp, mask);
+}
+
+template<> EIGEN_STRONG_INLINE Packet4f pceil<Packet4f>(const Packet4f& a)
+{
+  const Packet4f cst_1 = pset1<Packet4f>(1.0f);
+  Packet4i emm0 = _mm_cvttps_epi32(a);
+  Packet4f tmp  = _mm_cvtepi32_ps(emm0);
+  /* if greater, substract 1 */
+  Packet4f mask = _mm_cmplt_ps(tmp, a);
+  mask = pand(mask, cst_1);
+  return padd(tmp, mask);
+}
+
+// WARNING: this pfloor implementation makes sense for small inputs only,
+// It is currently only used by pexp and not exposed through HasFloor.
+template<> EIGEN_STRONG_INLINE Packet2d pceil<Packet2d>(const Packet2d& a)
+{
+  const Packet2d cst_1 = pset1<Packet2d>(1.0);
+  Packet4i emm0 = _mm_cvttpd_epi32(a);
+  Packet2d tmp  = _mm_cvtepi32_pd(emm0);
+  /* if greater, substract 1 */
+  Packet2d mask = _mm_cmplt_pd(tmp, a);
+  mask = pand(mask, cst_1);
+  return padd(tmp, mask);
 }
 #endif
 
