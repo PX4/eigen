@@ -1061,7 +1061,7 @@ inline void queryCacheSizes_amd(int& l1, int& l2, int& l3)
   
   // First query the max supported function.
   EIGEN_CPUID(abcd,0x80000000,0);
-  if(abcd[0] >= 0x80000006)
+  if(static_cast<numext::uint32_t>(abcd[0]) >= static_cast<numext::uint32_t>(0x80000006))
   {
     EIGEN_CPUID(abcd,0x80000005,0);
     l1 = (abcd[2] >> 24) * 1024; // C[31:24] = L1 size in KB
