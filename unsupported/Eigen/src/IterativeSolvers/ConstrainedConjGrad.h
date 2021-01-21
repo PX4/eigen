@@ -158,8 +158,6 @@ void constrained_cg(const TMatrix& A, const CMatrix& C, VectorX& x,
     rho = r.dot(z);
 
     if (iter.finished(rho)) break;
-
-    if (iter.noiseLevel() > 0 && transition) std::cerr << "CCG: transition\n";
     if (transition || iter.first()) gamma = 0.0;
     else gamma = (std::max)(0.0, (rho - old_z.dot(z)) / rho_1);
     p = z + gamma*p;
