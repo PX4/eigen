@@ -184,6 +184,19 @@ F16_PACKET_FUNCTION(Packet8f, Packet8h, ptanh)
 F16_PACKET_FUNCTION(Packet8f, Packet8h, psqrt)
 F16_PACKET_FUNCTION(Packet8f, Packet8h, prsqrt)
 
+template <>
+EIGEN_STRONG_INLINE Packet8h pfrexp(const Packet8h& a, Packet8h& exponent) {
+  Packet8f fexponent;
+  const Packet8h out = float2half(pfrexp<Packet8f>(half2float(a), fexponent));
+  exponent = float2half(fexponent);
+  return out;
+}
+
+template <>
+EIGEN_STRONG_INLINE Packet8h pldexp(const Packet8h& a, const Packet8h& exponent) {
+  return float2half(pldexp<Packet8f>(half2float(a), half2float(exponent)));
+}
+
 BF16_PACKET_FUNCTION(Packet8f, Packet8bf, psin)
 BF16_PACKET_FUNCTION(Packet8f, Packet8bf, pcos)
 BF16_PACKET_FUNCTION(Packet8f, Packet8bf, plog)
@@ -194,6 +207,19 @@ BF16_PACKET_FUNCTION(Packet8f, Packet8bf, pexp)
 BF16_PACKET_FUNCTION(Packet8f, Packet8bf, ptanh)
 BF16_PACKET_FUNCTION(Packet8f, Packet8bf, psqrt)
 BF16_PACKET_FUNCTION(Packet8f, Packet8bf, prsqrt)
+
+template <>
+EIGEN_STRONG_INLINE Packet8bf pfrexp(const Packet8bf& a, Packet8bf& exponent) {
+  Packet8f fexponent;
+  const Packet8bf out = F32ToBf16(pfrexp<Packet8f>(Bf16ToF32(a), fexponent));
+  exponent = F32ToBf16(fexponent);
+  return out;
+}
+
+template <>
+EIGEN_STRONG_INLINE Packet8bf pldexp(const Packet8bf& a, const Packet8bf& exponent) {
+  return F32ToBf16(pldexp<Packet8f>(Bf16ToF32(a), Bf16ToF32(exponent)));
+}
 
 }  // end namespace internal
 

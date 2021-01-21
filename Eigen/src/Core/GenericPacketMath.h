@@ -442,7 +442,7 @@ template <typename Packet>
 EIGEN_DEVICE_FUNC inline Packet pfrexp(const Packet& a, Packet& exponent) {
   int exp;
   EIGEN_USING_STD(frexp);
-  Packet result = frexp(a, &exp);
+  Packet result = static_cast<Packet>(frexp(a, &exp));
   exponent = static_cast<Packet>(exp);
   return result;
 }
@@ -453,7 +453,7 @@ EIGEN_DEVICE_FUNC inline Packet pfrexp(const Packet& a, Packet& exponent) {
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
 pldexp(const Packet &a, const Packet &exponent) {
   EIGEN_USING_STD(ldexp)
-  return ldexp(a, static_cast<int>(exponent));
+  return static_cast<Packet>(ldexp(a, static_cast<int>(exponent)));
 }
 
 /** \internal \returns the min of \a a and \a b  (coeff-wise) */

@@ -31,7 +31,7 @@ pfrexp_float(const Packet& a, Packet& exponent) {
   const Packet cst_126f = pset1<Packet>(126.0f);
   const Packet cst_half = pset1<Packet>(0.5f);
   const Packet cst_inv_mant_mask  = pset1frombits<Packet>(~0x7f800000u);
-  exponent = psub(pcast<PacketI,Packet>(plogical_shift_right<23>(preinterpret<PacketI>(a))), cst_126f);
+  exponent = psub(pcast<PacketI,Packet>(plogical_shift_right<23>(preinterpret<PacketI>(pabs<Packet>(a)))), cst_126f);
   return por(pand(a, cst_inv_mant_mask), cst_half);
 }
 
@@ -41,7 +41,7 @@ pfrexp_double(const Packet& a, Packet& exponent) {
   const Packet cst_1022d = pset1<Packet>(1022.0);
   const Packet cst_half = pset1<Packet>(0.5);
   const Packet cst_inv_mant_mask  = pset1frombits<Packet>(static_cast<uint64_t>(~0x7ff0000000000000ull));
-  exponent = psub(pcast<PacketI,Packet>(plogical_shift_right<52>(preinterpret<PacketI>(a))), cst_1022d);
+  exponent = psub(pcast<PacketI,Packet>(plogical_shift_right<52>(preinterpret<PacketI>(pabs<Packet>(a)))), cst_1022d);
   return por(pand(a, cst_inv_mant_mask), cst_half);
 }
 

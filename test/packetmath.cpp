@@ -46,6 +46,21 @@ inline bool REF_MUL(const bool& a, const bool& b) {
   return a && b;
 }
 
+template <typename T>
+inline T REF_FREXP(const T& x, T& exp) {
+  int iexp;
+  EIGEN_USING_STD(frexp)
+  const T out = static_cast<T>(frexp(x, &iexp));
+  exp = static_cast<T>(iexp);
+  return out;
+}
+
+template <typename T>
+inline T REF_LDEXP(const T& x, const T& exp) {
+  EIGEN_USING_STD(ldexp)
+  return static_cast<T>(ldexp(x, static_cast<int>(exp)));
+}
+
 // Uses pcast to cast from one array to another.
 template <typename SrcPacket, typename TgtPacket, int SrcCoeffRatio, int TgtCoeffRatio>
 struct pcast_array;
@@ -552,6 +567,17 @@ void packetmath_real() {
     data2[i] = Scalar(internal::random<double>(-87, 88));
   }
   CHECK_CWISE1_IF(PacketTraits::HasExp, std::exp, internal::pexp);
+  CHECK_CWISE1_BYREF1_IF(PacketTraits::HasExp, REF_FREXP, internal::pfrexp);
+  for (int i = 0; i < PacketSize; ++i) {
+    data1[i] = Scalar(internal::random<double>(-1, 1));
+    data2[i] = Scalar(internal::random<double>(-1, 1));
+  }
+  for (int i = 0; i < PacketSize; ++i) {
+    data1[i+PacketSize] = Scalar(internal::random<int>(0, 4));
+    data2[i+PacketSize] = Scalar(internal::random<double>(0, 4));
+  }
+  CHECK_CWISE2_IF(PacketTraits::HasExp, REF_LDEXP, internal::pldexp);
+
   for (int i = 0; i < size; ++i) {
     data1[i] = Scalar(internal::random<double>(-1, 1) * std::pow(10., internal::random<double>(-6, 6)));
     data2[i] = Scalar(internal::random<double>(-1, 1) * std::pow(10., internal::random<double>(-6, 6)));
