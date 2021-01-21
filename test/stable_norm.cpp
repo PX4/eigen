@@ -161,12 +161,8 @@ template<typename MatrixType> void stable_norm(const MatrixType& m)
   
   // mix
   {
-    // Ensure unique indices otherwise inf may be overwritten by NaN.
-    Index i2, j2;
-    do {
-      i2 = internal::random<Index>(0,rows-1);
-      j2 = internal::random<Index>(0,cols-1);
-    } while (i2 == i && j2 == j);
+    Index i2 = internal::random<Index>(0,rows-1);
+    Index j2 = internal::random<Index>(0,cols-1);
     v = vrand;
     v(i,j) = -std::numeric_limits<RealScalar>::infinity();
     v(i2,j2) = std::numeric_limits<RealScalar>::quiet_NaN();
@@ -174,8 +170,13 @@ template<typename MatrixType> void stable_norm(const MatrixType& m)
     VERIFY(!(numext::isfinite)(v.norm()));          VERIFY((numext::isnan)(v.norm()));
     VERIFY(!(numext::isfinite)(v.stableNorm()));    VERIFY((numext::isnan)(v.stableNorm()));
     VERIFY(!(numext::isfinite)(v.blueNorm()));      VERIFY((numext::isnan)(v.blueNorm()));
-    // hypot propagates inf over NaN.
-    VERIFY(!(numext::isfinite)(v.hypotNorm()));     VERIFY((numext::isinf)(v.hypotNorm()));
+    if (i2 != i || j2 != j) {
+      // hypot propagates inf over NaN.
+      VERIFY(!(numext::isfinite)(v.hypotNorm()));     VERIFY((numext::isinf)(v.hypotNorm()));
+    } else {
+      // inf is overwritten by NaN, expect norm to be NaN.
+      VERIFY(!(numext::isfinite)(v.hypotNorm()));     VERIFY((numext::isnan)(v.hypotNorm()));
+    }
   }
 
   // stableNormalize[d]
