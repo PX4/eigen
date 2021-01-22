@@ -555,45 +555,63 @@ struct rint_retval
 ****************************************************************************/
 
 #if EIGEN_HAS_CXX11_MATH
-  template<typename Scalar>
-  struct arg_impl {
-    EIGEN_DEVICE_FUNC
-    static inline Scalar run(const Scalar& x)
-    {
-      #if defined(EIGEN_HIP_DEVICE_COMPILE)
-      // HIP does not seem to have a native device side implementation for the math routine "arg"
-      using std::arg;
-      #else
-      EIGEN_USING_STD(arg);
-      #endif
-      return arg(x);
-    }
-  };
+// std::arg is only defined for types of std::complex, or integer types or float/double/long double
+template<typename Scalar,
+          bool HasStdImpl = NumTraits<Scalar>::IsComplex || is_integral<Scalar>::value
+                            || is_same<Scalar, float>::value || is_same<Scalar, double>::value
+                            || is_same<Scalar, long double>::value >
+struct arg_default_impl;
+
+template<typename Scalar>
+struct arg_default_impl<Scalar, true> {
+  EIGEN_DEVICE_FUNC
+  static inline Scalar run(const Scalar& x)
+  {
+    #if defined(EIGEN_HIP_DEVICE_COMPILE)
+    // HIP does not seem to have a native device side implementation for the math routine "arg"
+    using std::arg;
+    #else
+    EIGEN_USING_STD(arg);
+    #endif
+    return static_cast<Scalar>(arg(x));
+  }
+};
+
+// Must be non-complex floating-point type (e.g. half/bfloat16).
+template<typename Scalar>
+struct arg_default_impl<Scalar, false> {
+  typedef typename NumTraits<Scalar>::Real RealScalar;
+  EIGEN_DEVICE_FUNC
+  static inline RealScalar run(const Scalar& x)
+  {
+    return (x < Scalar(0)) ? Scalar(EIGEN_PI) : Scalar(0);
+  }
+};
 #else
-  template<typename Scalar, bool IsComplex = NumTraits<Scalar>::IsComplex>
-  struct arg_default_impl
+template<typename Scalar, bool IsComplex = NumTraits<Scalar>::IsComplex>
+struct arg_default_impl
+{
+  typedef typename NumTraits<Scalar>::Real RealScalar;
+  EIGEN_DEVICE_FUNC
+  static inline RealScalar run(const Scalar& x)
   {
-    typedef typename NumTraits<Scalar>::Real RealScalar;
-    EIGEN_DEVICE_FUNC
-    static inline RealScalar run(const Scalar& x)
-    {
-      return (x < Scalar(0)) ? Scalar(EIGEN_PI) : Scalar(0); }
-  };
+    return (x < Scalar(0)) ? Scalar(EIGEN_PI) : Scalar(0);
+  }
+};
 
-  template<typename Scalar>
-  struct arg_default_impl<Scalar,true>
+template<typename Scalar>
+struct arg_default_impl<Scalar,true>
+{
+  typedef typename NumTraits<Scalar>::Real RealScalar;
+  EIGEN_DEVICE_FUNC
+  static inline RealScalar run(const Scalar& x)
   {
-    typedef typename NumTraits<Scalar>::Real RealScalar;
-    EIGEN_DEVICE_FUNC
-    static inline RealScalar run(const Scalar& x)
-    {
-      EIGEN_USING_STD(arg);
-      return arg(x);
-    }
-  };
-
-  template<typename Scalar> struct arg_impl : arg_default_impl<Scalar> {};
+    EIGEN_USING_STD(arg);
+    return arg(x);
+  }
+};
 #endif
+template<typename Scalar> struct arg_impl : arg_default_impl<Scalar> {};
 
 template<typename Scalar>
 struct arg_retval
@@ -1425,7 +1443,7 @@ template<typename T>
 EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE
 T log(const T &x) {
   EIGEN_USING_STD(log);
-  return log(x);
+  return static_cast<T>(log(x));
 }
 
 #if defined(SYCL_DEVICE_ONLY)
@@ -1602,7 +1620,7 @@ template<typename T>
 EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE
 T acosh(const T &x) {
   EIGEN_USING_STD(acosh);
-  return acosh(x);
+  return static_cast<T>(acosh(x));
 }
 #endif
 
@@ -1631,7 +1649,7 @@ template<typename T>
 EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE
 T asinh(const T &x) {
   EIGEN_USING_STD(asinh);
-  return asinh(x);
+  return static_cast<T>(asinh(x));
 }
 #endif
 
@@ -1652,7 +1670,7 @@ template<typename T>
 EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE
 T atan(const T &x) {
   EIGEN_USING_STD(atan);
-  return atan(x);
+  return static_cast<T>(atan(x));
 }
 
 #if EIGEN_HAS_CXX11_MATH
@@ -1660,7 +1678,7 @@ template<typename T>
 EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE
 T atanh(const T &x) {
   EIGEN_USING_STD(atanh);
-  return atanh(x);
+  return static_cast<T>(atanh(x));
 }
 #endif
 
@@ -1682,7 +1700,7 @@ template<typename T>
 EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE
 T cosh(const T &x) {
   EIGEN_USING_STD(cosh);
-  return cosh(x);
+  return static_cast<T>(cosh(x));
 }
 
 #if defined(SYCL_DEVICE_ONLY)
@@ -1701,7 +1719,7 @@ template<typename T>
 EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE
 T sinh(const T &x) {
   EIGEN_USING_STD(sinh);
-  return sinh(x);
+  return static_cast<T>(sinh(x));
 }
 
 #if defined(SYCL_DEVICE_ONLY)

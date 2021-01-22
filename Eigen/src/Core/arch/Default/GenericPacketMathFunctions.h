@@ -804,8 +804,8 @@ EIGEN_STRONG_INLINE
 void veltkamp_splitting(const Packet& x, Packet& x_hi, Packet& x_lo) {
   typedef typename unpacket_traits<Packet>::type Scalar;
   EIGEN_CONSTEXPR int shift = (NumTraits<Scalar>::digits() + 1) / 2;
-  EIGEN_CONSTEXPR Scalar shift_scale = Scalar(uint64_t(1) << shift);
-  Packet gamma = pmul(pset1<Packet>(shift_scale + 1), x);
+  Scalar shift_scale = Scalar(uint64_t(1) << shift);  // Scalar constructor not necessarily constexpr.
+  Packet gamma = pmul(pset1<Packet>(shift_scale + Scalar(1)), x);
 #ifdef EIGEN_HAS_SINGLE_INSTRUCTION_MADD
   x_hi = pmadd(pset1<Packet>(-shift_scale), x, gamma);
 #else

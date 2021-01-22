@@ -403,7 +403,7 @@ struct functor_traits<scalar_log10_op<Scalar> >
   */
 template<typename Scalar> struct scalar_log2_op {
   EIGEN_EMPTY_STRUCT_CTOR(scalar_log2_op)
-  EIGEN_DEVICE_FUNC inline const Scalar operator() (const Scalar& a) const { return Scalar(EIGEN_LOG2E) * std::log(a); }
+  EIGEN_DEVICE_FUNC inline const Scalar operator() (const Scalar& a) const { return Scalar(EIGEN_LOG2E) * numext::log(a); }
   template <typename Packet>
   EIGEN_DEVICE_FUNC inline Packet packetOp(const Packet& a) const { return internal::plog2(a); }
 };
