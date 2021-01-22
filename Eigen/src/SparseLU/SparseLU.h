@@ -587,7 +587,6 @@ void SparseLU<MatrixType, OrderingType>::factorize(const MatrixType& matrix)
   //  (a) a relaxed supernode at the bottom of the etree, or
   //  (b) panel_size contiguous columns, <panel_size> defined by the user
   Index jcol; 
-  IndexVector panel_histo(n);
   Index pivrow; // Pivotal row number in the original row matrix
   Index nseg1; // Number of segments in U-column above panel row jcol
   Index nseg; // Number of segments in each U-column 
