@@ -54,7 +54,7 @@ void pow_test() {
     for (int j = 0; j < num_cases; ++j) {
       Scalar a = actual(i, j);
       Scalar e = expected(i, j);
-      bool fail = !(a==e) && !internal::isApprox(a, e, tol) && !((std::isnan)(a) && (std::isnan)(e));
+      bool fail = !(a==e) && !internal::isApprox(a, e, tol) && !((numext::isnan)(a) && (numext::isnan)(e));
       all_pass &= !fail;
       if (fail) {
         std::cout << "pow(" << x(i,j) << "," << y(i,j) << ")   =   " << a << " !=  " << e << std::endl;
