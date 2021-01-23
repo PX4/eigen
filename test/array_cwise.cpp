@@ -433,8 +433,8 @@ template<typename ArrayType> void array_real(const ArrayType& m)
   VERIFY_IS_APPROX(m3.pow(RealScalar(-2)), m3.square().inverse());
   pow_test<Scalar>();
 
-  VERIFY_IS_APPROX(log10(m3), log(m3)/log(Scalar(10)));
-  VERIFY_IS_APPROX(log2(m3), log(m3)/log(Scalar(2)));
+  VERIFY_IS_APPROX(log10(m3), log(m3)/numext::log(Scalar(10)));
+  VERIFY_IS_APPROX(log2(m3), log(m3)/numext::log(Scalar(2)));
 
   // scalar by array division
   const RealScalar tiny = sqrt(std::numeric_limits<RealScalar>::epsilon());
