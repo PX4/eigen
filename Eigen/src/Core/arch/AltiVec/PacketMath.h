@@ -1301,6 +1301,12 @@ template<> EIGEN_STRONG_INLINE Packet8bf prsqrt<Packet8bf> (const Packet8bf& a){
 template<> EIGEN_STRONG_INLINE Packet8bf pexp<Packet8bf> (const Packet8bf& a){
   BF16_TO_F32_UNARY_OP_WRAPPER(pexp_float, a);
 }
+template<> EIGEN_STRONG_INLINE Packet8bf pldexp<Packet8bf> (const Packet8bf& a, const Packet8bf& exponent){
+  BF16_TO_F32_BINARY_OP_WRAPPER(pldexp_float, a, exponent);
+}
+template<> EIGEN_STRONG_INLINE Packet8bf pfrexp<Packet8bf> (const Packet8bf& a, Packet8bf& exponent){
+  BF16_TO_F32_BINARY_OP_WRAPPER(pfrexp_float, a, exponent);
+}
 template<> EIGEN_STRONG_INLINE Packet8bf psin<Packet8bf> (const Packet8bf& a){
   BF16_TO_F32_UNARY_OP_WRAPPER(psin_float, a);
 }
@@ -2450,6 +2456,13 @@ template<> EIGEN_STRONG_INLINE Packet2d pldexp<Packet2d>(const Packet2d& a, cons
 #endif
 
   return pmul(a, reinterpret_cast<Packet2d>(emm0));
+}
+
+template<> EIGEN_STRONG_INLINE Packet2d pfrexp<Packet2d> (const Packet2d& a, Packet2d& exponent) {
+    Packet2d ret = { pfrexp<double>(a[0], exponent[0]), pfrexp<double>(a[1], exponent[1]) };
+    return ret;
+//  This doesn't currently work (no integer_packet for Packet2d - but adding it causes other problems)
+//  return pfrexp_double(a, exponent);
 }
 
 template<> EIGEN_STRONG_INLINE double predux<Packet2d>(const Packet2d& a)
