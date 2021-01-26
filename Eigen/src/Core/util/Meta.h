@@ -25,8 +25,40 @@
 
 #endif
 
-#if EIGEN_COMP_ICC>=1600 &&  __cplusplus >= 201103L
+// Recent versions of ICC require <cstdint> for pointer types below.
+#define EIGEN_ICC_NEEDS_CSTDINT (EIGEN_COMP_ICC>=1600 && EIGEN_COMP_CXXVER >= 11)
+
+// Define portable (u)int{32,64} types
+#if EIGEN_HAS_CXX11 || EIGEN_ICC_NEEDS_CSTDINT
 #include <cstdint>
+namespace Eigen {
+namespace numext {
+typedef std::uint8_t  uint8_t;
+typedef std::int8_t   int8_t;
+typedef std::uint16_t uint16_t;
+typedef std::int16_t  int16_t;
+typedef std::uint32_t uint32_t;
+typedef std::int32_t  int32_t;
+typedef std::uint64_t uint64_t;
+typedef std::int64_t  int64_t;
+}
+}
+#else
+// Without c++11, all compilers able to compile Eigen also
+// provide the C99 stdint.h header file.
+#include <stdint.h>
+namespace Eigen {
+namespace numext {
+typedef ::uint8_t  uint8_t;
+typedef ::int8_t   int8_t;
+typedef ::uint16_t uint16_t;
+typedef ::int16_t  int16_t;
+typedef ::uint32_t uint32_t;
+typedef ::int32_t  int32_t;
+typedef ::uint64_t uint64_t;
+typedef ::int64_t  int64_t;
+}
+}
 #endif
 
 namespace Eigen {
@@ -52,13 +84,14 @@ namespace internal {
 
 // Only recent versions of ICC complain about using ptrdiff_t to hold pointers,
 // and older versions do not provide *intptr_t types.
-#if EIGEN_COMP_ICC>=1600 &&  __cplusplus >= 201103L
+#if EIGEN_ICC_NEEDS_CSTDINT
 typedef std::intptr_t  IntPtr;
 typedef std::uintptr_t UIntPtr;
 #else
 typedef std::ptrdiff_t IntPtr;
 typedef std::size_t UIntPtr;
 #endif
+#undef EIGEN_ICC_NEEDS_CSTDINT
 
 struct true_type {  enum { value = 1 }; };
 struct false_type { enum { value = 0 }; };
@@ -687,38 +720,5 @@ bool not_equal_strict(const double& x,const double& y) { return std::not_equal_t
 } // end namespace numext
 
 } // end namespace Eigen
-
-// Define portable (u)int{32,64} types
-#if EIGEN_HAS_CXX11
-#include <cstdint>
-namespace Eigen {
-namespace numext {
-typedef std::uint8_t  uint8_t;
-typedef std::int8_t   int8_t;
-typedef std::uint16_t uint16_t;
-typedef std::int16_t  int16_t;
-typedef std::uint32_t uint32_t;
-typedef std::int32_t  int32_t;
-typedef std::uint64_t uint64_t;
-typedef std::int64_t  int64_t;
-}
-}
-#else
-// Without c++11, all compilers able to compile Eigen also
-// provides the C99 stdint.h header file.
-#include <stdint.h>
-namespace Eigen {
-namespace numext {
-typedef ::uint8_t  uint8_t;
-typedef ::int8_t   int8_t;
-typedef ::uint16_t uint16_t;
-typedef ::int16_t  int16_t;
-typedef ::uint32_t uint32_t;
-typedef ::int32_t  int32_t;
-typedef ::uint64_t uint64_t;
-typedef ::int64_t  int64_t;
-}
-}
-#endif
 
 #endif // EIGEN_META_H

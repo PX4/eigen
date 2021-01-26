@@ -33,7 +33,6 @@
 #if __cplusplus > 199711L || EIGEN_COMP_MSVC >= 1900
 #include <cstddef>
 #include <cstring>
-#include <stdint.h>
 #include <time.h>
 
 #include <vector>

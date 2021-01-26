@@ -10,8 +10,6 @@
 #ifndef EIGEN_PACKET_MATH_ZVECTOR_H
 #define EIGEN_PACKET_MATH_ZVECTOR_H
 
-#include <stdint.h>
-
 namespace Eigen {
 
 namespace internal {
@@ -51,10 +49,10 @@ typedef struct {
 #endif
 
 typedef union {
-  int32_t   i[4];
-  uint32_t ui[4];
-  int64_t   l[2];
-  uint64_t ul[2];
+  numext::int32_t   i[4];
+  numext::uint32_t ui[4];
+  numext::int64_t   l[2];
+  numext::uint64_t ul[2];
   double    d[2];
   float     f[4];
   Packet4i  v4i;
