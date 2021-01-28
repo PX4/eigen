@@ -717,6 +717,8 @@ class PlainObjectBase : public internal::dense_xpr_base<Derived>::type
     using Base::setConstant;
     EIGEN_DEVICE_FUNC Derived& setConstant(Index size, const Scalar& val);
     EIGEN_DEVICE_FUNC Derived& setConstant(Index rows, Index cols, const Scalar& val);
+    EIGEN_DEVICE_FUNC Derived& setConstant(NoChange_t, Index cols, const Scalar& val);
+    EIGEN_DEVICE_FUNC Derived& setConstant(Index rows, NoChange_t, const Scalar& val);
 
     using Base::setZero;
     EIGEN_DEVICE_FUNC Derived& setZero(Index size);

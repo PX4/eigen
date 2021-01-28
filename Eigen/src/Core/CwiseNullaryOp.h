@@ -383,6 +383,33 @@ PlainObjectBase<Derived>::setConstant(Index rows, Index cols, const Scalar& val)
   return setConstant(val);
 }
 
+/** Resizes to the given size, changing only the number of columns, and sets all
+  * coefficients in this expression to the given value \a val. For the parameter
+  * of type NoChange_t, just pass the special value \c NoChange.
+  *
+  * \sa MatrixBase::setConstant(const Scalar&), setConstant(Index,const Scalar&), class CwiseNullaryOp, MatrixBase::Constant(const Scalar&)
+  */
+template<typename Derived>
+EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Derived&
+PlainObjectBase<Derived>::setConstant(NoChange_t, Index cols, const Scalar& val)
+{
+  return setConstant(rows(), cols, val);
+}
+
+/** Resizes to the given size, changing only the number of rows, and sets all
+  * coefficients in this expression to the given value \a val. For the parameter
+  * of type NoChange_t, just pass the special value \c NoChange.
+  *
+  * \sa MatrixBase::setConstant(const Scalar&), setConstant(Index,const Scalar&), class CwiseNullaryOp, MatrixBase::Constant(const Scalar&)
+  */
+template<typename Derived>
+EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Derived&
+PlainObjectBase<Derived>::setConstant(Index rows, NoChange_t, const Scalar& val)
+{
+  return setConstant(rows, cols(), val);
+}
+
+
 /**
   * \brief Sets a linearly spaced vector.
   *
