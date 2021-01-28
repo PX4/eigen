@@ -721,14 +721,20 @@ class PlainObjectBase : public internal::dense_xpr_base<Derived>::type
     using Base::setZero;
     EIGEN_DEVICE_FUNC Derived& setZero(Index size);
     EIGEN_DEVICE_FUNC Derived& setZero(Index rows, Index cols);
+    EIGEN_DEVICE_FUNC Derived& setZero(NoChange_t, Index cols);
+    EIGEN_DEVICE_FUNC Derived& setZero(Index rows, NoChange_t);
 
     using Base::setOnes;
     EIGEN_DEVICE_FUNC Derived& setOnes(Index size);
     EIGEN_DEVICE_FUNC Derived& setOnes(Index rows, Index cols);
+    EIGEN_DEVICE_FUNC Derived& setOnes(NoChange_t, Index cols);
+    EIGEN_DEVICE_FUNC Derived& setOnes(Index rows, NoChange_t);
 
     using Base::setRandom;
     Derived& setRandom(Index size);
     Derived& setRandom(Index rows, Index cols);
+    Derived& setRandom(NoChange_t, Index cols);
+    Derived& setRandom(Index rows, NoChange_t);
 
     #ifdef EIGEN_PLAINOBJECTBASE_PLUGIN
     #include EIGEN_PLAINOBJECTBASE_PLUGIN
