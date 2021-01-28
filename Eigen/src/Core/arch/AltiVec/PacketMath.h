@@ -2459,8 +2459,11 @@ template<> EIGEN_STRONG_INLINE Packet2d pldexp<Packet2d>(const Packet2d& a, cons
 }
 
 template<> EIGEN_STRONG_INLINE Packet2d pfrexp<Packet2d> (const Packet2d& a, Packet2d& exponent) {
-    Packet2d ret = { pfrexp<double>(a[0], exponent[0]), pfrexp<double>(a[1], exponent[1]) };
-    return ret;
+  double exp[2] = { exponent[0], exponent[1] };
+  Packet2d ret = { pfrexp<double>(a[0], exp[0]), pfrexp<double>(a[1], exp[1]) };
+  exponent[0] = exp[0];
+  exponent[1] = exp[1];
+  return ret;
 //  This doesn't currently work (no integer_packet for Packet2d - but adding it causes other problems)
 //  return pfrexp_double(a, exponent);
 }
