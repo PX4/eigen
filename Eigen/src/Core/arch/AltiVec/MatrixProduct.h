@@ -72,7 +72,7 @@ struct quad_traits<double>
 // are responsible to extract from convert between Eigen's and MatrixProduct approach.
 const static Packet4f p4f_CONJUGATE = {-1.0f, -1.0f, -1.0f, -1.0f};
 
-const static Packet2d p2d_CONJUGATE = {-1.0f, -1.0f};
+const static Packet2d p2d_CONJUGATE = {-1.0, -1.0};
 
 const static Packet16uc p16uc_GETREAL32 = {  0,  1,  2,  3,
                                              8,  9, 10, 11,
@@ -1057,7 +1057,7 @@ struct lhs_cpack<double, IsComplex, Index, DataMapper, Packet, PacketC, StorageO
     const int vectorSize = quad_traits<double>::vectorsize;
     Index ri = 0, j = 0;
     double *blockAt  = reinterpret_cast<double *>(blockA);
-    Packet conj = pset1<Packet>((double)-1.0f);
+    Packet conj = pset1<Packet>(-1.0);
 
     for(j = 0; j + vectorSize < rows; j+=vectorSize)
     {
@@ -1202,7 +1202,7 @@ struct rhs_cpack<double, Index, DataMapper, Packet, PacketC, StorageOrder, Conju
   {
     const int vectorSize = quad_traits<double>::vectorsize;
     double *blockBt = reinterpret_cast<double *>(blockB);
-    Packet conj = pset1<Packet>((double)-1.0f);
+    Packet conj = pset1<Packet>(-1.0);
 
     Index ri = 0, j = 0;
     for(; j + 2*vectorSize < cols; j+=2*vectorSize)
