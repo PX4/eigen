@@ -266,37 +266,43 @@ EIGEN_DEVICE_FUNC inline Packet bitwise_helper(const Packet& a, const Packet& b,
   return c;
 }
 
+template<typename T>
+struct bit_and {
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR EIGEN_ALWAYS_INLINE T operator()(const T& a, const T& b) const {
+    return a & b;
+  }
+};
+
+template<typename T>
+struct bit_or {
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR EIGEN_ALWAYS_INLINE T operator()(const T& a, const T& b) const {
+    return a | b;
+  }
+};
+
+template<typename T>
+struct bit_xor {
+  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR EIGEN_ALWAYS_INLINE T operator()(const T& a, const T& b) const {
+    return a ^ b;
+  }
+};
+
 /** \internal \returns the bitwise and of \a a and \a b */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
 pand(const Packet& a, const Packet& b) {
-#if defined(EIGEN_HIP_DEVICE_COMPILE)
-  return bitwise_helper(a ,b, std::bit_and<unsigned char>());
-#else
-  EIGEN_USING_STD(bit_and);
-  return bitwise_helper(a ,b, bit_and<unsigned char>());
-#endif
+  return bitwise_helper(a, b, bit_and<unsigned char>());
 }
 
 /** \internal \returns the bitwise or of \a a and \a b */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
 por(const Packet& a, const Packet& b) {
-#if defined(EIGEN_HIP_DEVICE_COMPILE)
-  return bitwise_helper(a ,b, std::bit_or<unsigned char>());
-#else
-  EIGEN_USING_STD(bit_or);
   return bitwise_helper(a ,b, bit_or<unsigned char>());
-#endif
 }
 
 /** \internal \returns the bitwise xor of \a a and \a b */
 template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
 pxor(const Packet& a, const Packet& b) {
-#if defined(EIGEN_HIP_DEVICE_COMPILE)
-  return bitwise_helper(a ,b, std::bit_xor<unsigned char>());
-#else
-  EIGEN_USING_STD(bit_xor);
   return bitwise_helper(a ,b, bit_xor<unsigned char>());
-#endif
 }
 
 /** \internal \returns the bitwise and of \a a and not \a b */
