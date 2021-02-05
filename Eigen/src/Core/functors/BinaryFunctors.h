@@ -435,11 +435,13 @@ struct functor_traits<scalar_pow_op<Scalar,Exponent> > {
     Cost = 5 * NumTraits<Scalar>::MulCost,
     PacketAccess = (!NumTraits<Scalar>::IsComplex && !NumTraits<Scalar>::IsInteger &&
                     packet_traits<Scalar>::HasExp && packet_traits<Scalar>::HasLog &&
-                    packet_traits<Scalar>::HasRound && packet_traits<Scalar>::HasCmp)
+                    packet_traits<Scalar>::HasRound && packet_traits<Scalar>::HasCmp &&
+                    // Temporarly disable packet access for half/bfloat16 until
+                    // accuracy is improved.
+                    !is_same<Scalar, half>::value && !is_same<Scalar, bfloat16>::value
+                    )
   };
 };
-
-
 
 //---------- non associative binary functors ----------
 
