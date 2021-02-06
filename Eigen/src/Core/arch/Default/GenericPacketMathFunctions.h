@@ -929,6 +929,11 @@ Packet generic_pow(const Packet& x, const Packet& y) {
   Packet y_is_pos = pandnot(ptrue(y), por(y_is_zero, y_is_neg));
   Packet y_is_nan = pandnot(ptrue(y), pcmp_eq(y, y));
   Packet abs_y_is_inf = pcmp_eq(pabs(y), cst_pos_inf);
+  // |y| is so large that (1+eps)^y over- or underflows.
+  EIGEN_CONSTEXPR Scalar huge_exponent =
+      (std::numeric_limits<Scalar>::digits * Scalar(EIGEN_LOG2E)) /
+      std::numeric_limits<Scalar>::epsilon();
+  Packet abs_y_is_huge = pcmp_lt(pset1<Packet>(huge_exponent), pabs(y));
 
   // Predicates for whether y is integer and/or even.
   Packet y_is_int = pcmp_eq(pfloor(y), y);
@@ -937,14 +942,16 @@ Packet generic_pow(const Packet& x, const Packet& y) {
 
   // Predicates encoding special cases for the value of pow(x,y)
   Packet invalid_negative_x = pandnot(pandnot(pandnot(x_is_neg, abs_x_is_inf), y_is_int), abs_y_is_inf);
+  Packet pow_is_one = por(por(x_is_one, y_is_zero),
+                          pand(x_is_neg_one,
+                               por(abs_y_is_inf, pandnot(y_is_even, invalid_negative_x))));
   Packet pow_is_nan = por(invalid_negative_x, por(x_is_nan, y_is_nan));
-  Packet pow_is_one = por(por(y_is_zero, x_is_one), pand(x_is_neg_one, abs_y_is_inf));
   Packet pow_is_zero = por(por(por(pand(x_is_zero, y_is_pos), pand(abs_x_is_inf, y_is_neg)),
-                               pand(pand(abs_x_is_lt_one, abs_y_is_inf), y_is_pos)),
-                           pand(pand(abs_x_is_gt_one, abs_y_is_inf), y_is_neg));
+                               pand(pand(abs_x_is_lt_one, abs_y_is_huge), y_is_pos)),
+                           pand(pand(abs_x_is_gt_one, abs_y_is_huge), y_is_neg));
   Packet pow_is_inf = por(por(por(pand(x_is_zero, y_is_neg), pand(abs_x_is_inf, y_is_pos)),
-                              pand(pand(abs_x_is_lt_one, abs_y_is_inf), y_is_neg)),
-                          pand(pand(abs_x_is_gt_one, abs_y_is_inf), y_is_pos));
+                              pand(pand(abs_x_is_lt_one, abs_y_is_huge), y_is_neg)),
+                          pand(pand(abs_x_is_gt_one, abs_y_is_huge), y_is_pos));
 
   // General computation of pow(x,y) for positive x or negative x and integer y.
   Packet negate_pow_abs = pandnot(x_is_neg, y_is_even);
