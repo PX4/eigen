@@ -417,8 +417,8 @@ Packet pexp_float(const Packet _x)
 {
   const Packet cst_1      = pset1<Packet>(1.0f);
   const Packet cst_half   = pset1<Packet>(0.5f);
-  const Packet cst_exp_hi = pset1<Packet>( 88.3762626647950f);
-  const Packet cst_exp_lo = pset1<Packet>(-88.3762626647949f);
+  const Packet cst_exp_hi = pset1<Packet>( 88.723f);
+  const Packet cst_exp_lo = pset1<Packet>(-88.723f);
 
   const Packet cst_cephes_LOG2EF = pset1<Packet>(1.44269504088896341f);
   const Packet cst_cephes_exp_p0 = pset1<Packet>(1.9875691500E-4f);
@@ -478,8 +478,8 @@ Packet pexp_double(const Packet _x)
   const Packet cst_2 = pset1<Packet>(2.0);
   const Packet cst_half = pset1<Packet>(0.5);
 
-  const Packet cst_exp_hi = pset1<Packet>(709.437);
-  const Packet cst_exp_lo = pset1<Packet>(-709.436139303);
+  const Packet cst_exp_hi = pset1<Packet>(709.784);
+  const Packet cst_exp_lo = pset1<Packet>(-709.784);
 
   const Packet cst_cephes_LOG2EF = pset1<Packet>(1.4426950408889634073599);
   const Packet cst_cephes_exp_p0 = pset1<Packet>(1.26177193074810590878e-4);
