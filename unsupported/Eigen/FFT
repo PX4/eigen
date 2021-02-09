@@ -421,4 +421,3 @@ void fft_inv_proxy<T_SrcMat,T_FftIfc>::evalTo(T_DestMat& dst) const
 #include "../../Eigen/src/Core/util/ReenableStupidWarnings.h"
 
 #endif
-/* vim: set filetype=cpp et sw=2 ts=2 ai: */

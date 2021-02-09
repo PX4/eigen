@@ -135,4 +135,3 @@
 #include "../../Eigen/src/Core/util/ReenableStupidWarnings.h"
 
 #endif // EIGEN_POLYNOMIALS_MODULE_H
-/* vim: set filetype=cpp et sw=2 ts=2 ai: */
