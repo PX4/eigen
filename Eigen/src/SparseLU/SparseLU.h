@@ -35,7 +35,7 @@ public:
     MaxColsAtCompileTime = MatrixType::MaxColsAtCompileTime
   };
 
-  SparseLUTransposeView() : m_sparseLU(nullptr) {}
+  SparseLUTransposeView() : m_sparseLU(NULL) {}
   SparseLUTransposeView(const SparseLUTransposeView& view) {
     this->m_sparseLU = view.m_sparseLU;
   }
