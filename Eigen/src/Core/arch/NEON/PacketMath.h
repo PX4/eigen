@@ -4511,31 +4511,16 @@ EIGEN_STRONG_INLINE Eigen::half predux_max<Packet4hf>(const Packet4hf& a) {
 
 EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void ptranspose(PacketBlock<Packet8hf, 4>& kernel)
 {
-  EIGEN_ALIGN16 Eigen::half in[4][8];
+  const float16x8x2_t zip16_1 = vzipq_f16(kernel.packet[0], kernel.packet[1]);
+  const float16x8x2_t zip16_2 = vzipq_f16(kernel.packet[2], kernel.packet[3]);
 
-  pstore<Eigen::half>(in[0], kernel.packet[0]);
-  pstore<Eigen::half>(in[1], kernel.packet[1]);
-  pstore<Eigen::half>(in[2], kernel.packet[2]);
-  pstore<Eigen::half>(in[3], kernel.packet[3]);
+  const float32x4x2_t zip32_1 = vzipq_f32(vreinterpretq_f32_f16(zip16_1.val[0]), vreinterpretq_f32_f16(zip16_2.val[0]));
+  const float32x4x2_t zip32_2 = vzipq_f32(vreinterpretq_f32_f16(zip16_1.val[1]), vreinterpretq_f32_f16(zip16_2.val[1]));
 
-  EIGEN_ALIGN16 Eigen::half out[4][8];
-
-  EIGEN_UNROLL_LOOP
-  for (int i = 0; i < 4; ++i) {
-    EIGEN_UNROLL_LOOP
-    for (int j = 0; j < 4; ++j) {
-      out[i][j] = in[j][2 * i];
-    }
-    EIGEN_UNROLL_LOOP
-    for (int j = 0; j < 4; ++j) {
-      out[i][j + 4] = in[j][2 * i + 1];
-    }
-  }
-
-  kernel.packet[0] = pload<Packet8hf>(out[0]);
-  kernel.packet[1] = pload<Packet8hf>(out[1]);
-  kernel.packet[2] = pload<Packet8hf>(out[2]);
-  kernel.packet[3] = pload<Packet8hf>(out[3]);
+  kernel.packet[0] = vreinterpretq_f16_f32(zip32_1.val[0]);
+  kernel.packet[1] = vreinterpretq_f16_f32(zip32_1.val[1]);
+  kernel.packet[2] = vreinterpretq_f16_f32(zip32_2.val[0]);
+  kernel.packet[3] = vreinterpretq_f16_f32(zip32_2.val[1]);
 }
 
 EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void ptranspose(PacketBlock<Packet4hf, 4>& kernel) {
