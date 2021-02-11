@@ -3294,26 +3294,23 @@ template<> EIGEN_STRONG_INLINE Packet4ui psqrt(const Packet4ui& a) {
 // effective latency. This is similar to Quake3's fast inverse square root.
 // For more details see: http://www.beyond3d.com/content/articles/8/
 template<> EIGEN_STRONG_INLINE Packet4f psqrt(const Packet4f& _x){
-  Packet4f minus_half_x = vmulq_n_f32(_x, -0.5f);
   Packet4ui denormal_mask = vandq_u32(vcgeq_f32(_x, vdupq_n_f32(0.0f)),
                                       vcltq_f32(_x, pset1<Packet4f>((std::numeric_limits<float>::min)())));
   // Compute approximate reciprocal sqrt.
   Packet4f x = vrsqrteq_f32(_x);
-  // Do a single step of Newton's iteration.
-  //the number 1.5f was set reference to Quake3's fast inverse square root
-  x = pmul(x, pmadd(minus_half_x, pmul(x, x), pset1<Packet4f>(1.5f)));
+  // Do one Newton's iteration for 1/sqrt(x).
+  x = vmulq_f32(vrsqrtsq_f32(vmulq_f32(_x, x), x), x);
   // Flush results for denormals to zero.
   return vreinterpretq_f32_u32(vbicq_u32(vreinterpretq_u32_f32(pmul(_x, x)), denormal_mask));
 }
 
 template<> EIGEN_STRONG_INLINE Packet2f psqrt(const Packet2f& _x) {
-  Packet2f minus_half_x = vmul_n_f32(_x, -0.5f);
   Packet2ui denormal_mask = vand_u32(vcge_f32(_x, vdup_n_f32(0.0f)),
                                      vclt_f32(_x, pset1<Packet2f>((std::numeric_limits<float>::min)())));
   // Compute approximate reciprocal sqrt.
   Packet2f x = vrsqrte_f32(_x);
-  // Do a single step of Newton's iteration.
-  x = pmul(x, pmadd(minus_half_x, pmul(x, x), pset1<Packet2f>(1.5f)));
+  // Do one Newton's iteration for 1/sqrt(x).
+  x = vmul_f32(vrsqrts_f32(vmul_f32(_x, x), x), x);
   // Flush results for denormals to zero.
   return vreinterpret_f32_u32(vbic_u32(vreinterpret_u32_f32(pmul(_x, x)), denormal_mask));
 }
