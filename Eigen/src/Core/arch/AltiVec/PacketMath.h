@@ -1160,42 +1160,47 @@ template<> EIGEN_STRONG_INLINE Packet8bf  pabs(const Packet8bf& a) {
   return pand<Packet8us>(p8us_abs_mask, a);
 }
 
-template<int N> EIGEN_STRONG_INLINE Packet4i parithmetic_shift_right(Packet4i a)
+template<int N> EIGEN_STRONG_INLINE Packet4i parithmetic_shift_right(const Packet4i& a)
 { return vec_sra(a,reinterpret_cast<Packet4ui>(pset1<Packet4i>(N))); }
-template<int N> EIGEN_STRONG_INLINE Packet4i plogical_shift_right(Packet4i a)
+template<int N> EIGEN_STRONG_INLINE Packet4i plogical_shift_right(const Packet4i& a)
 { return vec_sr(a,reinterpret_cast<Packet4ui>(pset1<Packet4i>(N))); }
-template<int N> EIGEN_STRONG_INLINE Packet4i plogical_shift_left(Packet4i a)
+template<int N> EIGEN_STRONG_INLINE Packet4i plogical_shift_left(const Packet4i& a)
 { return vec_sl(a,reinterpret_cast<Packet4ui>(pset1<Packet4i>(N))); }
-template<int N> EIGEN_STRONG_INLINE Packet4f plogical_shift_left(Packet4f a)
+template<int N> EIGEN_STRONG_INLINE Packet4f plogical_shift_left(const Packet4f& a)
 {
   const _EIGEN_DECLARE_CONST_FAST_Packet4ui(mask, N);
   Packet4ui r = vec_sl(reinterpret_cast<Packet4ui>(a), p4ui_mask);
   return reinterpret_cast<Packet4f>(r);
 }
 
-template<int N> EIGEN_STRONG_INLINE Packet4f plogical_shift_right(Packet4f a)
+template<int N> EIGEN_STRONG_INLINE Packet4f plogical_shift_right(const Packet4f& a)
 {
   const _EIGEN_DECLARE_CONST_FAST_Packet4ui(mask, N);
   Packet4ui r = vec_sr(reinterpret_cast<Packet4ui>(a), p4ui_mask);
   return reinterpret_cast<Packet4f>(r);
 }
 
-template<int N> EIGEN_STRONG_INLINE Packet4ui plogical_shift_right(Packet4ui a)
+template<int N> EIGEN_STRONG_INLINE Packet4ui plogical_shift_right(const Packet4ui& a)
 {
   const _EIGEN_DECLARE_CONST_FAST_Packet4ui(mask, N);
   return vec_sr(a, p4ui_mask);
 }
 
-template<int N> EIGEN_STRONG_INLINE Packet4ui plogical_shift_left(Packet4ui a)
+template<int N> EIGEN_STRONG_INLINE Packet4ui plogical_shift_left(const Packet4ui& a)
 {
   const _EIGEN_DECLARE_CONST_FAST_Packet4ui(mask, N);
   return vec_sl(a, p4ui_mask);
 }
 
-template<int N> EIGEN_STRONG_INLINE Packet8us plogical_shift_left(Packet8us a)
+template<int N> EIGEN_STRONG_INLINE Packet8us plogical_shift_left(const Packet8us& a)
 {
   const _EIGEN_DECLARE_CONST_FAST_Packet8us(mask, N);
   return vec_sl(a, p8us_mask);
+}
+template<int N> EIGEN_STRONG_INLINE Packet8us plogical_shift_right(const Packet8us& a)
+{
+  const _EIGEN_DECLARE_CONST_FAST_Packet8us(mask, N);
+  return vec_sr(a, p8us_mask);
 }
 
 EIGEN_STRONG_INLINE Packet4f Bf16ToF32Even(const Packet8bf& bf){
@@ -1323,14 +1328,14 @@ template<> EIGEN_STRONG_INLINE Packet8bf pexp<Packet8bf> (const Packet8bf& a){
 }
 
 template<> EIGEN_STRONG_INLINE Packet4f pldexp<Packet4f>(const Packet4f& a, const Packet4f& exponent) {
-  return pldexp_float(a,exponent);
+  return pldexp_generic(a,exponent);
 }
 template<> EIGEN_STRONG_INLINE Packet8bf pldexp<Packet8bf> (const Packet8bf& a, const Packet8bf& exponent){
-  BF16_TO_F32_BINARY_OP_WRAPPER(pldexp_float, a, exponent);
+  BF16_TO_F32_BINARY_OP_WRAPPER(pldexp<Packet4f>, a, exponent);
 }
 
 template<> EIGEN_STRONG_INLINE Packet4f pfrexp<Packet4f>(const Packet4f& a, Packet4f& exponent) {
-  return pfrexp_float(a,exponent);
+  return pfrexp_generic(a,exponent);
 }
 template<> EIGEN_STRONG_INLINE Packet8bf pfrexp<Packet8bf> (const Packet8bf& a, Packet8bf& e){
   Packet4f a_even = Bf16ToF32Even(a);
@@ -2324,6 +2329,11 @@ template<> EIGEN_STRONG_INLINE Packet2d pset1<Packet2d>(const double&  from) {
   return v;
 }
 
+template<> EIGEN_STRONG_INLINE Packet2d pset1frombits<Packet2d>(unsigned long from) {
+  Packet2l v = {static_cast<long long>(from), static_cast<long long>(from)};
+  return reinterpret_cast<Packet2d>(v);
+}
+
 template<> EIGEN_STRONG_INLINE void
 pbroadcast4<Packet2d>(const double *a,
                       Packet2d& a0, Packet2d& a1, Packet2d& a2, Packet2d& a3)
@@ -2439,7 +2449,8 @@ template<> EIGEN_STRONG_INLINE Packet2d pabs(const Packet2d& a) { return vec_abs
 // a slow version that works with older compilers. 
 // Update: apparently vec_cts/vec_ctf intrinsics for 64-bit doubles
 // are buggy, https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70963
-static inline Packet2l ConvertToPacket2l(const Packet2d& x) {
+template<>
+inline Packet2l pcast<Packet2d, Packet2l>(const Packet2d& x) {
 #if EIGEN_GNUC_AT_LEAST(5, 4) || \
     (EIGEN_GNUC_AT(6, 1) && __GNUC_PATCHLEVEL__ >= 1)
   return vec_cts(x, 0);    // TODO: check clang version.
@@ -2450,6 +2461,15 @@ static inline Packet2l ConvertToPacket2l(const Packet2d& x) {
                  static_cast<long long>(tmp[1]) };
   return l;
 #endif
+}
+
+template<>
+inline Packet2d pcast<Packet2l, Packet2d>(const Packet2l& x) {
+  unsigned long long tmp[2];
+  memcpy(tmp, &x, sizeof(tmp));
+  Packet2d d = { static_cast<double>(tmp[0]),
+                 static_cast<double>(tmp[1]) };
+  return d;
 }
 
 
@@ -2569,7 +2589,7 @@ EIGEN_STRONG_INLINE Packet2l plogical_shift_right(const Packet2l& a) {
 template<> EIGEN_STRONG_INLINE Packet2d pldexp<Packet2d>(const Packet2d& a, const Packet2d& exponent) {
   // Clamp exponent to [-2099, 2099]
   const Packet2d max_exponent = pset1<Packet2d>(2099.0);
-  const Packet2l e = ConvertToPacket2l(pmin(pmax(exponent, pnegate(max_exponent)), max_exponent));
+  const Packet2l e = pcast<Packet2d, Packet2l>(pmin(pmax(exponent, pnegate(max_exponent)), max_exponent));
 
   // Split 2^e into four factors and multiply:
   const Packet2l  bias = { 1023, 1023 };
@@ -2582,14 +2602,16 @@ template<> EIGEN_STRONG_INLINE Packet2d pldexp<Packet2d>(const Packet2d& a, cons
   return out;
 }
 
+
+// Extract exponent without existence of Packet2l.
+template<>
+EIGEN_STRONG_INLINE  
+Packet2d pfrexp_generic_get_biased_exponent(const Packet2d& a) {
+  return pcast<Packet2l, Packet2d>(plogical_shift_right<52>(reinterpret_cast<Packet2l>(pabs(a))));
+}
+
 template<> EIGEN_STRONG_INLINE Packet2d pfrexp<Packet2d> (const Packet2d& a, Packet2d& exponent) {
-  double exp[2] = { exponent[0], exponent[1] };
-  Packet2d ret = { pfrexp<double>(a[0], exp[0]), pfrexp<double>(a[1], exp[1]) };
-  exponent[0] = exp[0];
-  exponent[1] = exp[1];
-  return ret;
-//  This doesn't currently work (no integer_packet for Packet2d - but adding it causes other problems)
-//  return pfrexp_double(a, exponent);
+  return pfrexp_generic(a, exponent);
 }
 
 template<> EIGEN_STRONG_INLINE double predux<Packet2d>(const Packet2d& a)

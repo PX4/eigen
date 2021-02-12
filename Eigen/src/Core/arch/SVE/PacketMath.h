@@ -669,7 +669,7 @@ EIGEN_STRONG_INLINE PacketXf pabs(const PacketXf& a)
 template <>
 EIGEN_STRONG_INLINE PacketXf pfrexp<PacketXf>(const PacketXf& a, PacketXf& exponent)
 {
-  return pfrexp_float(a, exponent);
+  return pfrexp_generic(a, exponent);
 }
 
 template <>
@@ -747,7 +747,7 @@ EIGEN_DEVICE_FUNC inline void ptranspose(PacketBlock<PacketXf, N>& kernel)
 template<>
 EIGEN_STRONG_INLINE PacketXf pldexp<PacketXf>(const PacketXf& a, const PacketXf& exponent)
 {
-  return pldexp_float(a, exponent);
+  return pldexp_generic(a, exponent);
 }
 
 }  // namespace internal

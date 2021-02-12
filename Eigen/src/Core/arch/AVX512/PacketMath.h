@@ -895,25 +895,28 @@ EIGEN_STRONG_INLINE Packet8d pabs(const Packet8d& a) {
 
 template<>
 EIGEN_STRONG_INLINE Packet16f pfrexp<Packet16f>(const Packet16f& a, Packet16f& exponent){
-  return pfrexp_float(a, exponent);
+  return pfrexp_generic(a, exponent);
+}
+
+// Extract exponent without existence of Packet8l.
+template<>
+EIGEN_STRONG_INLINE  
+Packet8d pfrexp_generic_get_biased_exponent(const Packet8d& a) {
+  const Packet8d cst_exp_mask  = pset1frombits<Packet8d>(static_cast<uint64_t>(0x7ff0000000000000ull));
+  #ifdef EIGEN_VECTORIZE_AVX512DQ
+  return _mm512_cvtepi64_pd(_mm512_srli_epi64(_mm512_castpd_si512(pand(a, cst_exp_mask)), 52));
+  #else
+  return _mm512_cvtepi32_pd(_mm512_cvtepi64_epi32(_mm512_srli_epi64(_mm512_castpd_si512(pand(a, cst_exp_mask)), 52)));
+  #endif
 }
 
 template<>
 EIGEN_STRONG_INLINE Packet8d pfrexp<Packet8d>(const Packet8d& a, Packet8d& exponent) {
-  const Packet8d cst_1022d = pset1<Packet8d>(1022.0);
-#ifdef EIGEN_TEST_AVX512DQ
-  exponent = psub(_mm512_cvtepi64_pd(_mm512_srli_epi64(_mm512_castpd_si512(a), 52)), cst_1022d);
-#else
-  exponent = psub(_mm512_cvtepi32_pd(_mm512_cvtepi64_epi32(_mm512_srli_epi64(_mm512_castpd_si512(a), 52))),
-                                     cst_1022d);
-#endif
-  const Packet8d cst_half = pset1<Packet8d>(0.5);
-  const Packet8d cst_inv_mant_mask  = pset1frombits<Packet8d>(static_cast<uint64_t>(~0x7ff0000000000000ull));
-  return por(pand(a, cst_inv_mant_mask), cst_half);
+  return pfrexp_generic(a, exponent);
 }
 
 template<> EIGEN_STRONG_INLINE Packet16f pldexp<Packet16f>(const Packet16f& a, const Packet16f& exponent) {
-  return pldexp_float(a,exponent);
+  return pldexp_generic(a, exponent);
 }
 
 template<> EIGEN_STRONG_INLINE Packet8d pldexp<Packet8d>(const Packet8d& a, const Packet8d& exponent) {

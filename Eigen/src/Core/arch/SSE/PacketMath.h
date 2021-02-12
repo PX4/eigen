@@ -887,21 +887,24 @@ template<> EIGEN_STRONG_INLINE Packet4i pabs(const Packet4i& a)
 }
 
 template<> EIGEN_STRONG_INLINE Packet4f pfrexp<Packet4f>(const Packet4f& a, Packet4f& exponent) {
-  return pfrexp_float(a,exponent);
+  return pfrexp_generic(a,exponent);
+}
+
+// Extract exponent without existence of Packet2l.
+template<>
+EIGEN_STRONG_INLINE  
+Packet2d pfrexp_generic_get_biased_exponent(const Packet2d& a) {
+  const Packet2d cst_exp_mask  = pset1frombits<Packet2d>(static_cast<uint64_t>(0x7ff0000000000000ull));
+  __m128i a_expo = _mm_srli_epi64(_mm_castpd_si128(pand(a, cst_exp_mask)), 52);
+  return _mm_cvtepi32_pd(vec4i_swizzle1(a_expo, 0, 2, 1, 3));
 }
 
 template<> EIGEN_STRONG_INLINE Packet2d pfrexp<Packet2d>(const Packet2d& a, Packet2d& exponent) {
-  const Packet2d cst_1022d = pset1<Packet2d>(1022.0);
-  const Packet2d cst_half = pset1<Packet2d>(0.5);
-  const Packet2d cst_exp_mask  = pset1frombits<Packet2d>(static_cast<uint64_t>(0x7ff0000000000000ull));
-  __m128i a_expo = _mm_srli_epi64(_mm_castpd_si128(pand(a, cst_exp_mask)), 52);
-  exponent = psub(_mm_cvtepi32_pd(vec4i_swizzle1(a_expo, 0, 2, 1, 3)), cst_1022d);
-  const Packet2d cst_mant_mask  = pset1frombits<Packet2d>(static_cast<uint64_t>(~0x7ff0000000000000ull));
-  return por(pand(a, cst_mant_mask), cst_half);
+  return pfrexp_generic(a, exponent);
 }
 
 template<> EIGEN_STRONG_INLINE Packet4f pldexp<Packet4f>(const Packet4f& a, const Packet4f& exponent) {
-  return pldexp_float(a,exponent);
+  return pldexp_generic(a,exponent);
 }
 
 // We specialize pldexp here, since the generic implementation uses Packet2l, which is not well

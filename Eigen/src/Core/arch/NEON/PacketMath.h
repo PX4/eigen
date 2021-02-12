@@ -2402,14 +2402,14 @@ template<> EIGEN_STRONG_INLINE Packet2l pabs(const Packet2l& a) {
 template<> EIGEN_STRONG_INLINE Packet2ul pabs(const Packet2ul& a) { return a; }
 
 template<> EIGEN_STRONG_INLINE Packet2f pfrexp<Packet2f>(const Packet2f& a, Packet2f& exponent)
-{ return pfrexp_float(a,exponent); }
+{ return pfrexp_generic(a,exponent); }
 template<> EIGEN_STRONG_INLINE Packet4f pfrexp<Packet4f>(const Packet4f& a, Packet4f& exponent)
-{ return pfrexp_float(a,exponent); }
+{ return pfrexp_generic(a,exponent); }
 
 template<> EIGEN_STRONG_INLINE Packet2f pldexp<Packet2f>(const Packet2f& a, const Packet2f& exponent)
-{ return pldexp_float(a,exponent); }
+{ return pldexp_generic(a,exponent); }
 template<> EIGEN_STRONG_INLINE Packet4f pldexp<Packet4f>(const Packet4f& a, const Packet4f& exponent)
-{ return pldexp_float(a,exponent); }
+{ return pldexp_generic(a,exponent); }
 
 template<> EIGEN_STRONG_INLINE float predux<Packet2f>(const Packet2f& a) { return vget_lane_f32(vpadd_f32(a,a), 0); }
 template<> EIGEN_STRONG_INLINE float predux<Packet4f>(const Packet4f& a)
@@ -3907,10 +3907,10 @@ template<> EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet2d pselect( const Packet2
 { return vbslq_f64(vreinterpretq_u64_f64(mask), a, b); }
 
 template<> EIGEN_STRONG_INLINE Packet2d pldexp<Packet2d>(const Packet2d& a, const Packet2d& exponent)
-{ return pldexp_double(a, exponent); }
+{ return pldexp_generic(a, exponent); }
 
 template<> EIGEN_STRONG_INLINE Packet2d pfrexp<Packet2d>(const Packet2d& a, Packet2d& exponent)
-{ return pfrexp_double(a,exponent); }
+{ return pfrexp_generic(a,exponent); }
 
 template<> EIGEN_STRONG_INLINE Packet2d pset1frombits<Packet2d>(uint64_t from)
 { return vreinterpretq_f64_u64(vdupq_n_u64(from)); }

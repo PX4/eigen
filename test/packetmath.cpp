@@ -567,7 +567,36 @@ void packetmath_real() {
     data2[i] = Scalar(internal::random<double>(-87, 88));
   }
   CHECK_CWISE1_IF(PacketTraits::HasExp, std::exp, internal::pexp);
+  
   CHECK_CWISE1_BYREF1_IF(PacketTraits::HasExp, REF_FREXP, internal::pfrexp);
+  if (PacketTraits::HasExp) {
+    // Check denormals:
+    for (int j=0; j<3; ++j) {
+      data1[0] = Scalar(std::ldexp(1, std::numeric_limits<Scalar>::min_exponent-j));
+      CHECK_CWISE1_BYREF1_IF(PacketTraits::HasExp, REF_FREXP, internal::pfrexp);
+      data1[0] = -data1[0];
+      CHECK_CWISE1_BYREF1_IF(PacketTraits::HasExp, REF_FREXP, internal::pfrexp);
+    }
+    
+    // zero
+    data1[0] = Scalar(0);
+    CHECK_CWISE1_BYREF1_IF(PacketTraits::HasExp, REF_FREXP, internal::pfrexp);
+    
+    // inf and NaN only compare output fraction, not exponent.
+    test::packet_helper<PacketTraits::HasExp,Packet> h;
+    Packet pout;
+    Scalar sout;
+    Scalar special[] = { NumTraits<Scalar>::infinity(), 
+                        -NumTraits<Scalar>::infinity(),
+                         NumTraits<Scalar>::quiet_NaN()};
+    for (int i=0; i<3; ++i) {
+      data1[0] = special[i];
+      ref[0] = Scalar(REF_FREXP(data1[0], ref[PacketSize]));
+      h.store(data2, internal::pfrexp(h.load(data1), h.forward_reference(pout, sout)));
+      VERIFY(test::areApprox(ref, data2, 1) && "internal::pfrexp");
+    }
+  }
+  
   for (int i = 0; i < PacketSize; ++i) {
     data1[i] = Scalar(internal::random<double>(-1, 1));
     data2[i] = Scalar(internal::random<double>(-1, 1));

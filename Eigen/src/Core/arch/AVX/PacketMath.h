@@ -734,12 +734,13 @@ template<> EIGEN_STRONG_INLINE Packet4d pabs(const Packet4d& a)
 }
 
 template<> EIGEN_STRONG_INLINE Packet8f pfrexp<Packet8f>(const Packet8f& a, Packet8f& exponent) {
-  return pfrexp_float(a,exponent);
+  return pfrexp_generic(a,exponent);
 }
 
-template<> EIGEN_STRONG_INLINE Packet4d pfrexp<Packet4d>(const Packet4d& a, Packet4d& exponent) {
-  const Packet4d cst_1022d = pset1<Packet4d>(1022.0);
-  const Packet4d cst_half = pset1<Packet4d>(0.5);
+// Extract exponent without existence of Packet4l.
+template<>
+EIGEN_STRONG_INLINE  
+Packet4d pfrexp_generic_get_biased_exponent(const Packet4d& a) {
   const Packet4d cst_exp_mask  = pset1frombits<Packet4d>(static_cast<uint64_t>(0x7ff0000000000000ull));
   __m256i a_expo = _mm256_castpd_si256(pand(a, cst_exp_mask));
 #ifdef EIGEN_VECTORIZE_AVX2
@@ -754,15 +755,18 @@ template<> EIGEN_STRONG_INLINE Packet4d pfrexp<Packet4d>(const Packet4d& a, Pack
 #endif
   Packet2d exponent_lo = _mm_cvtepi32_pd(vec4i_swizzle1(lo, 0, 2, 1, 3));
   Packet2d exponent_hi = _mm_cvtepi32_pd(vec4i_swizzle1(hi, 0, 2, 1, 3));
-  exponent = _mm256_insertf128_pd(exponent, exponent_lo, 0);
+  Packet4d exponent = _mm256_insertf128_pd(exponent, exponent_lo, 0);
   exponent = _mm256_insertf128_pd(exponent, exponent_hi, 1);
-  exponent = psub(exponent, cst_1022d);
-  const Packet4d cst_mant_mask  = pset1frombits<Packet4d>(static_cast<uint64_t>(~0x7ff0000000000000ull));
-  return por(pand(a, cst_mant_mask), cst_half);
+  return exponent;
+}
+
+
+template<> EIGEN_STRONG_INLINE Packet4d pfrexp<Packet4d>(const Packet4d& a, Packet4d& exponent) {
+  return pfrexp_generic(a, exponent);
 }
 
 template<> EIGEN_STRONG_INLINE Packet8f pldexp<Packet8f>(const Packet8f& a, const Packet8f& exponent) {
-  return pldexp_float(a,exponent);
+  return pldexp_generic(a, exponent);
 }
 
 template<> EIGEN_STRONG_INLINE Packet4d pldexp<Packet4d>(const Packet4d& a, const Packet4d& exponent) {
