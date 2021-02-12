@@ -36,7 +36,7 @@ template<typename Packet> EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC
 Packet pfrexp_generic_get_biased_exponent(const Packet& a) {
   typedef typename unpacket_traits<Packet>::type Scalar;
   typedef typename unpacket_traits<Packet>::integer_packet PacketI;
-  enum { mantissa_bits = numext::numeric_limits<Scalar>::digits - 1};
+  enum { mantissa_bits = NumTraits<Scalar>::digits() - 1};
   return pcast<PacketI, Packet>(plogical_shift_right<mantissa_bits>(preinterpret<PacketI>(pabs(a))));
 }
 
@@ -48,7 +48,7 @@ Packet pfrexp_generic(const Packet& a, Packet& exponent) {
   typedef typename make_unsigned<typename make_integer<Scalar>::type>::type ScalarUI;
   enum {
     TotalBits = sizeof(Scalar) * CHAR_BIT,
-    MantissaBits = numext::numeric_limits<Scalar>::digits - 1,
+    MantissaBits = NumTraits<Scalar>::digits() - 1,
     ExponentBits = int(TotalBits) - int(MantissaBits) - 1
   };
 
@@ -116,7 +116,7 @@ Packet pldexp_generic(const Packet& a, const Packet& exponent) {
   typedef typename unpacket_traits<PacketI>::type ScalarI;
   enum {
     TotalBits = sizeof(Scalar) * CHAR_BIT,
-    MantissaBits = numext::numeric_limits<Scalar>::digits - 1,
+    MantissaBits = NumTraits<Scalar>::digits() - 1,
     ExponentBits = int(TotalBits) - int(MantissaBits) - 1
   };
 
@@ -135,7 +135,7 @@ Packet pldexp_generic(const Packet& a, const Packet& exponent) {
 // Explicitly multiplies 
 //    a * (2^e)
 // clamping e to the range
-// [numeric_limits<Scalar>::min_exponent-2, numeric_limits<Scalar>::max_exponent]
+// [NumTraits<Scalar>::min_exponent()-2, NumTraits<Scalar>::max_exponent()]
 //
 // This is approx 7x faster than pldexp_impl, but will prematurely over/underflow
 // if 2^e doesn't fit into a normal floating-point Scalar.
@@ -148,7 +148,7 @@ struct pldexp_fast_impl {
   typedef typename unpacket_traits<PacketI>::type ScalarI;
   enum {
     TotalBits = sizeof(Scalar) * CHAR_BIT,
-    MantissaBits = numext::numeric_limits<Scalar>::digits - 1,
+    MantissaBits = NumTraits<Scalar>::digits() - 1,
     ExponentBits = int(TotalBits) - int(MantissaBits) - 1
   };
   
@@ -1480,8 +1480,8 @@ Packet generic_pow(const Packet& x, const Packet& y) {
   const Packet y_is_nan = pandnot(ptrue(y), pcmp_eq(y, y));
   const Packet abs_y_is_inf = pcmp_eq(pabs(y), cst_pos_inf);
   EIGEN_CONSTEXPR Scalar huge_exponent =
-      (std::numeric_limits<Scalar>::max_exponent * Scalar(EIGEN_LN2)) /
-      std::numeric_limits<Scalar>::epsilon();
+      (NumTraits<Scalar>::max_exponent() * Scalar(EIGEN_LN2)) /
+       NumTraits<Scalar>::epsilon();
   const Packet abs_y_is_huge = pcmp_le(pset1<Packet>(huge_exponent), pabs(y));
 
   // Predicates for whether y is integer and/or even.
