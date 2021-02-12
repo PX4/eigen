@@ -650,9 +650,8 @@ void SuperLU<MatrixType>::_solve_impl(const MatrixBase<Rhs> &b, MatrixBase<Dest>
 {
   eigen_assert(m_factorizationIsOk && "The decomposition is not in a valid state for solving, you must first call either compute() or analyzePattern()/factorize()");
 
-  const Index size = m_matrix.rows();
   const Index rhsCols = b.cols();
-  eigen_assert(size==b.rows());
+  eigen_assert(m_matrix.rows()==b.rows());
 
   m_sluOptions.Trans = NOTRANS;
   m_sluOptions.Fact = FACTORED;
@@ -974,9 +973,8 @@ void SuperILU<MatrixType>::_solve_impl(const MatrixBase<Rhs> &b, MatrixBase<Dest
 {
   eigen_assert(m_factorizationIsOk && "The decomposition is not in a valid state for solving, you must first call either compute() or analyzePattern()/factorize()");
 
-  const int size = m_matrix.rows();
   const int rhsCols = b.cols();
-  eigen_assert(size==b.rows());
+  eigen_assert(m_matrix.rows()==b.rows());
 
   m_sluOptions.Trans = NOTRANS;
   m_sluOptions.Fact = FACTORED;
