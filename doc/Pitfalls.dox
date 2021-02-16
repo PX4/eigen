@@ -124,5 +124,26 @@ There are at least two ways around this:
   - If the value you are passing is guaranteed to be around for the life of the functor, you can use boost::ref() to wrap the value as you pass it to boost::bind. Generally this is not a solution for values on the stack as if the functor ever gets passed to a lower or independent scope, the object may be gone by the time it's attempted to be used.
   - The other option is to make your functions take a reference counted pointer like boost::shared_ptr as the argument. This avoids needing to worry about managing the lifetime of the object being passed.
 
+
+\section TopicPitfalls_matrix_bool Matrices with boolean coefficients
+
+The current behaviour of using \c Matrix with boolean coefficients is inconsistent and likely to change in future versions of Eigen, so please use it carefully!
+
+A simple example for such an inconsistency is 
+
+\code
+template<int Size>
+void foo() {
+  Eigen::Matrix<bool, Size, Size> A, B, C;
+  A.setOnes();
+  B.setOnes();
+
+  C = A * B - A * B;
+  std::cout << C << "\n";
+}
+\endcode
+
+since calling \c foo<3>() prints the zero matrix while calling \c foo<10>() prints the identity matrix.
+
 */
 }
