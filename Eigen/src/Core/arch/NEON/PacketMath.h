@@ -3019,6 +3019,20 @@ EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void ptranspose(PacketBlock<Packet8s, 4>& 
   kernel.packet[3] = vreinterpretq_s16_u32(zip32_2.val[1]);
 }
 
+EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void ptranspose(PacketBlock<Packet16c, 4>& kernel)
+{
+  const int8x16x2_t zip8_1 = vzipq_s8(kernel.packet[0], kernel.packet[1]);
+  const int8x16x2_t zip8_2 = vzipq_s8(kernel.packet[2], kernel.packet[3]);
+
+  const int16x8x2_t zip16_1 = vzipq_s16(vreinterpretq_s16_s8(zip8_1.val[0]), vreinterpretq_s16_s8(zip8_2.val[0]));
+  const int16x8x2_t zip16_2 = vzipq_s16(vreinterpretq_s16_s8(zip8_1.val[1]), vreinterpretq_s16_s8(zip8_2.val[1]));
+
+  kernel.packet[0] = vreinterpretq_s8_s16(zip16_1.val[0]);
+  kernel.packet[1] = vreinterpretq_s8_s16(zip16_1.val[1]);
+  kernel.packet[2] = vreinterpretq_s8_s16(zip16_2.val[0]);
+  kernel.packet[3] = vreinterpretq_s8_s16(zip16_2.val[1]);
+}
+
 EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void ptranspose(PacketBlock<Packet16uc, 4>& kernel)
 {
   const uint8x16x2_t zip8_1 = vzipq_u8(kernel.packet[0], kernel.packet[1]);
