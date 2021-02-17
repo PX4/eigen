@@ -194,9 +194,15 @@ template<> struct make_unsigned<signed __int64>   { typedef unsigned __int64 typ
 template<> struct make_unsigned<unsigned __int64> { typedef unsigned __int64 type; };
 #endif
 
-// TODO: Some platforms define int64_t as long long even for C++03. In this case
-// we are missing the definition for make_unsigned. If we just define it, we get
-// duplicated definitions for platforms defining int64_t as signed long for C++03
+// Some platforms define int64_t as long long even for C++03. In this case we
+// are missing the definition for make_unsigned. If we just define it, we get
+// duplicated definitions for platforms defining int64_t as signed long for
+// C++03. We therefore add the specialization for C++03 long long for these
+// platforms only.
+#if EIGEN_OS_MAC
+template<> struct make_unsigned<unsigned long long> { typedef unsigned long long type; };
+template<> struct make_unsigned<long long>          { typedef unsigned long long type; };
+#endif
 #endif
 
 template <typename T> struct add_const { typedef const T type; };
