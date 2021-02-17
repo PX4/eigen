@@ -755,7 +755,7 @@ Packet4d pfrexp_generic_get_biased_exponent(const Packet4d& a) {
 #endif
   Packet2d exponent_lo = _mm_cvtepi32_pd(vec4i_swizzle1(lo, 0, 2, 1, 3));
   Packet2d exponent_hi = _mm_cvtepi32_pd(vec4i_swizzle1(hi, 0, 2, 1, 3));
-  Packet4d exponent = _mm256_insertf128_pd(exponent, exponent_lo, 0);
+  Packet4d exponent = _mm256_insertf128_pd(_mm256_setzero_pd(), exponent_lo, 0);
   exponent = _mm256_insertf128_pd(exponent, exponent_hi, 1);
   return exponent;
 }
