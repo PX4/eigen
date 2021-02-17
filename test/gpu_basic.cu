@@ -234,6 +234,26 @@ struct replicate {
 };
 
 template<typename T>
+struct alloc_new_delete {
+  EIGEN_DEVICE_FUNC
+  void operator()(int i, const typename T::Scalar* in, typename T::Scalar* out) const
+  {
+    int offset = 2*i*T::MaxSizeAtCompileTime;
+    T* x = new T(in + offset);
+    Eigen::Map<T> u(out + offset);
+    u = *x;
+    delete x;
+    
+    offset += T::MaxSizeAtCompileTime;
+    T* y = new T[1];
+    y[0] = T(in + offset);
+    Eigen::Map<T> v(out + offset);
+    v = y[0];    
+    delete[] y;
+  }
+};
+
+template<typename T>
 struct redux {
   EIGEN_DEVICE_FUNC
   void operator()(int i, const typename T::Scalar* in, typename T::Scalar* out) const
@@ -418,4 +438,5 @@ EIGEN_DECLARE_TEST(gpu_basic)
   typedef Matrix<float,6,6> Matrix6f;
   CALL_SUBTEST( run_and_compare_to_gpu(eigenvalues<Matrix6f>(), nthreads, in, out) );
 #endif
+  CALL_SUBTEST( run_and_compare_to_gpu(alloc_new_delete<Vector3f>(), nthreads, in, out) );
 }
