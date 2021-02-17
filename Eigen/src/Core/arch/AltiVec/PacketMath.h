@@ -2338,12 +2338,11 @@ template<> EIGEN_STRONG_INLINE void
 pbroadcast4<Packet2d>(const double *a,
                       Packet2d& a0, Packet2d& a1, Packet2d& a2, Packet2d& a3)
 {
-  a1 = pload<Packet2d>(a);
-  a0 = vec_splat_dbl<0>(a1);
-  a1 = vec_splat_dbl<1>(a1);
-  a3 = pload<Packet2d>(a+2);
-  a2 = vec_splat_dbl<0>(a3);
-  a3 = vec_splat_dbl<1>(a3);
+  //This way is faster than vec_splat (at least for doubles in Power 9)
+  a0 = pset1<Packet2d>(a[0]);
+  a1 = pset1<Packet2d>(a[1]);
+  a2 = pset1<Packet2d>(a[2]);
+  a3 = pset1<Packet2d>(a[3]);
 }
 
 template<> EIGEN_DEVICE_FUNC inline Packet2d pgather<double, Packet2d>(const double* from, Index stride)

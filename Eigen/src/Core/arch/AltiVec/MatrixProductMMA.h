@@ -16,29 +16,22 @@ namespace Eigen {
 
 namespace internal {
 
-template<typename Packet>
-union Packetx2u
-{
-    __vector_pair             vectorpair;
-    PacketBlock<Packet, 2>    pair;
-};
 const static Packet16uc MMA_p16uc_SETCOMPLEX32_FIRST = {  0,  1,  2,  3,
-                                                     16, 17, 18, 19,
-                                                      4,  5,  6,  7,
-                                                     20, 21, 22, 23};
+                                                         16, 17, 18, 19,
+                                                          4,  5,  6,  7,
+                                                         20, 21, 22, 23};
 
 const static Packet16uc MMA_p16uc_SETCOMPLEX32_SECOND = {  8,  9, 10, 11,
-                                                      24, 25, 26, 27,
-                                                      12, 13, 14, 15,
-                                                      28, 29, 30, 31};
+                                                          24, 25, 26, 27,
+                                                          12, 13, 14, 15,
+                                                          28, 29, 30, 31};
 //[a,b],[ai,bi] = [a,ai] - This is equivalent to p16uc_GETREAL64
 const static Packet16uc MMA_p16uc_SETCOMPLEX64_FIRST = {  0,  1,  2,  3,  4,  5,  6,  7,
-                                                     16, 17, 18, 19, 20, 21, 22, 23};
+                                                         16, 17, 18, 19, 20, 21, 22, 23};
 
 //[a,b],[ai,bi] = [b,bi] - This is equivalent to p16uc_GETIMAG64
 const static Packet16uc MMA_p16uc_SETCOMPLEX64_SECOND = {  8,  9, 10, 11, 12, 13, 14, 15,
-                                                      24, 25, 26, 27, 28, 29, 30, 31};
-
+                                                          24, 25, 26, 27, 28, 29, 30, 31};
 
 
 // Grab two decouples real/imaginary PacketBlocks and return two coupled (real/imaginary pairs) PacketBlocks.
@@ -93,11 +86,11 @@ EIGEN_STRONG_INLINE void bcoupleMMA<Packet2d, Packet1cd>(PacketBlock<Packet2d,4>
 template<typename Scalar, typename Packet>
 EIGEN_STRONG_INLINE Packet ploadLhsMMA(const Scalar *lhs)
 {
-    return *((Packet *)lhs);
+  return *((Packet *)lhs);
 }
 
 template<typename Packet>
-EIGEN_STRONG_INLINE PacketBlock<Packet,2> pmul (const PacketBlock<Packet,2>&   a, const Packet&   b)
+EIGEN_STRONG_INLINE PacketBlock<Packet,2> pmul(const PacketBlock<Packet,2>& a, const Packet& b)
 {
   PacketBlock<Packet,2> pb;
   pb.packet[0] = a.packet[0]*b;
@@ -117,13 +110,12 @@ EIGEN_STRONG_INLINE void storeAccumulator(Index i, Index j, const DataMapper& da
   PacketBlock<Packet, 4> result;
   __builtin_mma_disassemble_acc(&result.packet, acc);
 
-  PacketBlock<Packet, 4> block;
-  block.packet[0] = data.template loadPacket<Packet>(i, j + 0) + pmul<Packet>(alpha, result.packet[0]);
-  block.packet[1] = data.template loadPacket<Packet>(i, j + 1) + pmul<Packet>(alpha, result.packet[1]);
-  block.packet[2] = data.template loadPacket<Packet>(i, j + 2) + pmul<Packet>(alpha, result.packet[2]);
-  block.packet[3] = data.template loadPacket<Packet>(i, j + 3) + pmul<Packet>(alpha, result.packet[3]);
+  result.packet[0] = pmadd<Packet>(alpha, result.packet[0], data.template loadPacket<Packet>(i, j + 0));
+  result.packet[1] = pmadd<Packet>(alpha, result.packet[1], data.template loadPacket<Packet>(i, j + 1));
+  result.packet[2] = pmadd<Packet>(alpha, result.packet[2], data.template loadPacket<Packet>(i, j + 2));
+  result.packet[3] = pmadd<Packet>(alpha, result.packet[3], data.template loadPacket<Packet>(i, j + 3));
 
-  data.template storePacketBlock<Packet, 4>(i, j, block);
+  data.template storePacketBlock<Packet, 4>(i, j, result);
 }
 
 template<typename DataMapper, typename Index, typename Packet, typename Packetc, int N>
@@ -187,38 +179,221 @@ EIGEN_STRONG_INLINE void pgerMMA(__vector_quad *acc, const RhsPacket& a, const L
 template<>
 EIGEN_STRONG_INLINE void pgerMMA<Packet2d, PacketBlock<Packet2d, 2>, false>(__vector_quad *acc, const PacketBlock<Packet2d,2>& a, const Packet2d& b)
 {
-  Packetx2u<Packet2d> p;
-  p.pair = a;
-  __builtin_mma_xvf64gerpp(acc, p.vectorpair, (__vector unsigned char)b);
+  __vector_pair *a0 = (__vector_pair *)(&a.packet[0]);
+  __builtin_mma_xvf64gerpp(acc, *a0, (__vector unsigned char)b);
 }
 
 template<>
 EIGEN_STRONG_INLINE void pgerMMA<Packet2d, PacketBlock<Packet2d, 2>, true>(__vector_quad *acc, const PacketBlock<Packet2d, 2>& a, const Packet2d& b)
 {
-  Packetx2u<Packet2d> p;
-  p.pair = a;
-  __builtin_mma_xvf64gernp(acc, p.vectorpair, (__vector unsigned char)b);
+  __vector_pair *a0 = (__vector_pair *)(&a.packet[0]);
+  __builtin_mma_xvf64gernp(acc, *a0, (__vector unsigned char)b);
+}
+
+template<>
+EIGEN_STRONG_INLINE void pgerMMA<Packet2d, __vector_pair, false>(__vector_quad *acc, const __vector_pair& a, const Packet2d& b)
+{
+  __builtin_mma_xvf64gerpp(acc, a, (__vector unsigned char)b);
+}
+
+template<>
+EIGEN_STRONG_INLINE void pgerMMA<Packet2d, __vector_pair, true>(__vector_quad *acc, const __vector_pair& a, const Packet2d& b)
+{
+  __builtin_mma_xvf64gernp(acc, a, (__vector unsigned char)b);
 }
 
 // This is necessary because ploadRhs for double returns a pair of vectors when MMA is enabled.
 template<typename Scalar, typename Packet>
-EIGEN_STRONG_INLINE Packet ploadRhsMMA(const Scalar *rhs)
+EIGEN_STRONG_INLINE void ploadRhsMMA(const Scalar *rhs, Packet &rhsV)
 {
-    return *((Packet *)rhs);
+  rhsV = *((Packet *)rhs);
 } 
 
 template<>
-EIGEN_STRONG_INLINE PacketBlock<Packet2d, 2> ploadRhsMMA<double, PacketBlock<Packet2d, 2> >(const double *rhs)
+EIGEN_STRONG_INLINE void ploadRhsMMA<double, PacketBlock<Packet2d, 2> >(const double *rhs, PacketBlock<Packet2d, 2> &rhsV)
 {
-    PacketBlock<Packet2d, 2> pair;
-    pair.packet[0] = *((Packet2d *)rhs      );
-    pair.packet[1] = *(((Packet2d *)rhs) + 1);
-    return pair;
+  rhsV.packet[0] = *((Packet2d *)rhs      );
+  rhsV.packet[1] = *(((Packet2d *)rhs) + 1);
 }
 
-template<typename Scalar, typename Index, typename Packet, typename RhsPacket, typename DataMapper>
-void gemmMMA(const DataMapper& res, const Scalar* blockA, const Scalar* blockB,
-          Index rows, Index depth, Index cols, Scalar alpha, Index strideA, Index strideB, Index offsetA, Index offsetB, const int accRows, const int accCols)
+template<>
+EIGEN_STRONG_INLINE void ploadRhsMMA<double, __vector_pair>(const double *rhs, __vector_pair &rhsV)
+{
+  __builtin_mma_assemble_pair(&rhsV, (__vector unsigned char)(*(((Packet2d *)rhs) + 1)), (__vector unsigned char)(*((Packet2d *)rhs)));
+}
+
+template<typename Scalar, typename Packet, typename DataMapper, typename Index, const Index accRows>
+EIGEN_STRONG_INLINE void gemm_extra_col(
+  const DataMapper& res,
+  const Scalar *lhs_base,
+  const Scalar *rhs_base,
+  Index depth,
+  Index strideA,
+  Index offsetA,
+  Index row,
+  Index col,
+  Index remaining_rows,
+  Index remaining_cols,
+  const Packet& pAlpha);
+
+template<typename Scalar, typename Packet, typename DataMapper, typename Index, const Index accRows>
+EIGEN_STRONG_INLINE void gemm_extra_row(
+  const DataMapper& res,
+  const Scalar *lhs_base,
+  const Scalar *rhs_base,
+  Index depth,
+  Index strideA,
+  Index offsetA,
+  Index row,
+  Index col,
+  Index cols,
+  Index remaining_rows,
+  const Packet& pAlpha,
+  const Packet& pMask);
+
+template<typename Scalar, typename Packet, typename DataMapper, typename Index, const Index accCols>
+EIGEN_STRONG_INLINE void gemm_unrolled_col(
+  const DataMapper& res,
+  const Scalar *lhs_base,
+  const Scalar *rhs_base,
+  Index depth,
+  Index strideA,
+  Index offsetA,
+  Index& row,
+  Index rows,
+  Index col,
+  Index remaining_cols,
+  const Packet& pAlpha);
+
+template<typename Packet>
+EIGEN_STRONG_INLINE Packet bmask(const int remaining_rows);
+
+#define MICRO_MMA_DST \
+  __vector_quad *accZero0, __vector_quad *accZero1, __vector_quad *accZero2, \
+  __vector_quad *accZero3, __vector_quad *accZero4, __vector_quad *accZero5, \
+  __vector_quad *accZero6, __vector_quad *accZero7
+
+#define MICRO_MMA_SRC \
+  const Scalar **lhs_ptr0, const Scalar **lhs_ptr1, const Scalar **lhs_ptr2, \
+  const Scalar **lhs_ptr3, const Scalar **lhs_ptr4, const Scalar **lhs_ptr5, \
+  const Scalar **lhs_ptr6, const Scalar **lhs_ptr7
+
+#define MICRO_MMA_ONE \
+  if (sizeof(Scalar) == sizeof(float)) { \
+    MICRO_MMA<unroll_factor, Scalar, Packet, RhsPacket, accRows, accCols>(\
+      &lhs_ptr0, &lhs_ptr1, &lhs_ptr2, &lhs_ptr3, &lhs_ptr4, &lhs_ptr5, &lhs_ptr6, &lhs_ptr7, \
+      rhs_ptr, \
+      &accZero0, &accZero1, &accZero2, &accZero3, &accZero4, &accZero5, &accZero6, &accZero7); \
+  } else { \
+    MICRO_MMA<unroll_factor, Scalar, Packet, __vector_pair, accRows, accCols>(\
+      &lhs_ptr0, &lhs_ptr1, &lhs_ptr2, &lhs_ptr3, &lhs_ptr4, &lhs_ptr5, &lhs_ptr6, &lhs_ptr7, \
+      rhs_ptr, \
+      &accZero0, &accZero1, &accZero2, &accZero3, &accZero4, &accZero5, &accZero6, &accZero7); \
+  }
+
+#define MICRO_MMA_WORK_ONE(iter) \
+  if (N > iter) { \
+    Packet lhsV = ploadLhsMMA<Scalar, Packet>(*lhs_ptr##iter); \
+    pgerMMA<Packet, RhsPacket, false>(accZero##iter, rhsV, lhsV); \
+    *lhs_ptr##iter += accCols; \
+  } else { \
+    EIGEN_UNUSED_VARIABLE(accZero##iter); \
+    EIGEN_UNUSED_VARIABLE(lhs_ptr##iter); \
+  }
+
+#define MICRO_MMA_UNROLL(func) \
+  func(0) func(1) func(2) func(3) func(4) func(5) func(6) func(7)
+
+#define MICRO_MMA_WORK MICRO_MMA_UNROLL(MICRO_MMA_WORK_ONE)
+
+#define MICRO_MMA_DST_PTR_ONE(iter) \
+  if (unroll_factor > iter){ \
+    bsetzeroMMA<Scalar, Packet>(&accZero##iter); \
+  } else { \
+    EIGEN_UNUSED_VARIABLE(accZero##iter); \
+  }
+
+#define MICRO_MMA_DST_PTR MICRO_MMA_UNROLL(MICRO_MMA_DST_PTR_ONE)
+
+#define MICRO_MMA_SRC_PTR_ONE(iter) \
+  if (unroll_factor > iter) { \
+    lhs_ptr##iter = lhs_base + ( (row/accCols) + iter )*strideA*accCols + accCols*offsetA; \
+  } else { \
+    EIGEN_UNUSED_VARIABLE(lhs_ptr##iter); \
+  }
+
+#define MICRO_MMA_SRC_PTR MICRO_MMA_UNROLL(MICRO_MMA_SRC_PTR_ONE)
+
+#define MICRO_MMA_PREFETCH_ONE(iter) \
+  if (unroll_factor > iter){ \
+    prefetch(lhs_ptr##iter); \
+  }
+
+#define MICRO_MMA_PREFETCH MICRO_MMA_UNROLL(MICRO_MMA_PREFETCH_ONE)
+
+#define MICRO_MMA_STORE_ONE(iter) \
+  if (unroll_factor > iter){ \
+    storeAccumulator<DataMapper, Index, Packet>(row + iter*accCols, col, res, pAlpha, &accZero##iter); \
+  }
+
+#define MICRO_MMA_STORE MICRO_MMA_UNROLL(MICRO_MMA_STORE_ONE)
+
+// PEEL_MMA loop factor.
+#define PEEL_MMA 10
+
+template<int N, typename Scalar, typename Packet, typename RhsPacket, const Index accRows, const Index accCols>
+EIGEN_STRONG_INLINE void MICRO_MMA(
+  MICRO_MMA_SRC,
+  const Scalar* &rhs_ptr,
+  MICRO_MMA_DST)
+  {
+    RhsPacket rhsV;
+    ploadRhsMMA<Scalar, RhsPacket>(rhs_ptr, rhsV);
+    MICRO_MMA_WORK
+    rhs_ptr += accRows;
+  }
+
+template<int unroll_factor, typename Scalar, typename Packet, typename RhsPacket, typename DataMapper, typename Index, const Index accRows, const Index accCols>
+EIGEN_STRONG_INLINE void gemm_unrolled_MMA_iteration(
+  const DataMapper& res,
+  const Scalar *lhs_base,
+  const Scalar *rhs_base,
+  Index depth,
+  Index strideA,
+  Index offsetA,
+  Index& row,
+  Index col,
+  const Packet& pAlpha)
+{
+  const Scalar *rhs_ptr = rhs_base;
+  const Scalar *lhs_ptr0, *lhs_ptr1, *lhs_ptr2, *lhs_ptr3, *lhs_ptr4, *lhs_ptr5, *lhs_ptr6, *lhs_ptr7;
+  __vector_quad accZero0, accZero1, accZero2, accZero3, accZero4, accZero5, accZero6, accZero7;
+
+  asm("#unrolled MMA start");
+  MICRO_MMA_SRC_PTR
+  MICRO_MMA_DST_PTR
+
+  Index k = 0;
+  for(; k + PEEL_MMA <= depth; k+= PEEL_MMA)
+  {
+    prefetch(rhs_ptr);
+    MICRO_MMA_PREFETCH
+    for (int l = 0; l < PEEL_MMA; l++) {
+      MICRO_MMA_ONE
+    }
+  }
+  for(; k < depth; k++)
+  {
+    MICRO_MMA_ONE
+  }
+  MICRO_MMA_STORE
+
+  row += unroll_factor*accCols;
+  asm("#unrolled MMA end");
+}
+
+template<typename Scalar, typename Index, typename Packet, typename RhsPacket, typename DataMapper, const Index accRows, const Index accCols>
+void gemmMMA(const DataMapper& res, const Scalar* blockA, const Scalar* blockB, Index rows, Index depth, Index cols, Scalar alpha, Index strideA, Index strideB, Index offsetA, Index offsetB)
 {
       const Index remaining_rows = rows % accCols;
       const Index remaining_cols = cols % accRows;
@@ -227,111 +402,89 @@ void gemmMMA(const DataMapper& res, const Scalar* blockA, const Scalar* blockB,
       if( strideB == -1 ) strideB = depth;
 
       const Packet pAlpha = pset1<Packet>(alpha);
+      const Packet pMask  = bmask<Packet>((const int)(remaining_rows));
+
       Index col = 0;
       for(; col + accRows <= cols; col += accRows)
       {
-        const Scalar *rhs_base = blockB + ( col/accRows     )*strideB*accRows;
+        const Scalar *rhs_base = blockB + col*strideB + accRows*offsetB;
         const Scalar *lhs_base = blockA;
 
         Index row = 0;
-        for(; row + accCols <= rows; row += accCols)
-        {
-          const Scalar *rhs_ptr  = rhs_base;
-          const Scalar *lhs_ptr1 = lhs_base + (row/accCols)*strideA*accCols;
-
-          __vector_quad acc;
-          bsetzeroMMA<Scalar, Packet>(&acc);
-
-          lhs_ptr1 += accCols*offsetA;
-          rhs_ptr += accRows*offsetB;
-          for(Index k = 0; k < depth; k++)
-          {
-            Packet lhsV = ploadLhsMMA<Scalar, Packet>(lhs_ptr1);
-            RhsPacket rhsV = ploadRhsMMA<Scalar, RhsPacket>(rhs_ptr);
-
-            pgerMMA<Packet, RhsPacket, false>(&acc, rhsV, lhsV);
-
-            lhs_ptr1 += accCols;
-            rhs_ptr += accRows;
-          }
-
-          storeAccumulator<DataMapper, Index, Packet>(row, col, res, pAlpha, &acc);
+#define MAX_MMA_UNROLL 7
+        while(row + MAX_MMA_UNROLL*accCols <= rows){
+          gemm_unrolled_MMA_iteration<MAX_MMA_UNROLL, Scalar, Packet, RhsPacket, DataMapper, Index, accRows, accCols>(res, lhs_base, rhs_base, depth, strideA, offsetA, row, col, pAlpha);
         }
+        switch( (rows-row)/accCols ){
+#if MAX_MMA_UNROLL > 7
+          case 7:
+            gemm_unrolled_MMA_iteration<7, Scalar, Packet, RhsPacket, DataMapper, Index, accRows, accCols>(res, lhs_base, rhs_base, depth, strideA, offsetA, row, col, pAlpha);
+            break;
+#endif
+#if MAX_MMA_UNROLL > 6
+          case 6:
+            gemm_unrolled_MMA_iteration<6, Scalar, Packet, RhsPacket, DataMapper, Index, accRows, accCols>(res, lhs_base, rhs_base, depth, strideA, offsetA, row, col, pAlpha);
+            break;
+#endif
+#if MAX_MMA_UNROLL > 5
+          case 5:
+            gemm_unrolled_MMA_iteration<5, Scalar, Packet, RhsPacket, DataMapper, Index, accRows, accCols>(res, lhs_base, rhs_base, depth, strideA, offsetA, row, col, pAlpha);
+            break;
+#endif
+#if MAX_MMA_UNROLL > 4
+          case 4:
+            gemm_unrolled_MMA_iteration<4, Scalar, Packet, RhsPacket, DataMapper, Index, accRows, accCols>(res, lhs_base, rhs_base, depth, strideA, offsetA, row, col, pAlpha);
+            break;
+#endif
+#if MAX_MMA_UNROLL > 3
+          case 3:
+            gemm_unrolled_MMA_iteration<3, Scalar, Packet, RhsPacket, DataMapper, Index, accRows, accCols>(res, lhs_base, rhs_base, depth, strideA, offsetA, row, col, pAlpha);
+            break;
+#endif
+#if MAX_MMA_UNROLL > 2
+          case 2:
+            gemm_unrolled_MMA_iteration<2, Scalar, Packet, RhsPacket, DataMapper, Index, accRows, accCols>(res, lhs_base, rhs_base, depth, strideA, offsetA, row, col, pAlpha);
+            break;
+#endif
+#if MAX_MMA_UNROLL > 1
+          case 1:
+            gemm_unrolled_MMA_iteration<1, Scalar, Packet, RhsPacket, DataMapper, Index, accRows, accCols>(res, lhs_base, rhs_base, depth, strideA, offsetA, row, col, pAlpha);
+            break;
+#endif
+          default:
+            break;
+        }
+#undef MAX_MMA_UNROLL
+
         if(remaining_rows > 0)
         {
-          const Scalar *rhs_ptr  = rhs_base;
-          const Scalar *lhs_ptr = lhs_base + (row/accCols)*strideA*accCols;
-
-          lhs_ptr += remaining_rows*offsetA;
-          rhs_ptr += accRows*offsetB;
-          for(Index k = 0; k < depth; k++)
-          {
-              for(Index arow = 0; arow < remaining_rows; arow++)
-              {
-                  for(Index acol = 0; acol < accRows; acol++ )
-                  {
-                    res(row + arow, col + acol) += alpha*lhs_ptr[arow]*rhs_ptr[acol];
-                  }
-              }
-              rhs_ptr += accRows;
-              lhs_ptr += remaining_rows;
-          }
+          gemm_extra_row<Scalar, Packet, DataMapper, Index, accRows>(res, lhs_base, rhs_base, depth, strideA, offsetA, row, col, cols, remaining_rows, pAlpha, pMask);
         }
     }
 
     if(remaining_cols > 0)
     {
-      const Scalar *rhs_base = blockB + (col/accRows)*strideB*accRows;
+      const Scalar *rhs_base = blockB + col*strideB + remaining_cols*offsetB;
       const Scalar *lhs_base = blockA;
 
-      Index row = 0;
-      for(; row + accCols <= rows; row += accCols)
+      for(; col < cols; col++)
       {
-        const Scalar *rhs_ptr = rhs_base;
-        const Scalar *lhs_ptr = lhs_base + (row/accCols)*strideA*accCols;
+        Index row = 0;
 
-        lhs_ptr += accCols*offsetA;
-        rhs_ptr += remaining_cols*offsetB;
-        for(Index k = 0; k < depth; k++)
-        {
-          for(Index arow = 0; arow < accCols; arow++)
-          {
-            for(Index acol = 0; acol < remaining_cols; acol++ )
-            {
-              res(row + arow, col + acol) += alpha*lhs_ptr[arow]*rhs_ptr[acol];
-            }
-          }
-          rhs_ptr += remaining_cols;
-          lhs_ptr += accCols;
-        }
-      }
-      
-      if(remaining_rows > 0 )
-      {
-        const Scalar *rhs_ptr  = rhs_base;
-        const Scalar *lhs_ptr = lhs_base + (row/accCols)*strideA*accCols;
+        gemm_unrolled_col<Scalar, Packet, DataMapper, Index, accCols>(res, lhs_base, rhs_base, depth, strideA, offsetA, row, rows, col, remaining_cols, pAlpha);
 
-        lhs_ptr += remaining_rows*offsetA;
-        rhs_ptr += remaining_cols*offsetB;
-        for(Index k = 0; k < depth; k++)
+        if (remaining_rows > 0)
         {
-            for(Index arow = 0; arow < remaining_rows; arow++)
-            {
-                for(Index acol = 0; acol < remaining_cols; acol++ )
-                {
-                  res(row + arow, col + acol) += alpha*lhs_ptr[arow]*rhs_ptr[acol];
-                }
-            }
-            rhs_ptr += remaining_cols;
-            lhs_ptr += remaining_rows;
+          gemm_extra_col<Scalar, Packet, DataMapper, Index, accRows>(res, lhs_base, rhs_base, depth, strideA, offsetA, row, col, remaining_rows, remaining_cols, pAlpha);
         }
+        rhs_base++;
       }
     }
 }
 
-template<typename LhsScalar, typename RhsScalar, typename Scalarc, typename Scalar, typename Index, typename Packet, typename Packetc, typename RhsPacket, typename DataMapper, bool ConjugateLhs, bool ConjugateRhs, bool LhsIsReal, bool RhsIsReal>
+template<typename LhsScalar, typename RhsScalar, typename Scalarc, typename Scalar, typename Index, typename Packet, typename Packetc, typename RhsPacket, typename DataMapper, const int accRows, const int accCols, bool ConjugateLhs, bool ConjugateRhs, bool LhsIsReal, bool RhsIsReal>
 void gemm_complexMMA(const DataMapper& res, const LhsScalar* blockAc, const RhsScalar* blockBc,
-          Index rows, Index depth, Index cols, Scalarc alpha, Index strideA, Index strideB, Index offsetA, Index offsetB, const int accRows, const int accCols)
+          Index rows, Index depth, Index cols, Scalarc alpha, Index strideA, Index strideB, Index offsetA, Index offsetB)
 {
       const int remaining_rows = rows % accCols;
       const int remaining_cols = cols % accRows;
