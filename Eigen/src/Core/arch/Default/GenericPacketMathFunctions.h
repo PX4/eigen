@@ -1,4 +1,3 @@
-
 // This file is part of Eigen, a lightweight C++ template library
 // for linear algebra.
 //
@@ -468,16 +467,10 @@ Packet pexp_float(const Packet _x)
   // Get r = x - m*ln(2). If no FMA instructions are available, m*ln(2) is
   // subtracted out in two parts, m*C1+m*C2 = m*ln(2), to avoid accumulating
   // truncation errors.
-  Packet r;
-#ifdef EIGEN_HAS_SINGLE_INSTRUCTION_MADD
-  const Packet cst_nln2 = pset1<Packet>(-0.6931471805599453f);
-  r = pmadd(m, cst_nln2, x);
-#else
-  const Packet cst_cephes_exp_C1 = pset1<Packet>(0.693359375f);
-  const Packet cst_cephes_exp_C2 = pset1<Packet>(-2.12194440e-4f);
-  r = psub(x, pmul(m, cst_cephes_exp_C1));
-  r = psub(r, pmul(m, cst_cephes_exp_C2));
-#endif
+  const Packet cst_cephes_exp_C1 = pset1<Packet>(-0.693359375f);
+  const Packet cst_cephes_exp_C2 = pset1<Packet>(2.12194440e-4f);
+  Packet r = pmadd(m, cst_cephes_exp_C1, x);
+  r = pmadd(m, cst_cephes_exp_C2, r);
 
   Packet r2 = pmul(r, r);
   Packet r3 = pmul(r2, r);
