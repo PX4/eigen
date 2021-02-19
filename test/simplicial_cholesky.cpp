@@ -9,9 +9,9 @@
 
 #include "sparse_solver.h"
 
-template<typename T, typename I_> void test_simplicial_cholesky_T()
+template<typename T, typename I_, int flag> void test_simplicial_cholesky_T()
 {
-  typedef SparseMatrix<T,0,I_> SparseMatrixType;
+  typedef SparseMatrix<T,flag,I_> SparseMatrixType;
   SimplicialCholesky<SparseMatrixType, Lower> chol_colmajor_lower_amd;
   SimplicialCholesky<SparseMatrixType, Upper> chol_colmajor_upper_amd;
   SimplicialLLT<     SparseMatrixType, Lower> llt_colmajor_lower_amd;
@@ -41,7 +41,10 @@ template<typename T, typename I_> void test_simplicial_cholesky_T()
 
 EIGEN_DECLARE_TEST(simplicial_cholesky)
 {
-  CALL_SUBTEST_1(( test_simplicial_cholesky_T<double,int>() ));
-  CALL_SUBTEST_2(( test_simplicial_cholesky_T<std::complex<double>, int>() ));
-  CALL_SUBTEST_3(( test_simplicial_cholesky_T<double,long int>() ));
+  CALL_SUBTEST_11(( test_simplicial_cholesky_T<double,               int, ColMajor>() ));
+  CALL_SUBTEST_12(( test_simplicial_cholesky_T<std::complex<double>, int, ColMajor>() ));
+  CALL_SUBTEST_13(( test_simplicial_cholesky_T<double,          long int, ColMajor>() ));
+  CALL_SUBTEST_21(( test_simplicial_cholesky_T<double,               int, RowMajor>() ));
+  CALL_SUBTEST_22(( test_simplicial_cholesky_T<std::complex<double>, int, RowMajor>() ));
+  CALL_SUBTEST_23(( test_simplicial_cholesky_T<double,          long int, RowMajor>() ));
 }
