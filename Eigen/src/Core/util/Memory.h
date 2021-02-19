@@ -781,48 +781,31 @@ template<typename T> void swap(scoped_array<T> &a,scoped_array<T> &b)
 #else
 
 #if EIGEN_MAX_ALIGN_BYTES!=0
-#if !defined(EIGEN_HIPCC)
-  #define EIGEN_DEVICE_FUNC_NO_HIPCC EIGEN_DEVICE_FUNC
-#else
-  #define EIGEN_DEVICE_FUNC_NO_HIPCC
-#endif
   #define EIGEN_MAKE_ALIGNED_OPERATOR_NEW_NOTHROW(NeedsToAlign) \
-      EIGEN_DEVICE_FUNC_NO_HIPCC \
       void* operator new(std::size_t size, const std::nothrow_t&) EIGEN_NO_THROW { \
         EIGEN_TRY { return Eigen::internal::conditional_aligned_malloc<NeedsToAlign>(size); } \
         EIGEN_CATCH (...) { return 0; } \
       }
   #define EIGEN_MAKE_ALIGNED_OPERATOR_NEW_IF(NeedsToAlign) \
-      EIGEN_DEVICE_FUNC_NO_HIPCC \
       void *operator new(std::size_t size) { \
         return Eigen::internal::conditional_aligned_malloc<NeedsToAlign>(size); \
       } \
-      EIGEN_DEVICE_FUNC_NO_HIPCC \
       void *operator new[](std::size_t size) { \
         return Eigen::internal::conditional_aligned_malloc<NeedsToAlign>(size); \
       } \
-      EIGEN_DEVICE_FUNC_NO_HIPCC \
       void operator delete(void * ptr) EIGEN_NO_THROW { Eigen::internal::conditional_aligned_free<NeedsToAlign>(ptr); } \
-      EIGEN_DEVICE_FUNC_NO_HIPCC \
       void operator delete[](void * ptr) EIGEN_NO_THROW { Eigen::internal::conditional_aligned_free<NeedsToAlign>(ptr); } \
-      EIGEN_DEVICE_FUNC_NO_HIPCC \
       void operator delete(void * ptr, std::size_t /* sz */) EIGEN_NO_THROW { Eigen::internal::conditional_aligned_free<NeedsToAlign>(ptr); } \
-      EIGEN_DEVICE_FUNC_NO_HIPCC \
       void operator delete[](void * ptr, std::size_t /* sz */) EIGEN_NO_THROW { Eigen::internal::conditional_aligned_free<NeedsToAlign>(ptr); } \
       /* in-place new and delete. since (at least afaik) there is no actual   */ \
       /* memory allocated we can safely let the default implementation handle */ \
       /* this particular case. */ \
-      EIGEN_DEVICE_FUNC_NO_HIPCC \
       static void *operator new(std::size_t size, void *ptr) { return ::operator new(size,ptr); } \
-      EIGEN_DEVICE_FUNC_NO_HIPCC \
       static void *operator new[](std::size_t size, void* ptr) { return ::operator new[](size,ptr); } \
-      EIGEN_DEVICE_FUNC_NO_HIPCC \
       void operator delete(void * memory, void *ptr) EIGEN_NO_THROW { return ::operator delete(memory,ptr); } \
-      EIGEN_DEVICE_FUNC_NO_HIPCC \
       void operator delete[](void * memory, void *ptr) EIGEN_NO_THROW { return ::operator delete[](memory,ptr); } \
       /* nothrow-new (returns zero instead of std::bad_alloc) */ \
       EIGEN_MAKE_ALIGNED_OPERATOR_NEW_NOTHROW(NeedsToAlign) \
-      EIGEN_DEVICE_FUNC_NO_HIPCC \
       void operator delete(void *ptr, const std::nothrow_t&) EIGEN_NO_THROW { \
         Eigen::internal::conditional_aligned_free<NeedsToAlign>(ptr); \
       } \
