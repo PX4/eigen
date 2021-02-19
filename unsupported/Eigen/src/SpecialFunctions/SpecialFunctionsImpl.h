@@ -241,7 +241,7 @@ struct digamma_impl {
     Scalar p, q, nz, s, w, y;
     bool negative = false;
 
-    const Scalar maxnum = NumTraits<Scalar>::infinity();
+    const Scalar nan = NumTraits<Scalar>::quiet_NaN();
     const Scalar m_pi = Scalar(EIGEN_PI);
 
     const Scalar zero = Scalar(0);
@@ -254,7 +254,7 @@ struct digamma_impl {
       q = x;
       p = numext::floor(q);
       if (p == q) {
-        return maxnum;
+        return nan;
       }
       /* Remove the zeros of tan(m_pi x)
        * by subtracting the nearest integer from x
@@ -1403,7 +1403,12 @@ struct zeta_impl {
         {
             if(q == numext::floor(q))
             {
-                return maxnum;
+                if (x == numext::floor(x) && long(x) % 2 == 0) {
+                    return maxnum;
+                }
+                else {
+                    return nan;
+                }
             }
             p = x;
             r = numext::floor(p);
@@ -1479,11 +1484,11 @@ struct polygamma_impl {
         Scalar nplus = n + one;
         const Scalar nan = NumTraits<Scalar>::quiet_NaN();
 
-        // Check that n is an integer
-        if (numext::floor(n) != n) {
+        // Check that n is a non-negative integer
+        if (numext::floor(n) != n || n < zero) {
             return nan;
         }
-        // Just return the digamma function for n = 1
+        // Just return the digamma function for n = 0
         else if (n == zero) {
             return digamma_impl<Scalar>::run(x);
         }

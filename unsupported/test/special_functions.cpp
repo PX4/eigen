@@ -191,10 +191,10 @@ template<typename ArrayType> void array_special_functions()
 
   // Check the zeta function against scipy.special.zeta
   {
-    ArrayType x(7), q(7), res(7), ref(7);
-    x << 1.5,   4, 10.5, 10000.5,    3, 1,        0.9;
-    q << 2,   1.5,    3,  1.0001, -2.5, 1.2345, 1.2345;
-    ref << 1.61237534869, 0.234848505667, 1.03086757337e-5, 0.367879440865, 0.054102025820864097, plusinf, nan;
+    ArrayType x(10), q(10), res(10), ref(10);
+    x << 1.5,   4, 10.5, 10000.5,    3,      1,    0.9,  2,  3,  4;
+    q <<   2, 1.5,    3,  1.0001, -2.5, 1.2345, 1.2345, -1, -2, -3;
+    ref << 1.61237534869, 0.234848505667, 1.03086757337e-5, 0.367879440865, 0.054102025820864097, plusinf, nan, plusinf, nan, plusinf;
     CALL_SUBTEST( verify_component_wise(ref, ref); );
     CALL_SUBTEST( res = x.zeta(q); verify_component_wise(res, ref); );
     CALL_SUBTEST( res = zeta(x,q); verify_component_wise(res, ref); );
@@ -202,9 +202,9 @@ template<typename ArrayType> void array_special_functions()
 
   // digamma
   {
-    ArrayType x(7), res(7), ref(7);
-    x << 1, 1.5, 4, -10.5, 10000.5, 0, -1;
-    ref << -0.5772156649015329, 0.03648997397857645, 1.2561176684318, 2.398239129535781, 9.210340372392849, plusinf, plusinf;
+    ArrayType x(9), res(9), ref(9);
+    x << 1, 1.5, 4, -10.5, 10000.5, 0, -1, -2, -3;
+    ref << -0.5772156649015329, 0.03648997397857645, 1.2561176684318, 2.398239129535781, 9.210340372392849, nan, nan, nan, nan;
     CALL_SUBTEST( verify_component_wise(ref, ref); );
 
     CALL_SUBTEST( res = x.digamma(); verify_component_wise(res, ref); );
@@ -213,10 +213,10 @@ template<typename ArrayType> void array_special_functions()
 
 #if EIGEN_HAS_C99_MATH
   {
-    ArrayType n(11), x(11), res(11), ref(11);
-    n << 1, 1,    1, 1.5,   17,   31,   28,    8, 42, 147, 170;
-    x << 2, 3, 25.5, 1.5,  4.7, 11.8, 17.7, 30.2, 15.8, 54.1, 64;
-    ref << 0.644934066848, 0.394934066848, 0.0399946696496, nan, 293.334565435, 0.445487887616, -2.47810300902e-07, -8.29668781082e-09, -0.434562276666, 0.567742190178, -0.0108615497927;
+    ArrayType n(16), x(16), res(16), ref(16);
+    n << 1, 1,    1, 1.5,   17,   31,   28,    8,   42,  147, 170, -1,  0,  1,  2,  3;
+    x << 2, 3, 25.5, 1.5,  4.7, 11.8, 17.7, 30.2, 15.8, 54.1,  64, -1, -2, -3, -4, -5;
+    ref << 0.644934066848, 0.394934066848, 0.0399946696496, nan, 293.334565435, 0.445487887616, -2.47810300902e-07, -8.29668781082e-09, -0.434562276666, 0.567742190178, -0.0108615497927, nan, nan, plusinf, nan, plusinf;
     CALL_SUBTEST( verify_component_wise(ref, ref); );
 
     if(sizeof(RealScalar)>=8) {  // double
