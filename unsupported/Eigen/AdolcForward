@@ -74,6 +74,9 @@ inline adouble imag(const adouble&)    { return 0.; }
 inline adouble abs(const adouble&  x)  { return fabs(x); }
 inline adouble abs2(const adouble& x)  { return x*x; }
 
+inline bool (isinf)(const adouble& x) { return (Eigen::numext::isinf)(x.getValue()); }
+inline bool (isnan)(const adouble& x) { return (Eigen::numext::isnan)(x.getValue()); }
+
 }
 
 namespace Eigen {

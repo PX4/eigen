@@ -23,7 +23,7 @@ endif()
 
 
 find_package(Adolc)
-if(ADOLC_FOUND)
+if(Adolc_FOUND)
   include_directories(${ADOLC_INCLUDES})
   ei_add_property(EIGEN_TESTED_BACKENDS "Adolc, ")
   if(EIGEN_TEST_CXX11)
