@@ -655,20 +655,6 @@ template<> struct NumTraits<Eigen::bfloat16>
 
 } // namespace Eigen
 
-namespace std {
-
-#if __cplusplus > 199711L
-template <>
-struct hash<Eigen::bfloat16> {
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE std::size_t operator()(const Eigen::bfloat16& a) const {
-    return hash<float>()(static_cast<float>(a));
-  }
-};
-#endif
-
-} // namespace std
-
-
 namespace Eigen {
 namespace numext {
 
@@ -702,5 +688,17 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC uint16_t bit_cast<uint16_t, Eigen::bfloat1
 
 }  // namespace numext
 }  // namespace Eigen
+
+#if EIGEN_HAS_STD_HASH
+namespace std {
+template <>
+struct hash<Eigen::bfloat16> {
+  EIGEN_STRONG_INLINE std::size_t operator()(const Eigen::bfloat16& a) const {
+    return static_cast<std::size_t>(Eigen::numext::bit_cast<Eigen::numext::uint16_t>(a));
+  }
+};
+} // namespace std
+#endif
+
 
 #endif // EIGEN_BFLOAT16_H

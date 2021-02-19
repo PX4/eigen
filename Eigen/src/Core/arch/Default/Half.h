@@ -757,19 +757,6 @@ template<> struct NumTraits<Eigen::half>
   #pragma pop_macro("EIGEN_CONSTEXPR")
 #endif
 
-namespace std {
-
-#if __cplusplus > 199711L
-template <>
-struct hash<Eigen::half> {
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE std::size_t operator()(const Eigen::half& a) const {
-    return static_cast<std::size_t>(a.x);
-  }
-};
-#endif
-
-} // end namespace std
-
 namespace Eigen {
 namespace numext {
 
@@ -869,5 +856,16 @@ EIGEN_STRONG_INLINE __device__ Eigen::half __ldg(const Eigen::half* ptr) {
   return Eigen::half_impl::raw_uint16_to_half(__ldg(reinterpret_cast<const Eigen::numext::uint16_t*>(ptr)));
 }
 #endif // __ldg
+
+#if EIGEN_HAS_STD_HASH
+namespace std {
+template <>
+struct hash<Eigen::half> {
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE std::size_t operator()(const Eigen::half& a) const {
+    return static_cast<std::size_t>(Eigen::numext::bit_cast<Eigen::numext::uint16_t>(a));
+  }
+};
+} // end namespace std
+#endif
 
 #endif // EIGEN_HALF_H
