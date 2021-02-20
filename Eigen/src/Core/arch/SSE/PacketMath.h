@@ -598,9 +598,9 @@ EIGEN_STRONG_INLINE Packet2d pmax<PropagateNaN, Packet2d>(const Packet2d& a, con
   return pminmax_propagate_nan(a, b, pmax<Packet2d>);
 }
 
-template<int N> EIGEN_STRONG_INLINE Packet4i parithmetic_shift_right(Packet4i a) { return _mm_srai_epi32(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet4i plogical_shift_right(Packet4i a) { return _mm_srli_epi32(a,N); }
-template<int N> EIGEN_STRONG_INLINE Packet4i plogical_shift_left(Packet4i a) { return _mm_slli_epi32(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet4i parithmetic_shift_right(const Packet4i& a) { return _mm_srai_epi32(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet4i plogical_shift_right   (const Packet4i& a) { return _mm_srli_epi32(a,N); }
+template<int N> EIGEN_STRONG_INLINE Packet4i plogical_shift_left    (const Packet4i& a) { return _mm_slli_epi32(a,N); }
 
 #ifdef EIGEN_VECTORIZE_SSE4_1
 template<> EIGEN_STRONG_INLINE Packet4f pround<Packet4f>(const Packet4f& a)
