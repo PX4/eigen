@@ -202,6 +202,18 @@ EIGEN_STRONG_INLINE void pgerMMA<Packet2d, __vector_pair, true>(__vector_quad *a
   __builtin_mma_xvf64gernp(acc, a, (__vector unsigned char)b);
 }
 
+template<>
+EIGEN_STRONG_INLINE void pgerMMA<Packet4f, __vector_pair, false>(__vector_quad *acc, const __vector_pair& a, const Packet4f& b)
+{
+  // Just for compilation
+}
+
+template<>
+EIGEN_STRONG_INLINE void pgerMMA<Packet4f, __vector_pair, true>(__vector_quad *acc, const __vector_pair& a, const Packet4f& b)
+{
+  // Just for compilation
+}
+
 // This is necessary because ploadRhs for double returns a pair of vectors when MMA is enabled.
 template<typename Scalar, typename Packet>
 EIGEN_STRONG_INLINE void ploadRhsMMA(const Scalar *rhs, Packet &rhsV)
