@@ -587,30 +587,38 @@ template<typename SparseMatrixType> void sparse_basic(const SparseMatrixType& re
       inc.push_back(std::pair<StorageIndex,StorageIndex>(3,2));
       inc.push_back(std::pair<StorageIndex,StorageIndex>(3,0));
       inc.push_back(std::pair<StorageIndex,StorageIndex>(0,3));
-      
+      inc.push_back(std::pair<StorageIndex,StorageIndex>(0,-1));
+      inc.push_back(std::pair<StorageIndex,StorageIndex>(-1,0));
+      inc.push_back(std::pair<StorageIndex,StorageIndex>(-1,-1));
+
       for(size_t i = 0; i< inc.size(); i++) {
         StorageIndex incRows = inc[i].first;
         StorageIndex incCols = inc[i].second;
         SparseMatrixType m1(rows, cols);
         DenseMatrix refMat1 = DenseMatrix::Zero(rows, cols);
         initSparse<Scalar>(density, refMat1, m1);
-        
+
+        SparseMatrixType m2 = m1;
+        m2.makeCompressed();
+
         m1.conservativeResize(rows+incRows, cols+incCols);
+        m2.conservativeResize(rows+incRows, cols+incCols);
         refMat1.conservativeResize(rows+incRows, cols+incCols);
         if (incRows > 0) refMat1.bottomRows(incRows).setZero();
         if (incCols > 0) refMat1.rightCols(incCols).setZero();
-        
+
         VERIFY_IS_APPROX(m1, refMat1);
-        
+        VERIFY_IS_APPROX(m2, refMat1);
+
         // Insert new values
         if (incRows > 0) 
           m1.insert(m1.rows()-1, 0) = refMat1(refMat1.rows()-1, 0) = 1;
         if (incCols > 0) 
           m1.insert(0, m1.cols()-1) = refMat1(0, refMat1.cols()-1) = 1;
-          
+
         VERIFY_IS_APPROX(m1, refMat1);
-          
-          
+
+
       }
   }
 
