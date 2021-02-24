@@ -450,7 +450,7 @@ struct dense_assignment_loop<Kernel, LinearVectorizedTraversal, CompleteUnrollin
 
     enum { size = DstXprType::SizeAtCompileTime,
            packetSize =unpacket_traits<PacketType>::size,
-           alignedSize = (size/packetSize)*packetSize };
+           alignedSize = (int(size)/packetSize)*packetSize };
 
     copy_using_evaluator_innervec_CompleteUnrolling<Kernel, 0, alignedSize>::run(kernel);
     copy_using_evaluator_DefaultTraversal_CompleteUnrolling<Kernel, alignedSize, size>::run(kernel);
