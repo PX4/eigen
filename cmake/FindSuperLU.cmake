@@ -90,7 +90,7 @@ endif()
 endif()
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(SUPERLU
+find_package_handle_standard_args(SuperLU
                                   REQUIRED_VARS SUPERLU_INCLUDES SUPERLU_LIBRARIES SUPERLU_VERSION_OK
                                   VERSION_VAR SUPERLU_VERSION_VAR)
 

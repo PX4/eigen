@@ -18,6 +18,6 @@ if(GOOGLEHASH_INCLUDES)
 endif()
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(GOOGLEHASH DEFAULT_MSG GOOGLEHASH_INCLUDES GOOGLEHASH_COMPILE)
+find_package_handle_standard_args(GoogleHash DEFAULT_MSG GOOGLEHASH_INCLUDES GOOGLEHASH_COMPILE)
 
 mark_as_advanced(GOOGLEHASH_INCLUDES)

@@ -13,7 +13,7 @@ include_directories(../../test ../../unsupported ../../Eigen
 find_package (Threads)
 
 find_package(GoogleHash)
-if(GOOGLEHASH_FOUND)
+if(GoogleHash_FOUND)
   add_definitions("-DEIGEN_GOOGLEHASH_SUPPORT")
   include_directories(${GOOGLEHASH_INCLUDES})
   ei_add_property(EIGEN_TESTED_BACKENDS  "GoogleHash, ")
