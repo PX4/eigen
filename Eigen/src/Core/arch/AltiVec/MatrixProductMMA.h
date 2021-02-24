@@ -12,6 +12,10 @@
 
 #pragma GCC target("cpu=power10")
 
+#if !__has_builtin(__builtin_vsx_assemble_pair)
+#define __builtin_vsx_assemble_pair __builtin_mma_assemble_pair
+#endif
+
 namespace Eigen {
 
 namespace internal {
@@ -193,13 +197,13 @@ EIGEN_STRONG_INLINE void pgerMMA<Packet2d, PacketBlock<Packet2d, 2>, true>(__vec
 template<>
 EIGEN_STRONG_INLINE void pgerMMA<Packet2d, __vector_pair, false>(__vector_quad *acc, const __vector_pair& a, const Packet2d& b)
 {
-  __builtin_mma_xvf64gerpp(acc, a, (__vector unsigned char)b);
+  __builtin_mma_xvf64gerpp(acc, (__vector_pair)a, (__vector unsigned char)b);
 }
 
 template<>
 EIGEN_STRONG_INLINE void pgerMMA<Packet2d, __vector_pair, true>(__vector_quad *acc, const __vector_pair& a, const Packet2d& b)
 {
-  __builtin_mma_xvf64gernp(acc, a, (__vector unsigned char)b);
+  __builtin_mma_xvf64gernp(acc, (__vector_pair)a, (__vector unsigned char)b);
 }
 
 template<>
@@ -231,7 +235,7 @@ EIGEN_STRONG_INLINE void ploadRhsMMA<double, PacketBlock<Packet2d, 2> >(const do
 template<>
 EIGEN_STRONG_INLINE void ploadRhsMMA<double, __vector_pair>(const double *rhs, __vector_pair &rhsV)
 {
-  __builtin_mma_assemble_pair(&rhsV, (__vector unsigned char)(*(((Packet2d *)rhs) + 1)), (__vector unsigned char)(*((Packet2d *)rhs)));
+  __builtin_vsx_assemble_pair(&rhsV, (__vector unsigned char)(*(((Packet2d *)rhs) + 1)), (__vector unsigned char)(*((Packet2d *)rhs)));
 }
 
 template<typename Scalar, typename Packet, typename DataMapper, typename Index, const Index accRows>

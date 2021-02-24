@@ -12,7 +12,7 @@
 
 #include "MatrixProductCommon.h"
 
-#if __GNUC__ > 10 || \
+#if __GNUC__ > 10 || __clang_major__ > 11 || \
     (__GNUC__ == 10 && (__GNUC_MINOR__ > 2 || \
                        (__GNUC_MINOR__ == 2 && \
                         __GNUC_PATCHLEVEL__ >= 1)))
