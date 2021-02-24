@@ -672,7 +672,7 @@
 #ifndef EIGEN_HAS_STD_HASH
 // The std::hash struct is defined in C++11 but is not labelled as a __device__
 // function and is not constexpr, so cannot be used on device.
-#if EIGEN_HAS_CXX11 && !EIGEN_GPU_COMPILE_PHASE
+#if EIGEN_HAS_CXX11 && !defined(EIGEN_GPU_COMPILE_PHASE)
 #define EIGEN_HAS_STD_HASH 1
 #else
 #define EIGEN_HAS_STD_HASH 0
