@@ -2,6 +2,52 @@ namespace Eigen {
 
 namespace internal {
 
+template<typename Scalar, typename Packet, typename DataMapper, typename Index, const Index accRows>
+EIGEN_STRONG_INLINE void gemm_extra_col(
+  const DataMapper& res,
+  const Scalar *lhs_base,
+  const Scalar *rhs_base,
+  Index depth,
+  Index strideA,
+  Index offsetA,
+  Index row,
+  Index col,
+  Index remaining_rows,
+  Index remaining_cols,
+  const Packet& pAlpha);
+
+template<typename Scalar, typename Packet, typename DataMapper, typename Index, const Index accRows>
+EIGEN_STRONG_INLINE void gemm_extra_row(
+  const DataMapper& res,
+  const Scalar *lhs_base,
+  const Scalar *rhs_base,
+  Index depth,
+  Index strideA,
+  Index offsetA,
+  Index row,
+  Index col,
+  Index cols,
+  Index remaining_rows,
+  const Packet& pAlpha,
+  const Packet& pMask);
+
+template<typename Scalar, typename Packet, typename DataMapper, typename Index, const Index accCols>
+EIGEN_STRONG_INLINE void gemm_unrolled_col(
+  const DataMapper& res,
+  const Scalar *lhs_base,
+  const Scalar *rhs_base,
+  Index depth,
+  Index strideA,
+  Index offsetA,
+  Index& row,
+  Index rows,
+  Index col,
+  Index remaining_cols,
+  const Packet& pAlpha);
+
+template<typename Packet>
+EIGEN_STRONG_INLINE Packet bmask(const int remaining_rows);
+
 const static Packet16uc p16uc_SETCOMPLEX32_FIRST = {  0,  1,  2,  3,
                                                      16, 17, 18, 19,
                                                       4,  5,  6,  7,

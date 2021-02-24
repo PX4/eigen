@@ -238,52 +238,6 @@ EIGEN_STRONG_INLINE void ploadRhsMMA<double, __vector_pair>(const double *rhs, _
   __builtin_vsx_assemble_pair(&rhsV, (__vector unsigned char)(*(((Packet2d *)rhs) + 1)), (__vector unsigned char)(*((Packet2d *)rhs)));
 }
 
-template<typename Scalar, typename Packet, typename DataMapper, typename Index, const Index accRows>
-EIGEN_STRONG_INLINE void gemm_extra_col(
-  const DataMapper& res,
-  const Scalar *lhs_base,
-  const Scalar *rhs_base,
-  Index depth,
-  Index strideA,
-  Index offsetA,
-  Index row,
-  Index col,
-  Index remaining_rows,
-  Index remaining_cols,
-  const Packet& pAlpha);
-
-template<typename Scalar, typename Packet, typename DataMapper, typename Index, const Index accRows>
-EIGEN_STRONG_INLINE void gemm_extra_row(
-  const DataMapper& res,
-  const Scalar *lhs_base,
-  const Scalar *rhs_base,
-  Index depth,
-  Index strideA,
-  Index offsetA,
-  Index row,
-  Index col,
-  Index cols,
-  Index remaining_rows,
-  const Packet& pAlpha,
-  const Packet& pMask);
-
-template<typename Scalar, typename Packet, typename DataMapper, typename Index, const Index accCols>
-EIGEN_STRONG_INLINE void gemm_unrolled_col(
-  const DataMapper& res,
-  const Scalar *lhs_base,
-  const Scalar *rhs_base,
-  Index depth,
-  Index strideA,
-  Index offsetA,
-  Index& row,
-  Index rows,
-  Index col,
-  Index remaining_cols,
-  const Packet& pAlpha);
-
-template<typename Packet>
-EIGEN_STRONG_INLINE Packet bmask(const int remaining_rows);
-
 #define MICRO_MMA_DST \
   __vector_quad *accZero0, __vector_quad *accZero1, __vector_quad *accZero2, \
   __vector_quad *accZero3, __vector_quad *accZero4, __vector_quad *accZero5, \
