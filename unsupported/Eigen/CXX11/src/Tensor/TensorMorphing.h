@@ -451,12 +451,16 @@ struct TensorEvaluator<const TensorSlicingOp<StartIndices, Sizes, ArgType>, Devi
     }
 
     m_is_identity = true;
+    bool degenerate = false;
     for (int i = 0; i < internal::array_size<Dimensions>::value; ++i) {
       eigen_assert(m_impl.dimensions()[i] >=
                    op.sizes()[i] + op.startIndices()[i]);
       if (m_impl.dimensions()[i] != op.sizes()[i] ||
           op.startIndices()[i] != 0) {
         m_is_identity = false;
+      }
+      if (op.sizes()[i] == 0) { // we have an empty size
+        degenerate = true;
       }
     }
 
@@ -475,8 +479,8 @@ struct TensorEvaluator<const TensorSlicingOp<StartIndices, Sizes, ArgType>, Devi
       m_outputStrides[0] = 1;
       for (int i = 1; i < NumDims; ++i) {
         m_outputStrides[i] = m_outputStrides[i-1] * output_dims[i-1];
-        m_fastOutputStrides[i] = internal::TensorIntDivisor<Index>(m_outputStrides[i]);
-      }
+        // NOTE: if tensor is degenerate, we send 1 to prevent TensorIntDivisor constructor crash
+        m_fastOutputStrides[i] = internal::TensorIntDivisor<Index>(degenerate ? 1 : m_outputStrides[i]);      }
     } else {
       m_inputStrides[NumDims-1] = 1;
       for (int i = NumDims - 2; i >= 0; --i) {
@@ -487,8 +491,8 @@ struct TensorEvaluator<const TensorSlicingOp<StartIndices, Sizes, ArgType>, Devi
       m_outputStrides[NumDims-1] = 1;
       for (int i = NumDims - 2; i >= 0; --i) {
         m_outputStrides[i] = m_outputStrides[i+1] * output_dims[i+1];
-        m_fastOutputStrides[i] = internal::TensorIntDivisor<Index>(m_outputStrides[i]);
-      }
+        // NOTE: if tensor is degenerate, we send 1 to prevent TensorIntDivisor constructor crash
+        m_fastOutputStrides[i] = internal::TensorIntDivisor<Index>(degenerate ? 1 : m_outputStrides[i]);      }
     }
   }
 
