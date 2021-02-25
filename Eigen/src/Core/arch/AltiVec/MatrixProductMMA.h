@@ -12,8 +12,10 @@
 
 #pragma GCC target("cpu=power10")
 
+#ifdef __has_builtin
 #if !__has_builtin(__builtin_vsx_assemble_pair)
 #define __builtin_vsx_assemble_pair __builtin_mma_assemble_pair
+#endif
 #endif
 
 namespace Eigen {

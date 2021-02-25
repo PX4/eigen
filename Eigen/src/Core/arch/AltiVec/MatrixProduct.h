@@ -12,11 +12,20 @@
 
 #include "MatrixProductCommon.h"
 
-#if __GNUC__ > 10 || __clang_major__ > 11 || \
-    (__GNUC__ == 10 && (__GNUC_MINOR__ > 2 || \
-                       (__GNUC_MINOR__ == 2 && \
-                        __GNUC_PATCHLEVEL__ >= 1)))
+#if EIGEN_COMP_LLVM
+#if !defined(EIGEN_ALTIVEC_DISABLE_MMA) && !defined(EIGEN_ALTIVEC_MMA_ONLY)
+#ifdef __MMA__
+#define EIGEN_ALTIVEC_MMA_ONLY
+#else
+#define EIGEN_ALTIVEC_DISABLE_MMA
+#endif
+#endif
+#endif
+
+#ifdef __has_builtin
+#if __has_builtin(__builtin_mma_assemble_acc)
   #define ALTIVEC_MMA_SUPPORT
+#endif
 #endif
 
 #if defined(ALTIVEC_MMA_SUPPORT) && !defined(EIGEN_ALTIVEC_DISABLE_MMA)
