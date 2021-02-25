@@ -549,7 +549,7 @@ struct product_evaluator<Product<Lhs, Rhs, LazyProduct>, ProductTag, DenseShape,
     RhsCoeffReadCost = RhsEtorType::CoeffReadCost,
     CoeffReadCost = InnerSize==0 ? NumTraits<Scalar>::ReadCost
                   : InnerSize == Dynamic ? HugeCost
-                  : InnerSize * (NumTraits<Scalar>::MulCost + LhsCoeffReadCost + RhsCoeffReadCost)
+                    : InnerSize * (NumTraits<Scalar>::MulCost + int(LhsCoeffReadCost) + int(RhsCoeffReadCost))
                     + (InnerSize - 1) * NumTraits<Scalar>::AddCost,
 
     Unroll = CoeffReadCost <= EIGEN_UNROLLING_LIMIT,
@@ -576,7 +576,7 @@ struct product_evaluator<Product<Lhs, Rhs, LazyProduct>, ProductTag, DenseShape,
                     : (MaxColsAtCompileTime==1&&MaxRowsAtCompileTime!=1) ? 0
                     : (bool(RhsRowMajor) && !CanVectorizeLhs),
 
-    Flags = ((unsigned int)(LhsFlags | RhsFlags) & HereditaryBits & ~RowMajorBit)
+    Flags = ((int(LhsFlags) | int(RhsFlags)) & HereditaryBits & ~RowMajorBit)
           | (EvalToRowMajor ? RowMajorBit : 0)
           // TODO enable vectorization for mixed types
           | (SameType && (CanVectorizeLhs || CanVectorizeRhs) ? PacketAccessBit : 0)
@@ -597,8 +597,8 @@ struct product_evaluator<Product<Lhs, Rhs, LazyProduct>, ProductTag, DenseShape,
     CanVectorizeInner =    SameType
                         && LhsRowMajor
                         && (!RhsRowMajor)
-                        && (LhsFlags & RhsFlags & ActualPacketAccessBit)
-                        && (InnerSize % packet_traits<Scalar>::size == 0)
+                        && (int(LhsFlags) & int(RhsFlags) & ActualPacketAccessBit)
+                        && (int(InnerSize) % packet_traits<Scalar>::size == 0)
   };
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const CoeffReturnType coeff(Index row, Index col) const
