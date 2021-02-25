@@ -602,6 +602,26 @@ template<int N> EIGEN_STRONG_INLINE Packet4i parithmetic_shift_right(const Packe
 template<int N> EIGEN_STRONG_INLINE Packet4i plogical_shift_right   (const Packet4i& a) { return _mm_srli_epi32(a,N); }
 template<int N> EIGEN_STRONG_INLINE Packet4i plogical_shift_left    (const Packet4i& a) { return _mm_slli_epi32(a,N); }
 
+template<> EIGEN_STRONG_INLINE Packet4f pabs(const Packet4f& a)
+{
+  const Packet4f mask = _mm_castsi128_ps(_mm_setr_epi32(0x7FFFFFFF,0x7FFFFFFF,0x7FFFFFFF,0x7FFFFFFF));
+  return _mm_and_ps(a,mask);
+}
+template<> EIGEN_STRONG_INLINE Packet2d pabs(const Packet2d& a)
+{
+  const Packet2d mask = _mm_castsi128_pd(_mm_setr_epi32(0xFFFFFFFF,0x7FFFFFFF,0xFFFFFFFF,0x7FFFFFFF));
+  return _mm_and_pd(a,mask);
+}
+template<> EIGEN_STRONG_INLINE Packet4i pabs(const Packet4i& a)
+{
+  #ifdef EIGEN_VECTORIZE_SSSE3
+  return _mm_abs_epi32(a);
+  #else
+  Packet4i aux = _mm_srai_epi32(a,31);
+  return _mm_sub_epi32(_mm_xor_si128(a,aux),aux);
+  #endif
+}
+
 #ifdef EIGEN_VECTORIZE_SSE4_1
 template<> EIGEN_STRONG_INLINE Packet4f pround<Packet4f>(const Packet4f& a)
 {
@@ -632,20 +652,30 @@ template<> EIGEN_STRONG_INLINE Packet4f pfloor<Packet4f>(const Packet4f& a)
   const Packet4f cst_1 = pset1<Packet4f>(1.0f);
   Packet4i emm0 = _mm_cvttps_epi32(a);
   Packet4f tmp  = _mm_cvtepi32_ps(emm0);
-  /* if greater, substract 1 */
+  // If greater, subtract one.
   Packet4f mask = _mm_cmpgt_ps(tmp, a);
   mask = pand(mask, cst_1);
-  return psub(tmp, mask);
+  tmp = psub(tmp, mask);
+  // Handle saturation cases.
+  const Packet4f cst_max = pset1<Packet4f>(static_cast<float>(NumTraits<int32_t>::highest()));
+  return pselect(pcmp_lt(pabs(a), cst_max), tmp, a);
 }
 
-// WARNING: this pfloor implementation makes sense for small inputs only,
-// It is currently only used by pexp and not exposed through HasFloor.
+// Rounds to nearest integer.
+EIGEN_STRONG_INLINE Packet2d pround_to_nearest(const Packet2d& a) {
+  // Adds and subtracts signum(a) * 2^52 to force rounding to within precision.
+  const Packet2d offset = 
+    pselect(pcmp_lt(a, pzero(a)), 
+      pset1<Packet2d>(-static_cast<double>(1ull<<52)),
+      pset1<Packet2d>(+static_cast<double>(1ull<<52)));
+  return psub(padd(a, offset), offset);
+}
+
 template<> EIGEN_STRONG_INLINE Packet2d pfloor<Packet2d>(const Packet2d& a)
 {
   const Packet2d cst_1 = pset1<Packet2d>(1.0);
-  Packet4i emm0 = _mm_cvttpd_epi32(a);
-  Packet2d tmp  = _mm_cvtepi32_pd(emm0);
-  /* if greater, substract 1 */
+  Packet2d tmp  = pround_to_nearest(a);
+  // If greater, subtract one.
   Packet2d mask = _mm_cmpgt_pd(tmp, a);
   mask = pand(mask, cst_1);
   return psub(tmp, mask);
@@ -656,20 +686,20 @@ template<> EIGEN_STRONG_INLINE Packet4f pceil<Packet4f>(const Packet4f& a)
   const Packet4f cst_1 = pset1<Packet4f>(1.0f);
   Packet4i emm0 = _mm_cvttps_epi32(a);
   Packet4f tmp  = _mm_cvtepi32_ps(emm0);
-  /* if greater, substract 1 */
+  // If smaller, add one.
   Packet4f mask = _mm_cmplt_ps(tmp, a);
   mask = pand(mask, cst_1);
-  return padd(tmp, mask);
+  tmp = padd(tmp, mask);
+  // Handle saturation cases.
+  const Packet4f cst_max = pset1<Packet4f>(static_cast<float>(NumTraits<int32_t>::highest()));
+  return pselect(pcmp_lt(pabs(a), cst_max), tmp, a);
 }
 
-// WARNING: this pfloor implementation makes sense for small inputs only,
-// It is currently only used by pexp and not exposed through HasFloor.
 template<> EIGEN_STRONG_INLINE Packet2d pceil<Packet2d>(const Packet2d& a)
 {
   const Packet2d cst_1 = pset1<Packet2d>(1.0);
-  Packet4i emm0 = _mm_cvttpd_epi32(a);
-  Packet2d tmp  = _mm_cvtepi32_pd(emm0);
-  /* if greater, substract 1 */
+  Packet2d tmp  = pround_to_nearest(a);
+  // If smaller, add one.
   Packet2d mask = _mm_cmplt_pd(tmp, a);
   mask = pand(mask, cst_1);
   return padd(tmp, mask);
@@ -864,26 +894,6 @@ template<> EIGEN_STRONG_INLINE Packet16b preverse(const Packet16b& a) {
   tmp = _mm_shufflehi_epi16(_mm_shufflelo_epi16(tmp, _MM_SHUFFLE(2, 3, 0, 1)), _MM_SHUFFLE(2, 3, 0, 1));
   return _mm_or_si128(_mm_slli_epi16(tmp, 8), _mm_srli_epi16(tmp, 8));
 #endif
-}
-
-template<> EIGEN_STRONG_INLINE Packet4f pabs(const Packet4f& a)
-{
-  const Packet4f mask = _mm_castsi128_ps(_mm_setr_epi32(0x7FFFFFFF,0x7FFFFFFF,0x7FFFFFFF,0x7FFFFFFF));
-  return _mm_and_ps(a,mask);
-}
-template<> EIGEN_STRONG_INLINE Packet2d pabs(const Packet2d& a)
-{
-  const Packet2d mask = _mm_castsi128_pd(_mm_setr_epi32(0xFFFFFFFF,0x7FFFFFFF,0xFFFFFFFF,0x7FFFFFFF));
-  return _mm_and_pd(a,mask);
-}
-template<> EIGEN_STRONG_INLINE Packet4i pabs(const Packet4i& a)
-{
-  #ifdef EIGEN_VECTORIZE_SSSE3
-  return _mm_abs_epi32(a);
-  #else
-  Packet4i aux = _mm_srai_epi32(a,31);
-  return _mm_sub_epi32(_mm_xor_si128(a,aux),aux);
-  #endif
 }
 
 template<> EIGEN_STRONG_INLINE Packet4f pfrexp<Packet4f>(const Packet4f& a, Packet4f& exponent) {

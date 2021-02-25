@@ -546,14 +546,43 @@ void packetmath_real() {
   CHECK_CWISE1_IF(PacketTraits::HasCeil, numext::ceil, internal::pceil);
   CHECK_CWISE1_IF(PacketTraits::HasFloor, numext::floor, internal::pfloor);
   CHECK_CWISE1_IF(PacketTraits::HasRint, numext::rint, internal::print);
-
-  // See bug 1785.
-  for (int i = 0; i < size; ++i) {
-    data1[i] = Scalar(-1.5 + i);
-    data2[i] = Scalar(-1.5 + i);
+  
+  // Rounding edge cases.
+  if (PacketTraits::HasRound || PacketTraits::HasCeil || PacketTraits::HasFloor || PacketTraits::HasRint) {
+    typedef typename internal::make_integer<Scalar>::type IntType;
+    // Start with values that cannot fit inside an integer, work down to less than one.
+    Scalar val = Scalar(2) * static_cast<Scalar>(NumTraits<IntType>::highest());
+    std::vector<Scalar> values;
+    while (val > Scalar(0.25)) {
+      // Cover both even and odd, positive and negative cases.
+      values.push_back(val);
+      values.push_back(val + Scalar(0.3));
+      values.push_back(val + Scalar(0.5));
+      values.push_back(val + Scalar(0.8));
+      values.push_back(val + Scalar(1));
+      values.push_back(val + Scalar(1.3));
+      values.push_back(val + Scalar(1.5));
+      values.push_back(val + Scalar(1.8));
+      values.push_back(-val);
+      values.push_back(-val - Scalar(0.3));
+      values.push_back(-val - Scalar(0.5));
+      values.push_back(-val - Scalar(0.8));
+      values.push_back(-val - Scalar(1));
+      values.push_back(-val - Scalar(1.3));
+      values.push_back(-val - Scalar(1.5));
+      values.push_back(-val - Scalar(1.8));
+      values.push_back(Scalar(-1.5) + val);  // Bug 1785.
+      val = val / Scalar(2);
+    }
+    
+    for (size_t k=0; k<values.size(); ++k) {
+      data1[0] = values[k];
+      CHECK_CWISE1_IF(PacketTraits::HasRound, numext::round, internal::pround);
+      CHECK_CWISE1_IF(PacketTraits::HasCeil, numext::ceil, internal::pceil);
+      CHECK_CWISE1_IF(PacketTraits::HasFloor, numext::floor, internal::pfloor);
+      CHECK_CWISE1_IF(PacketTraits::HasRint, numext::rint, internal::print);
+    }
   }
-  CHECK_CWISE1_IF(PacketTraits::HasRound, numext::round, internal::pround);
-  CHECK_CWISE1_IF(PacketTraits::HasRint, numext::rint, internal::print);
 
   for (int i = 0; i < size; ++i) {
     data1[i] = Scalar(internal::random<double>(-1, 1));
