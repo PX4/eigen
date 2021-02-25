@@ -577,6 +577,9 @@ void packetmath_real() {
       values.push_back(Scalar(-1.5) + val);  // Bug 1785.
       val = val / Scalar(2);
     }
+    values.push_back(NumTraits<Scalar>::infinity());
+    values.push_back(-NumTraits<Scalar>::infinity());
+    values.push_back(NumTraits<Scalar>::quiet_NaN());
     
     for (size_t k=0; k<values.size(); ++k) {
       data1[0] = values[k];

@@ -265,6 +265,14 @@
   #define EIGEN_ARCH_ARM_OR_ARM64 0
 #endif
 
+/// \internal EIGEN_ARCH_ARMV8 set to 1 if the architecture is armv8 or greater.
+#if EIGEN_ARCH_ARM_OR_ARM64 && defined(__ARM_ARCH) && __ARM_ARCH >= 8
+#define EIGEN_ARCH_ARMV8 1
+#else
+#define EIGEN_ARCH_ARMV8 0
+#endif
+
+
 /// \internal EIGEN_HAS_ARM64_FP16 set to 1 if the architecture provides an IEEE
 /// compliant Arm fp16 type
 #if EIGEN_ARCH_ARM64
