@@ -610,6 +610,20 @@ template<typename ArrayType> void min_max(const ArrayType& m)
   VERIFY_IS_APPROX(ArrayType::Constant(rows,cols, maxM1), (m1.max)( maxM1));
   VERIFY_IS_APPROX(m1, (m1.max)( minM1));
 
+
+  // min/max with various NaN propagation options.
+  if (m1.size() > 1 && !NumTraits<Scalar>::IsInteger) {
+    m1(0,0) = std::numeric_limits<Scalar>::quiet_NaN();
+    maxM1 = m1.template maxCoeff<PropagateNaN>();
+    minM1 = m1.template minCoeff<PropagateNaN>();
+    VERIFY((numext::isnan)(maxM1));
+    VERIFY((numext::isnan)(minM1));
+
+    maxM1 = m1.template maxCoeff<PropagateNumbers>();
+    minM1 = m1.template minCoeff<PropagateNumbers>();
+    VERIFY(!(numext::isnan)(maxM1));
+    VERIFY(!(numext::isnan)(minM1));
+  }
 }
 
 EIGEN_DECLARE_TEST(array_cwise)
