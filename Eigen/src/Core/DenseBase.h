@@ -453,7 +453,7 @@ template<typename Derived> class DenseBase
     EIGEN_DEVICE_FUNC typename internal::traits<Derived>::Scalar maxCoeff() const;
 
     template<int NaNPropagation>
-        EIGEN_DEVICE_FUNC typename internal::traits<Derived>::Scalar minCoeff() const;
+    EIGEN_DEVICE_FUNC typename internal::traits<Derived>::Scalar minCoeff() const;
     template<int NaNPropagation>
     EIGEN_DEVICE_FUNC typename internal::traits<Derived>::Scalar maxCoeff() const;
 
