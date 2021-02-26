@@ -551,7 +551,9 @@ void packetmath_real() {
   if (PacketTraits::HasRound || PacketTraits::HasCeil || PacketTraits::HasFloor || PacketTraits::HasRint) {
     typedef typename internal::make_integer<Scalar>::type IntType;
     // Start with values that cannot fit inside an integer, work down to less than one.
-    Scalar val = Scalar(2) * static_cast<Scalar>(NumTraits<IntType>::highest());
+    Scalar val = numext::mini(
+        Scalar(2) * static_cast<Scalar>(NumTraits<IntType>::highest()),
+        NumTraits<Scalar>::highest());
     std::vector<Scalar> values;
     while (val > Scalar(0.25)) {
       // Cover both even and odd, positive and negative cases.
