@@ -25,7 +25,7 @@ void pow_test() {
   const Scalar denorm_min = std::numeric_limits<Scalar>::denorm_min();
   const Scalar min = (std::numeric_limits<Scalar>::min)();
   const Scalar max = (std::numeric_limits<Scalar>::max)();
-  const Scalar max_exp = (static_cast<Scalar>(std::numeric_limits<Scalar>::max_exponent) * Scalar(EIGEN_LN2)) / eps;
+  const Scalar max_exp = (static_cast<Scalar>(int(std::numeric_limits<Scalar>::max_exponent)) * Scalar(EIGEN_LN2)) / eps;
 
   const static Scalar abs_vals[] = {zero,
                                     denorm_min,

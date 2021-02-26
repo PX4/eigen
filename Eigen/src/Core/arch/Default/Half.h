@@ -147,7 +147,7 @@ struct half : public half_impl::half_base {
   explicit EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR half(bool b)
       : half_impl::half_base(half_impl::raw_uint16_to_half(b ? 0x3c00 : 0)) {}
   template<class T>
-  explicit EIGEN_DEVICE_FUNC half(const T& val)
+  explicit EIGEN_DEVICE_FUNC half(T val)
       : half_impl::half_base(half_impl::float_to_half_rtne(static_cast<float>(val))) {}
   explicit EIGEN_DEVICE_FUNC half(float f)
       : half_impl::half_base(half_impl::float_to_half_rtne(f)) {}

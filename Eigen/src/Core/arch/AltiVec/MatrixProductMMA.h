@@ -212,12 +212,18 @@ template<>
 EIGEN_STRONG_INLINE void pgerMMA<Packet4f, __vector_pair, false>(__vector_quad *acc, const __vector_pair& a, const Packet4f& b)
 {
   // Just for compilation
+  EIGEN_UNUSED_VARIABLE(acc)
+  EIGEN_UNUSED_VARIABLE(a)
+  EIGEN_UNUSED_VARIABLE(b)
 }
 
 template<>
 EIGEN_STRONG_INLINE void pgerMMA<Packet4f, __vector_pair, true>(__vector_quad *acc, const __vector_pair& a, const Packet4f& b)
 {
   // Just for compilation
+  EIGEN_UNUSED_VARIABLE(acc)
+  EIGEN_UNUSED_VARIABLE(a)
+  EIGEN_UNUSED_VARIABLE(b)
 }
 
 // This is necessary because ploadRhs for double returns a pair of vectors when MMA is enabled.
