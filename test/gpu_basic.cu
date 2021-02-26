@@ -409,6 +409,9 @@ EIGEN_DECLARE_TEST(gpu_basic)
   //           (aka 'ArrayBase<Eigen::Replicate<Eigen::Array<float, 4, 1, 0, 4, 1>, -1, -1> >') has protected default constructor
   CALL_SUBTEST( run_and_compare_to_gpu(replicate<Array4f>(), nthreads, in, out) );
   CALL_SUBTEST( run_and_compare_to_gpu(replicate<Array33f>(), nthreads, in, out) );
+
+  // HIP does not support new/delete on device.
+  CALL_SUBTEST( run_and_compare_to_gpu(alloc_new_delete<Vector3f>(), nthreads, in, out) );
 #endif
   
   CALL_SUBTEST( run_and_compare_to_gpu(redux<Array4f>(), nthreads, in, out) );
@@ -438,5 +441,4 @@ EIGEN_DECLARE_TEST(gpu_basic)
   typedef Matrix<float,6,6> Matrix6f;
   CALL_SUBTEST( run_and_compare_to_gpu(eigenvalues<Matrix6f>(), nthreads, in, out) );
 #endif
-  CALL_SUBTEST( run_and_compare_to_gpu(alloc_new_delete<Vector3f>(), nthreads, in, out) );
 }

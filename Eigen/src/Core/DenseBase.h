@@ -454,6 +454,7 @@ template<typename Derived> class DenseBase
     template<int NaNPropagation>
     EIGEN_DEVICE_FUNC typename internal::traits<Derived>::Scalar maxCoeff() const;
 
+
     // By default, the fastest version with undefined NaN propagation semantics is
     // used.
     // TODO(rmlarsen): Replace with default template argument when we move to
@@ -464,8 +465,6 @@ template<typename Derived> class DenseBase
     EIGEN_DEVICE_FUNC typename internal::traits<Derived>::Scalar maxCoeff() const {
       return maxCoeff<PropagateFast>();
     }
-
-
 
     template<typename IndexType> EIGEN_DEVICE_FUNC
     typename internal::traits<Derived>::Scalar minCoeff(IndexType* row, IndexType* col) const;

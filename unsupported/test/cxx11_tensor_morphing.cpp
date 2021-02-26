@@ -479,6 +479,66 @@ static void test_composition()
   }
 }
 
+template<typename T, int DataLayout>
+static void test_empty_slice()
+{
+  Tensor<T, 3, DataLayout> tensor(2,3,5);
+  tensor.setRandom();
+  Tensor<T, 3, DataLayout> copy = tensor;
+
+  // empty size in first dimension
+  Eigen::DSizes<ptrdiff_t, 3> indices1(1,2,3);
+  Eigen::DSizes<ptrdiff_t, 3> sizes1(0,1,2);
+  Tensor<T, 3, DataLayout> slice1(0,1,2);
+  slice1.setRandom();
+  tensor.slice(indices1, sizes1) = slice1;
+
+  // empty size in second dimension
+  Eigen::DSizes<ptrdiff_t, 3> indices2(1,2,3);
+  Eigen::DSizes<ptrdiff_t, 3> sizes2(1,0,2);
+  Tensor<T, 3, DataLayout> slice2(1,0,2);
+  slice2.setRandom();
+  tensor.slice(indices2, sizes2) = slice2;
+
+  // empty size in third dimension
+  Eigen::DSizes<ptrdiff_t, 3> indices3(1,2,3);
+  Eigen::DSizes<ptrdiff_t, 3> sizes3(1,1,0);
+  Tensor<T, 3, DataLayout> slice3(1,1,0);
+  slice3.setRandom();
+  tensor.slice(indices3, sizes3) = slice3;
+
+  // empty size in first and second dimension
+  Eigen::DSizes<ptrdiff_t, 3> indices4(1,2,3);
+  Eigen::DSizes<ptrdiff_t, 3> sizes4(0,0,2);
+  Tensor<T, 3, DataLayout> slice4(0,0,2);
+  slice4.setRandom();
+  tensor.slice(indices4, sizes4) = slice4;
+
+  // empty size in second and third dimension
+  Eigen::DSizes<ptrdiff_t, 3> indices5(1,2,3);
+  Eigen::DSizes<ptrdiff_t, 3> sizes5(1,0,0);
+  Tensor<T, 3, DataLayout> slice5(1,0,0);
+  slice5.setRandom();
+  tensor.slice(indices5, sizes5) = slice5;
+
+  // empty size in all dimensions
+  Eigen::DSizes<ptrdiff_t, 3> indices6(1,2,3);
+  Eigen::DSizes<ptrdiff_t, 3> sizes6(0,0,0);
+  Tensor<T, 3, DataLayout> slice6(0,0,0);
+  slice6.setRandom();
+  tensor.slice(indices6, sizes6) = slice6;
+
+  // none of these operations should change the tensor's components
+  // because all of the rvalue slices have at least one zero dimension
+  for (int i = 0; i < 2; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      for (int k = 0; k < 5; ++k) {
+          VERIFY_IS_EQUAL(tensor(i,j,k), copy(i,j,k));
+      }
+    }
+  }
+}
+
 #define CALL_SUBTEST_PART(PART) \
   CALL_SUBTEST_##PART
 
