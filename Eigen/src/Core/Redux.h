@@ -419,17 +419,6 @@ DenseBase<Derived>::redux(const Func& func) const
 }
 
 /** \returns the minimum of all coefficients of \c *this.
-  * \warning the matrix must be not empty, otherwise an assertion is triggered.
-  * \warning the result is undefined if \c *this contains NaN.
-  */
-template<typename Derived>
-EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE typename internal::traits<Derived>::Scalar
-DenseBase<Derived>::minCoeff() const
-{
-  return derived().redux(Eigen::internal::scalar_min_op<Scalar,Scalar>());
-}
-
-/** \returns the minimum of all coefficients of \c *this.
   * In case \c *this contains NaN, NaNPropagation determines the behavior:
   *   NaNPropagation == PropagateFast : undefined
   *   NaNPropagation == PropagateNaN : result is NaN
@@ -442,17 +431,6 @@ EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE typename internal::traits<Derived>::Scalar
 DenseBase<Derived>::minCoeff() const
 {
   return derived().redux(Eigen::internal::scalar_min_op<Scalar,Scalar, NaNPropagation>());
-}
-
-/** \returns the maximum of all coefficients of \c *this.
-  * \warning the matrix must be not empty, otherwise an assertion is triggered.
-  * \warning the result is undefined if \c *this contains NaN.
-  */
-template<typename Derived>
-EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE typename internal::traits<Derived>::Scalar
-DenseBase<Derived>::maxCoeff() const
-{
-  return derived().redux(Eigen::internal::scalar_max_op<Scalar,Scalar>());
 }
 
 /** \returns the maximum of all coefficients of \c *this. 

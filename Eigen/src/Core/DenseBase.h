@@ -449,13 +449,21 @@ template<typename Derived> class DenseBase
 
     EIGEN_DEVICE_FUNC Scalar prod() const;
 
+    template<int NaNPropagation>
     EIGEN_DEVICE_FUNC typename internal::traits<Derived>::Scalar minCoeff() const;
+    template<int NaNPropagation>
     EIGEN_DEVICE_FUNC typename internal::traits<Derived>::Scalar maxCoeff() const;
 
-    template<int NaNPropagation>
-    EIGEN_DEVICE_FUNC typename internal::traits<Derived>::Scalar minCoeff() const;
-    template<int NaNPropagation>
-    EIGEN_DEVICE_FUNC typename internal::traits<Derived>::Scalar maxCoeff() const;
+    // By default, the fastest version with undefined NaN propagation semantics is
+    // used.
+    EIGEN_DEVICE_FUNC typename internal::traits<Derived>::Scalar minCoeff() const {
+      return minCoeff<PropagateFast>();
+    }
+    EIGEN_DEVICE_FUNC typename internal::traits<Derived>::Scalar maxCoeff() const {
+      return maxCoeff<PropagateFast>();
+    }
+
+
 
     template<typename IndexType> EIGEN_DEVICE_FUNC
     typename internal::traits<Derived>::Scalar minCoeff(IndexType* row, IndexType* col) const;
