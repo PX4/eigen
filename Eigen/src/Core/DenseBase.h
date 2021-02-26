@@ -456,6 +456,8 @@ template<typename Derived> class DenseBase
 
     // By default, the fastest version with undefined NaN propagation semantics is
     // used.
+    // TODO(rmlarsen): Replace with default template argument when we move to
+    // c++11 or beyond.
     EIGEN_DEVICE_FUNC typename internal::traits<Derived>::Scalar minCoeff() const {
       return minCoeff<PropagateFast>();
     }
