@@ -26,6 +26,9 @@
 #if defined(__GNUC__) && (__GNUC__ >=9)
   #pragma GCC diagnostic ignored "-Wdeprecated-copy"
 #endif
+#if defined(__clang__) && (__clang_major__ >= 10)
+  #pragma clang diagnostic ignored "-Wdeprecated-copy"
+#endif
 
 #endif
 
