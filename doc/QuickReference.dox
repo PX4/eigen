@@ -480,13 +480,14 @@ The main difference between the two API is that the one based on cwise* methods 
 while the second one (based on .array()) returns an array expression.
 Recall that .array() has no cost, it only changes the available API and interpretation of the data.
 
-It is also very simple to apply any user defined function \c foo using DenseBase::unaryExpr together with <a href="http://en.cppreference.com/w/cpp/utility/functional/ptr_fun">std::ptr_fun</a> (c++03), <a href="http://en.cppreference.com/w/cpp/utility/functional/ref">std::ref</a> (c++11), or <a href="http://en.cppreference.com/w/cpp/language/lambda">lambdas</a> (c++11):
+It is also very simple to apply any user defined function \c foo using DenseBase::unaryExpr together with <a href="http://en.cppreference.com/w/cpp/utility/functional/ptr_fun">std::ptr_fun</a> (c++03, deprecated or removed in newer C++ versions), <a href="http://en.cppreference.com/w/cpp/utility/functional/ref">std::ref</a> (c++11), or <a href="http://en.cppreference.com/w/cpp/language/lambda">lambdas</a> (c++11):
 \code
 mat1.unaryExpr(std::ptr_fun(foo));
 mat1.unaryExpr(std::ref(foo));
 mat1.unaryExpr([](double x) { return foo(x); });
 \endcode
 
+Please note that it's not possible to pass a raw function pointer to \c unaryExpr, so please warp it as shown above.
 
 <a href="#" class="top">top</a>
 \section QuickRef_Reductions Reductions
