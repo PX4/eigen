@@ -362,7 +362,7 @@ class TensorContractionOp : public TensorBase<TensorContractionOp<Indices, LhsXp
 
 
 template<typename Derived>
-struct TensorContractionEvaluatorBase
+struct TensorContractionEvaluatorBase : internal::no_assignment_operator
 {
   typedef typename internal::traits<Derived>::Indices Indices;
   typedef typename internal::traits<Derived>::LeftArgType LeftArgType;
@@ -934,8 +934,6 @@ struct TensorContractionEvaluatorBase
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE EvaluatorPointerType data() const { return m_result; }
 
 protected:
-  // Prevent assignment
-  TensorContractionEvaluatorBase& operator = (const TensorContractionEvaluatorBase&);
   Dimensions m_dimensions;
 
   contract_t m_k_strides;
