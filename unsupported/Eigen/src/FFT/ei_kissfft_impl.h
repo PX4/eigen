@@ -31,7 +31,7 @@ struct kiss_cpx_fft
     using numext::cos;
     m_inverse = inverse;
     m_twiddles.resize(nfft);
-    double phinc =  0.25 * EIGEN_PI / nfft;
+    double phinc =  0.25 * double(EIGEN_PI) / nfft;
     Scalar flip = inverse ? Scalar(1) : Scalar(-1);
     m_twiddles[0] = Complex(Scalar(1), Scalar(0));
     if ((nfft&1)==0)

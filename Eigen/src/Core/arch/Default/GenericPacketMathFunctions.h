@@ -1369,7 +1369,7 @@ struct fast_accurate_exp2<double> {
     const Packet p0 = pset1<Packet>(0.240226506959101332);
     const Packet C_hi = pset1<Packet>(0.693147180559945286); 
     const Packet C_lo = pset1<Packet>(4.81927865669806721e-17);
-    const Packet one = pset1<Packet>(1.0f);
+    const Packet one = pset1<Packet>(1.0);
 
     // Evaluate P(x) in working precision.
     // We evaluate even and odd parts of the polynomial separately
