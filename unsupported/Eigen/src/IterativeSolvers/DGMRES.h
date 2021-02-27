@@ -57,7 +57,7 @@ void sortWithPermutation (VectorType& vec, IndexType& perm, typename IndexType::
 
 }
 /**
- * \ingroup IterativeLInearSolvers_Module
+ * \ingroup IterativeLinearSolvers_Module
  * \brief A Restarted GMRES with deflation.
  * This class implements a modification of the GMRES solver for
  * sparse linear systems. The basis is built with modified 

@@ -15,11 +15,14 @@
 #include "../../Eigen/Householder"
 
 /**
-  * \defgroup IterativeSolvers_Module Iterative solvers module
+  * \defgroup IterativeLinearSolvers_Module Iterative solvers module
   * This module aims to provide various iterative linear and non linear solver algorithms.
   * It currently provides:
   *  - a constrained conjugate gradient
   *  - a Householder GMRES implementation
+  *  - an IDR(s) implementation
+  *  - a DGMRES implementation
+  *  - a MINRES implementation
   * \code
   * #include <unsupported/Eigen/IterativeSolvers>
   * \endcode
@@ -38,6 +41,7 @@
 #include "src/IterativeSolvers/DGMRES.h"
 //#include "src/IterativeSolvers/SSORPreconditioner.h"
 #include "src/IterativeSolvers/MINRES.h"
+#include "src/IterativeSolvers/IDRS.h"
 
 #include "../../Eigen/src/Core/util/ReenableStupidWarnings.h"
 
