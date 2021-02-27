@@ -10,10 +10,6 @@
 #ifndef EIGEN_STABLENORM_H
 #define EIGEN_STABLENORM_H
 
-#if EIGEN_HAS_CXX11_ATOMIC
-#include <atomic>
-#endif
-
 namespace Eigen { 
 
 namespace internal {
