@@ -217,12 +217,12 @@ struct SluMatrix : SuperMatrix
     res.setScalarType<typename MatrixType::Scalar>();
 
     // FIXME the following is not very accurate
-    if (MatrixType::Flags & Upper)
+    if (int(MatrixType::Flags) & int(Upper))
       res.Mtype = SLU_TRU;
-    if (MatrixType::Flags & Lower)
+    if (int(MatrixType::Flags) & int(Lower))
       res.Mtype = SLU_TRL;
 
-    eigen_assert(((MatrixType::Flags & SelfAdjoint)==0) && "SelfAdjoint matrix shape not supported by SuperLU");
+    eigen_assert(((int(MatrixType::Flags) & int(SelfAdjoint))==0) && "SelfAdjoint matrix shape not supported by SuperLU");
 
     return res;
   }
