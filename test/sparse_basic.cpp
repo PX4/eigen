@@ -413,7 +413,7 @@ template<typename SparseMatrixType> void sparse_basic(const SparseMatrixType& re
 
     m.setFromTriplets(triplets.begin(), triplets.end(), std::multiplies<Scalar>());
     VERIFY_IS_APPROX(m, refMat_prod);
-#if (defined(__cplusplus) && __cplusplus >= 201103L)
+#if (EIGEN_COMP_CXXVER >= 11)
     m.setFromTriplets(triplets.begin(), triplets.end(), [] (Scalar,Scalar b) { return b; });
     VERIFY_IS_APPROX(m, refMat_last);
 #endif

@@ -761,7 +761,7 @@ void packetmath_real() {
     }
   }
 
-#if EIGEN_HAS_C99_MATH && (__cplusplus > 199711L)
+#if EIGEN_HAS_C99_MATH && (EIGEN_COMP_CXXVER >= 11)
   data1[0] = std::numeric_limits<Scalar>::infinity();
   data1[1] = Scalar(-1);
   CHECK_CWISE1_IF(PacketTraits::HasLog1p, std::log1p, internal::plog1p);

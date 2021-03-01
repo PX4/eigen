@@ -56,7 +56,7 @@ int main()
   B =  mat_indexing(A, ri+1, ci);
   std::cout << "A(ri+1,ci) =" << std::endl;
   std::cout << B << std::endl << std::endl;
-#if __cplusplus >= 201103L
+#if EIGEN_COMP_CXXVER >= 11
   B =  mat_indexing(A, ArrayXi::LinSpaced(13,0,12).unaryExpr([](int x){return x%4;}), ArrayXi::LinSpaced(4,0,3));
   std::cout << "A(ArrayXi::LinSpaced(13,0,12).unaryExpr([](int x){return x%4;}), ArrayXi::LinSpaced(4,0,3)) =" << std::endl;
   std::cout << B << std::endl << std::endl;

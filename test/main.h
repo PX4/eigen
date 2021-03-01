@@ -45,7 +45,7 @@
 #include <queue>
 #include <cassert>
 #include <list>
-#if __cplusplus >= 201103L
+#if __cplusplus >= 201103L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201103L)
 #include <random>
 #include <chrono>
 #ifdef EIGEN_USE_THREADS

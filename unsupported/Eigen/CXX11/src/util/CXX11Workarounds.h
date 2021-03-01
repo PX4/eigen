@@ -32,7 +32,7 @@
  * On the other hand, visual studio still doesn't claim to support C++11 although it's
  * compliant enugh for our purpose.
  */
-#if (__cplusplus <= 199711L) && (EIGEN_COMP_MSVC < 1900)
+#if (EIGEN_COMP_CXXVER < 11)
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__INTEL_COMPILER)
 #pragma GCC diagnostic error "-Wfatal-errors"
 #endif

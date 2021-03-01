@@ -609,18 +609,36 @@
 #define EIGEN_HAS_STATIC_ARRAY_TEMPLATE 0
 #endif
 
+// The macro EIGEN_CPLUSPLUS is a replacement for __cplusplus/_MSVC_LANG that
+// works for both platforms, indicating the C++ standard version number.
+//
+// With MSVC, without defining /Zc:__cplusplus, the __cplusplus macro will
+// report 199711L regardless of the language standard specified via /std.
+// We need to rely on _MSVC_LANG instead, which is only available after
+// VS2015.3.
+#if EIGEN_COMP_MSVC_LANG > 0
+#define EIGEN_CPLUSPLUS EIGEN_COMP_MSVC_LANG
+#elif EIGEN_COMP_MSVC >= 1900
+#define EIGEN_CPLUSPLUS 201103L
+#elif defined(__cplusplus)
+#define EIGEN_CPLUSPLUS __cplusplus
+#else
+#define EIGEN_CPLUSPLUS 0
+#endif
 
 // The macro EIGEN_COMP_CXXVER defines the c++ verson expected by the compiler.
 // For instance, if compiling with gcc and -std=c++17, then EIGEN_COMP_CXXVER
 // is defined to 17.
-#if   (defined(__cplusplus) && (__cplusplus >  201402L) || EIGEN_COMP_MSVC_LANG > 201402L)
-#define EIGEN_COMP_CXXVER 17
-#elif (defined(__cplusplus) && (__cplusplus >  201103L) || EIGEN_COMP_MSVC >= 1910)
-#define EIGEN_COMP_CXXVER 14
-#elif (defined(__cplusplus) && (__cplusplus >= 201103L) || EIGEN_COMP_MSVC >= 1900)
-#define EIGEN_COMP_CXXVER 11
+#if EIGEN_CPLUSPLUS > 201703L
+  #define EIGEN_COMP_CXXVER 20
+#elif EIGEN_CPLUSPLUS > 201402L
+  #define EIGEN_COMP_CXXVER 17
+#elif EIGEN_CPLUSPLUS > 201103L
+  #define EIGEN_COMP_CXXVER 14
+#elif EIGEN_CPLUSPLUS >= 201103L
+  #define EIGEN_COMP_CXXVER 11
 #else
-#define EIGEN_COMP_CXXVER 03
+  #define EIGEN_COMP_CXXVER 03
 #endif
 
 
@@ -645,8 +663,7 @@
 #ifndef EIGEN_HAS_RVALUE_REFERENCES
 #if EIGEN_MAX_CPP_VER>=11 && \
     (__has_feature(cxx_rvalue_references) || \
-    (defined(__cplusplus) && __cplusplus >= 201103L) || \
-    (EIGEN_COMP_MSVC >= 1600))
+     (EIGEN_COMP_CXXVER >= 11) || (EIGEN_COMP_MSVC >= 1600))
   #define EIGEN_HAS_RVALUE_REFERENCES 1
 #else
   #define EIGEN_HAS_RVALUE_REFERENCES 0
@@ -731,12 +748,12 @@
 
 // Does the compiler support variadic templates?
 #ifndef EIGEN_HAS_VARIADIC_TEMPLATES
-#if EIGEN_MAX_CPP_VER>=11 && (__cplusplus > 199711L || EIGEN_COMP_MSVC >= 1900) \
+#if EIGEN_MAX_CPP_VER>=11 && (EIGEN_COMP_CXXVER >= 11) \
   && (!defined(__NVCC__) || !EIGEN_ARCH_ARM_OR_ARM64 || (EIGEN_COMP_NVCC >= 80000) )
     // ^^ Disable the use of variadic templates when compiling with versions of nvcc older than 8.0 on ARM devices:
     //    this prevents nvcc from crashing when compiling Eigen on Tegra X1
 #define EIGEN_HAS_VARIADIC_TEMPLATES 1
-#elif  EIGEN_MAX_CPP_VER>=11 && (__cplusplus > 199711L || EIGEN_COMP_MSVC >= 1900) && defined(SYCL_DEVICE_ONLY)
+#elif  EIGEN_MAX_CPP_VER>=11 && (EIGEN_COMP_CXXVER >= 11) && defined(SYCL_DEVICE_ONLY)
 #define EIGEN_HAS_VARIADIC_TEMPLATES 1
 #else
 #define EIGEN_HAS_VARIADIC_TEMPLATES 0
@@ -747,12 +764,12 @@
 #ifndef EIGEN_HAS_CONSTEXPR
   #if defined(EIGEN_CUDACC)
   // Const expressions are supported provided that c++11 is enabled and we're using either clang or nvcc 7.5 or above
-    #if EIGEN_MAX_CPP_VER>=14 && (__cplusplus > 199711L && (EIGEN_COMP_CLANG || EIGEN_COMP_NVCC >= 70500))
+    #if EIGEN_MAX_CPP_VER>=14 && (EIGEN_COMP_CXXVER >= 11 && (EIGEN_COMP_CLANG || EIGEN_COMP_NVCC >= 70500))
       #define EIGEN_HAS_CONSTEXPR 1
     #endif
-  #elif EIGEN_MAX_CPP_VER>=14 && (__has_feature(cxx_relaxed_constexpr) || (defined(__cplusplus) && __cplusplus >= 201402L) || \
-    (EIGEN_GNUC_AT_LEAST(4,8) && (__cplusplus > 199711L)) || \
-    (EIGEN_COMP_CLANG >= 306 && (__cplusplus > 199711L)))
+  #elif EIGEN_MAX_CPP_VER>=14 && (__has_feature(cxx_relaxed_constexpr) || (EIGEN_COMP_CXXVER >= 14) || \
+    (EIGEN_GNUC_AT_LEAST(4,8) && (EIGEN_COMP_CXXVER >= 11)) || \
+    (EIGEN_COMP_CLANG >= 306 && (EIGEN_COMP_CXXVER >= 11)))
     #define EIGEN_HAS_CONSTEXPR 1
   #endif
 
@@ -771,7 +788,7 @@
 // Does the compiler support C++11 math?
 // Let's be conservative and enable the default C++11 implementation only if we are sure it exists
 #ifndef EIGEN_HAS_CXX11_MATH
-  #if EIGEN_MAX_CPP_VER>=11 && ((__cplusplus > 201103L) || (__cplusplus >= 201103L) && (EIGEN_COMP_GNUC_STRICT || EIGEN_COMP_CLANG || EIGEN_COMP_MSVC || EIGEN_COMP_ICC)  \
+  #if EIGEN_MAX_CPP_VER>=11 && ((EIGEN_COMP_CXXVER > 11) || (EIGEN_COMP_CXXVER == 11) && (EIGEN_COMP_GNUC_STRICT || EIGEN_COMP_CLANG || EIGEN_COMP_MSVC || EIGEN_COMP_ICC)  \
       && (EIGEN_ARCH_i386_OR_x86_64) && (EIGEN_OS_GNULINUX || EIGEN_OS_WIN_STRICT || EIGEN_OS_MAC))
     #define EIGEN_HAS_CXX11_MATH 1
   #else
@@ -782,9 +799,8 @@
 // Does the compiler support proper C++11 containers?
 #ifndef EIGEN_HAS_CXX11_CONTAINERS
   #if    EIGEN_MAX_CPP_VER>=11 && \
-         ((__cplusplus > 201103L) \
-      || ((__cplusplus >= 201103L) && (EIGEN_COMP_GNUC_STRICT || EIGEN_COMP_CLANG || EIGEN_COMP_ICC>=1400)) \
-      || EIGEN_COMP_MSVC >= 1900)
+         ((EIGEN_COMP_CXXVER > 11) \
+      || ((EIGEN_COMP_CXXVER == 11) && (EIGEN_COMP_GNUC_STRICT || EIGEN_COMP_CLANG || EIGEN_COMP_MSVC || EIGEN_COMP_ICC>=1400)))
     #define EIGEN_HAS_CXX11_CONTAINERS 1
   #else
     #define EIGEN_HAS_CXX11_CONTAINERS 0
@@ -795,9 +811,8 @@
 #ifndef EIGEN_HAS_CXX11_NOEXCEPT
   #if    EIGEN_MAX_CPP_VER>=11 && \
          (__has_feature(cxx_noexcept) \
-      || (__cplusplus > 201103L) \
-      || ((__cplusplus >= 201103L) && (EIGEN_COMP_GNUC_STRICT || EIGEN_COMP_CLANG || EIGEN_COMP_ICC>=1400)) \
-      || EIGEN_COMP_MSVC >= 1900)
+      || (EIGEN_COMP_CXXVER > 11) \
+      || ((EIGEN_COMP_CXXVER == 11) && (EIGEN_COMP_GNUC_STRICT || EIGEN_COMP_CLANG || EIGEN_COMP_MSVC || EIGEN_COMP_ICC>=1400)))
     #define EIGEN_HAS_CXX11_NOEXCEPT 1
   #else
     #define EIGEN_HAS_CXX11_NOEXCEPT 0
@@ -807,8 +822,8 @@
 #ifndef EIGEN_HAS_CXX11_ATOMIC
   #if    EIGEN_MAX_CPP_VER>=11 && \
          (__has_feature(cxx_atomic) \
-      || (__cplusplus > 201103L) \
-      || ((__cplusplus >= 201103L) && (EIGEN_COMP_MSVC==0 || EIGEN_COMP_MSVC >= 1700)))
+      || (EIGEN_COMP_CXXVER > 11) \
+      || ((EIGEN_COMP_CXXVER == 11) && (EIGEN_COMP_MSVC==0 || EIGEN_COMP_MSVC >= 1700)))
     #define EIGEN_HAS_CXX11_ATOMIC 1
   #else
     #define EIGEN_HAS_CXX11_ATOMIC 0
@@ -817,7 +832,7 @@
 
 #ifndef EIGEN_HAS_CXX11_OVERRIDE_FINAL
   #if    EIGEN_MAX_CPP_VER>=11 && \
-       (__cplusplus >= 201103L || EIGEN_COMP_MSVC >= 1700)
+       (EIGEN_COMP_CXXVER >= 11 || EIGEN_COMP_MSVC >= 1700)
     #define EIGEN_HAS_CXX11_OVERRIDE_FINAL 1
   #else
     #define EIGEN_HAS_CXX11_OVERRIDE_FINAL 0

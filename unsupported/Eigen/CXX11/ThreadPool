@@ -30,7 +30,7 @@
 
 // The code depends on CXX11, so only include the module if the
 // compiler supports it.
-#if __cplusplus > 199711L || EIGEN_COMP_MSVC >= 1900
+#if (EIGEN_COMP_CXXVER >= 11)
 #include <cstddef>
 #include <cstring>
 #include <time.h>
