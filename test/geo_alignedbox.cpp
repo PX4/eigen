@@ -10,7 +10,6 @@
 #include "main.h"
 #include <Eigen/Geometry>
 
-#include<iostream>
 using namespace std;
 
 // NOTE the following workaround was needed on some 32 bits builds to kill extra precision of x87 registers.
@@ -26,7 +25,7 @@ void kill_extra_precision(T& /* x */) {
 }
 
 
-template<typename BoxType> void alignedbox(const BoxType& _box)
+template<typename BoxType> void alignedbox(const BoxType& box)
 {
   /* this test covers the following files:
      AlignedBox.h
@@ -36,7 +35,7 @@ template<typename BoxType> void alignedbox(const BoxType& _box)
   typedef typename ScalarTraits::Real RealScalar;
   typedef Matrix<Scalar, BoxType::AmbientDimAtCompileTime, 1> VectorType;
 
-  const Index dim = _box.dim();
+  const Index dim = box.dim();
 
   VectorType p0 = VectorType::Random(dim);
   VectorType p1 = VectorType::Random(dim);
@@ -87,18 +86,18 @@ template<typename BoxType> void alignedbox(const BoxType& _box)
 
 }
 
-template<typename BoxType> void alignedboxTranslatable(const BoxType& _box)
+template<typename BoxType> void alignedboxTranslatable(const BoxType& box)
 {
   typedef typename BoxType::Scalar Scalar;
   typedef Matrix<Scalar, BoxType::AmbientDimAtCompileTime, 1> VectorType;
   typedef Transform<Scalar, BoxType::AmbientDimAtCompileTime, Isometry> IsometryTransform;
   typedef Transform<Scalar, BoxType::AmbientDimAtCompileTime, Affine> AffineTransform;
 
-  alignedbox(_box);
+  alignedbox(box);
 
   const VectorType Ones = VectorType::Ones();
   const VectorType UnitX = VectorType::UnitX();
-  const Index dim = _box.dim();
+  const Index dim = box.dim();
 
   // box((-1, -1, -1), (1, 1, 1))
   BoxType a(-Ones, Ones);
@@ -175,33 +174,33 @@ template<typename BoxType> void alignedboxTranslatable(const BoxType& _box)
 }
 
 template<typename Scalar, typename Rotation>
-Rotation rotate2D(Scalar _angle) {
-  return Rotation2D<Scalar>(_angle);
+Rotation rotate2D(Scalar angle) {
+  return Rotation2D<Scalar>(angle);
 }
 
 template<typename Scalar, typename Rotation>
-Rotation rotate2DIntegral(typename NumTraits<Scalar>::NonInteger _angle) {
+Rotation rotate2DIntegral(typename NumTraits<Scalar>::NonInteger angle) {
   typedef typename NumTraits<Scalar>::NonInteger NonInteger;
-  return Rotation2D<NonInteger>(_angle).toRotationMatrix().
+  return Rotation2D<NonInteger>(angle).toRotationMatrix().
       template cast<Scalar>();
 }
 
 template<typename Scalar, typename Rotation>
-Rotation rotate3DZAxis(Scalar _angle) {
-  return AngleAxis<Scalar>(_angle, Matrix<Scalar, 3, 1>(0, 0, 1));
+Rotation rotate3DZAxis(Scalar angle) {
+  return AngleAxis<Scalar>(angle, Matrix<Scalar, 3, 1>(0, 0, 1));
 }
 
 template<typename Scalar, typename Rotation>
-Rotation rotate3DZAxisIntegral(typename NumTraits<Scalar>::NonInteger _angle) {
+Rotation rotate3DZAxisIntegral(typename NumTraits<Scalar>::NonInteger angle) {
   typedef typename NumTraits<Scalar>::NonInteger NonInteger;
-  return AngleAxis<NonInteger>(_angle, Matrix<NonInteger, 3, 1>(0, 0, 1)).
+  return AngleAxis<NonInteger>(angle, Matrix<NonInteger, 3, 1>(0, 0, 1)).
       toRotationMatrix().template cast<Scalar>();
 }
 
 template<typename Scalar, typename Rotation>
-Rotation rotate4DZWAxis(Scalar _angle) {
+Rotation rotate4DZWAxis(Scalar angle) {
   Rotation result = Matrix<Scalar, 4, 4>::Identity();
-  result.block(0, 0, 3, 3) = rotate3DZAxis<Scalar, AngleAxisd>(_angle).toRotationMatrix();
+  result.block(0, 0, 3, 3) = rotate3DZAxis<Scalar, AngleAxisd>(angle).toRotationMatrix();
   return result;
 }
 
@@ -221,38 +220,22 @@ MatrixType randomRotationMatrix()
 }
 
 template <typename Scalar, int Dim>
-std::vector<Matrix<Scalar, Dim, 1> > boxGetCorners(const Matrix<Scalar, Dim, 1>& _min, const Matrix<Scalar, Dim, 1>& _max, int dim = Dim)
+Matrix<Scalar, Dim, (1<<Dim)> boxGetCorners(const Matrix<Scalar, Dim, 1>& min_, const Matrix<Scalar, Dim, 1>& max_)
 {
-  std::vector<Matrix<Scalar, Dim, 1> > result;
-  if (dim == 1)
+  Matrix<Scalar, Dim, (1<<Dim) > result;
+  for(Index i=0; i<(1<<Dim); ++i)
   {
-    result.push_back(_min);
-    result.push_back(_max);
-  }
-  else
-  {
-    std::vector<Matrix<Scalar, Dim, 1> > shorter = boxGetCorners(_min, _max, dim - 1);
-    for (size_t i = 0; i < shorter.size(); ++i)
-    {
-      Matrix<Scalar, Dim , 1> vec = shorter[i];
-
-      Matrix<Scalar, Dim, 1> vec1 = _min;
-      vec1.block(Dim - dim, 0, dim - 1, 1) = vec.block(Dim - dim, 0, dim - 1, 1);
-      result.push_back(vec1);
-
-      Matrix<Scalar, Dim, 1> vec2 = _max;
-      vec2.block(Dim - dim, 0, dim - 1, 1) = vec.block(Dim - dim, 0, dim - 1, 1);
-      result.push_back(vec2);
-    }
+    for(Index j=0; j<Dim; ++j)
+      result(j,i) = (i & (1<<j)) ? min_(j) : max_(j);
   }
   return result;
 }
 
 template<typename BoxType, typename Rotation> void alignedboxRotatable(
-    const BoxType& _box,
-    Rotation (*_rotate)(typename NumTraits<typename BoxType::Scalar>::NonInteger /*_angle*/))
+    const BoxType& box,
+    Rotation (*rotate)(typename NumTraits<typename BoxType::Scalar>::NonInteger /*_angle*/))
 {
-  alignedboxTranslatable(_box);
+  alignedboxTranslatable(box);
 
   typedef typename BoxType::Scalar Scalar;
   typedef typename NumTraits<Scalar>::NonInteger NonInteger;
@@ -285,7 +268,7 @@ template<typename BoxType, typename Rotation> void alignedboxRotatable(
   IsometryTransform tf2 = IsometryTransform::Identity();
   // for some weird reason the following statement has to be put separate from
   // the following rotate call, otherwise precision problems arise...
-  Rotation rot = _rotate(NonInteger(EIGEN_PI));
+  Rotation rot = rotate(NonInteger(EIGEN_PI));
   tf2.rotate(rot);
 
   c.transform(tf2);
@@ -295,7 +278,7 @@ template<typename BoxType, typename Rotation> void alignedboxRotatable(
   VERIFY_IS_APPROX((c.min)(), UnitX - UnitZ * Scalar(2));
   VERIFY_IS_APPROX((c.max)(), UnitX * Scalar(3) + UnitY * Scalar(2));
 
-  rot = _rotate(NonInteger(EIGEN_PI / 2));
+  rot = rotate(NonInteger(EIGEN_PI / 2));
   tf2.setIdentity();
   tf2.rotate(rot);
 
@@ -319,18 +302,20 @@ template<typename BoxType, typename Rotation> void alignedboxRotatable(
 }
 
 template<typename BoxType, typename Rotation> void alignedboxNonIntegralRotatable(
-    const BoxType& _box,
-    Rotation (*_rotate)(typename NumTraits<typename BoxType::Scalar>::NonInteger /*_angle*/))
+    const BoxType& box,
+    Rotation (*rotate)(typename NumTraits<typename BoxType::Scalar>::NonInteger /*_angle*/))
 {
-  alignedboxRotatable(_box, _rotate);
+  alignedboxRotatable(box, rotate);
 
   typedef typename BoxType::Scalar Scalar;
   typedef typename NumTraits<Scalar>::NonInteger NonInteger;
-  typedef Matrix<Scalar, BoxType::AmbientDimAtCompileTime, 1> VectorType;
-  typedef Transform<Scalar, BoxType::AmbientDimAtCompileTime, Isometry> IsometryTransform;
-  typedef Transform<Scalar, BoxType::AmbientDimAtCompileTime, Affine> AffineTransform;
+  enum { Dim = BoxType::AmbientDimAtCompileTime };
+  typedef Matrix<Scalar, Dim, 1> VectorType;
+  typedef Matrix<Scalar, Dim, (1 << Dim)> CornersType;
+  typedef Transform<Scalar, Dim, Isometry> IsometryTransform;
+  typedef Transform<Scalar, Dim, Affine> AffineTransform;
 
-  const Index dim = _box.dim();
+  const Index dim = box.dim();
   const VectorType Zero = VectorType::Zero();
   const VectorType Ones = VectorType::Ones();
 
@@ -347,7 +332,7 @@ template<typename BoxType, typename Rotation> void alignedboxNonIntegralRotatabl
   VectorType cornerTL = (c.max)(); cornerTL[0] = cornerBL[0];
 
   NonInteger angle = NonInteger(EIGEN_PI/3);
-  Rotation rot = _rotate(angle);
+  Rotation rot = rotate(angle);
   IsometryTransform tf2;
   tf2.setIdentity();
   tf2.rotate(rot);
@@ -393,8 +378,7 @@ template<typename BoxType, typename Rotation> void alignedboxNonIntegralRotatabl
 
     c = BoxType(minCorner, maxCorner);
 
-    std::vector<VectorType> corners = boxGetCorners(minCorner, maxCorner);
-    const size_t numCorners = corners.size();
+    CornersType corners = boxGetCorners(minCorner, maxCorner);
 
     typename AffineTransform::LinearMatrixType rotation =
         randomRotationMatrix<typename AffineTransform::LinearMatrixType>();
@@ -404,20 +388,10 @@ template<typename BoxType, typename Rotation> void alignedboxNonIntegralRotatabl
     tf2.translate(VectorType::Random());
 
     c.transform(tf2);
-    for (size_t corner = 0; corner < numCorners; ++corner)
-      corners[corner] = tf2 * corners[corner];
+    corners = tf2 * corners;
 
-    for (Index d = 0; d < dim; ++d)
-    {
-      minCorner[d] = corners[0][d];
-      maxCorner[d] = corners[0][d];
-
-      for (size_t corner = 0; corner < numCorners; ++corner)
-      {
-        minCorner[d] = (min)(minCorner[d], corners[corner][d]);
-        maxCorner[d] = (max)(maxCorner[d], corners[corner][d]);
-      }
-    }
+    minCorner = corners.rowwise().minCoeff();
+    maxCorner = corners.rowwise().maxCoeff();
 
     VERIFY_IS_APPROX((c.min)(), minCorner);
     VERIFY_IS_APPROX((c.max)(), maxCorner);
@@ -434,28 +408,17 @@ template<typename BoxType, typename Rotation> void alignedboxNonIntegralRotatabl
 
     c = BoxType(minCorner, maxCorner);
 
-    std::vector<VectorType> corners = boxGetCorners(minCorner, maxCorner);
-    const size_t numCorners = corners.size();
+    CornersType corners = boxGetCorners(minCorner, maxCorner);
 
     AffineTransform atf = AffineTransform::Identity();
     atf.linearExt() = AffineTransform::LinearPart::Random();
     atf.translate(VectorType::Random());
 
     c.transform(atf);
-    for (size_t corner = 0; corner < numCorners; ++corner)
-      corners[corner] = atf * corners[corner];
+    corners = atf * corners;
 
-    for (Index d = 0; d < dim; ++d)
-    {
-      minCorner[d] = corners[0][d];
-      maxCorner[d] = corners[0][d];
-
-      for (size_t corner = 0; corner < numCorners; ++corner)
-      {
-        minCorner[d] = (min)(minCorner[d], corners[corner][d]);
-        maxCorner[d] = (max)(maxCorner[d], corners[corner][d]);
-      }
-    }
+    minCorner = corners.rowwise().minCoeff();
+    maxCorner = corners.rowwise().maxCoeff();
 
     VERIFY_IS_APPROX((c.min)(), minCorner);
     VERIFY_IS_APPROX((c.max)(), maxCorner);
@@ -463,13 +426,13 @@ template<typename BoxType, typename Rotation> void alignedboxNonIntegralRotatabl
 }
 
 template<typename BoxType>
-void alignedboxCastTests(const BoxType& _box)
+void alignedboxCastTests(const BoxType& box)
 {
   // casting
   typedef typename BoxType::Scalar Scalar;
   typedef Matrix<Scalar, BoxType::AmbientDimAtCompileTime, 1> VectorType;
 
-  const Index dim = _box.dim();
+  const Index dim = box.dim();
 
   VectorType p0 = VectorType::Random(dim);
   VectorType p1 = VectorType::Random(dim);
