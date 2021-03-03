@@ -108,23 +108,6 @@ template<typename Scalar> bool areApprox(const Scalar* a, const Scalar* b, int s
   return true;
 }
 
-template<typename Scalar> bool areEqual(const Scalar* a, const Scalar* b, int size)
-{
-  for (int i=0; i<size; ++i)
-  {
-    if (a[i] != b[i])
-    {
-      if((numext::isnan)(a[i]) && (numext::isnan)(b[i]))
-      {
-        continue;
-      }
-      std::cout << "ref: [" << Map<const Matrix<Scalar,1,Dynamic> >(a,size) << "]" << " != vec: [" << Map<const Matrix<Scalar,1,Dynamic> >(b,size) << "]\n";
-      return false;
-    }
-  }
-  return true;
-}
-
 #define CHECK_CWISE1(REFOP, POP) { \
   for (int i=0; i<PacketSize; ++i) \
     ref[i] = REFOP(data1[i]); \
@@ -193,14 +176,6 @@ struct packet_helper<false,Packet>
     ref[i] = Scalar(REFOP(data1[i])); \
   h.store(data2, POP(h.load(data1))); \
   VERIFY(test::areApprox(ref, data2, PacketSize) && #POP); \
-}
-
-#define CHECK_CWISE1_EXACT_IF(COND, REFOP, POP) if(COND) { \
-  test::packet_helper<COND,Packet> h; \
-  for (int i=0; i<PacketSize; ++i) \
-    ref[i] = Scalar(REFOP(data1[i])); \
-  h.store(data2, POP(h.load(data1))); \
-  VERIFY(test::areEqual(ref, data2, PacketSize) && #POP); \
 }
 
 #define CHECK_CWISE2_IF(COND, REFOP, POP) if(COND) { \

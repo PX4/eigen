@@ -646,35 +646,20 @@ template<> EIGEN_STRONG_INLINE Packet2d pfloor<Packet2d>(const Packet2d& a) { re
 #else
 template<> EIGEN_STRONG_INLINE Packet4f print(const Packet4f& a) {
   // Adds and subtracts signum(a) * 2^23 to force rounding.
-  const Packet4f limit = pset1<Packet4f>(static_cast<float>(1<<23));
-  const Packet4f abs_a = pabs(a);
-  // Inline asm to prevent the compiler from optimizing away the
-  // addition and subtraction.
-  // Packet4f r = psub(padd(abs_a, limit), limit);
-  Packet4f r = abs_a;
-  __asm__ ("addps %[limit], %[r]\n\t"
-           "subps %[limit], %[r]" : [r] "+x" (r) : [limit] "x" (limit));
-  // If greater than limit, simply return a.  Otherwise, account for sign.
-  r = pselect(pcmp_lt(abs_a, limit),
-              pselect(pcmp_lt(a, pzero(a)), pnegate(r), r), a);
-  return r;
+  const Packet4f offset = 
+    pselect(pcmp_lt(a, pzero(a)), 
+      pset1<Packet4f>(-static_cast<float>(1<<23)),
+      pset1<Packet4f>(+static_cast<float>(1<<23)));
+  return psub(padd(a, offset), offset);
 }
 
 template<> EIGEN_STRONG_INLINE Packet2d print(const Packet2d& a) {
   // Adds and subtracts signum(a) * 2^52 to force rounding.
-  const Packet2d limit = pset1<Packet2d>(static_cast<double>(1ull<<52));
-  const Packet2d abs_a = pabs(a);
-  // Inline asm to prevent the compiler from optimizing away the
-  // addition and subtraction.
-  // Packet2d r = psub(padd(abs_a, limit), limit);
-  Packet2d r = abs_a;
-  asm("addpd %[limit], %[r] \n\t"
-      "subpd %[limit], %[r]" : [r] "+x" (r) : [limit] "x" (limit));
-
-  // If greater than limit, simply return a.  Otherwise, account for sign.
-  r = pselect(pcmp_lt(abs_a, limit),
-              pselect(pcmp_lt(a, pzero(a)), pnegate(r), r), a);
-  return r;
+  const Packet2d offset = 
+    pselect(pcmp_lt(a, pzero(a)), 
+      pset1<Packet2d>(-static_cast<double>(1ull<<52)),
+      pset1<Packet2d>(+static_cast<double>(1ull<<52)));
+  return psub(padd(a, offset), offset);
 }
 
 template<> EIGEN_STRONG_INLINE Packet4f pfloor<Packet4f>(const Packet4f& a)

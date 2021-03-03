@@ -3207,34 +3207,20 @@ template<> EIGEN_STRONG_INLINE Packet4f pceil<Packet4f>(const Packet4f& a)
 
 template<> EIGEN_STRONG_INLINE Packet4f print(const Packet4f& a) {
   // Adds and subtracts signum(a) * 2^23 to force rounding.
-  const Packet4f limit = pset1<Packet4f>(static_cast<float>(1<<23));
-  const Packet4f abs_a = pabs(a);
-  // Inline asm to prevent the compiler from optimizing away the
-  // addition and subtraction.
-  // Packet4f r = psub(padd(abs_a, limit), limit);
-  Packet4f r = abs_a;
-  __asm__ ("vadd.f32 %[r], %[r], %[limit]\n\t"
-           "vsub.f32 %[r], %[r], %[limit]" : [r] "+x" (r) : [limit] "x" (limit));
-  // If greater than limit, simply return a.  Otherwise, account for sign.
-  r = pselect(pcmp_lt(abs_a, limit),
-              pselect(pcmp_lt(a, pzero(a)), pnegate(r), r), a);
-  return r;
+  const Packet4f offset = 
+    pselect(pcmp_lt(a, pzero(a)), 
+      pset1<Packet4f>(-static_cast<float>(1<<23)),
+      pset1<Packet4f>(+static_cast<float>(1<<23)));
+  return psub(padd(a, offset), offset);
 }
 
 template<> EIGEN_STRONG_INLINE Packet2f print(const Packet2f& a) {
   // Adds and subtracts signum(a) * 2^23 to force rounding.
-  const Packet2f limit = pset1<Packet2f>(static_cast<float>(1<<23));
-  const Packet2f abs_a = pabs(a);
-  // Inline asm to prevent the compiler from optimizing away the
-  // addition and subtraction.
-  // Packet4f r = psub(padd(abs_a, limit), limit);
-  Packet2f r = abs_a;
-  __asm__ ("vadd.f32 %[r], %[r], %[limit]\n\t"
-           "vsub.f32 %[r], %[r], %[limit]" : [r] "+x" (r) : [limit] "x" (limit));
-  // If greater than limit, simply return a.  Otherwise, account for sign.
-  r = pselect(pcmp_lt(abs_a, limit),
-              pselect(pcmp_lt(a, pzero(a)), pnegate(r), r), a);
-  return r;
+  const Packet2f offset = 
+    pselect(pcmp_lt(a, pzero(a)), 
+      pset1<Packet2f>(-static_cast<float>(1<<23)),
+      pset1<Packet2f>(+static_cast<float>(1<<23)));
+  return psub(padd(a, offset), offset);
 }
 
 template<> EIGEN_STRONG_INLINE Packet4f pfloor<Packet4f>(const Packet4f& a)

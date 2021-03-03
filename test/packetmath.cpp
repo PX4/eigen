@@ -543,10 +543,10 @@ void packetmath_real() {
   CHECK_CWISE1_IF(PacketTraits::HasCos, std::cos, internal::pcos);
   CHECK_CWISE1_IF(PacketTraits::HasTan, std::tan, internal::ptan);
 
-  CHECK_CWISE1_EXACT_IF(PacketTraits::HasRound, numext::round, internal::pround);
-  CHECK_CWISE1_EXACT_IF(PacketTraits::HasCeil, numext::ceil, internal::pceil);
-  CHECK_CWISE1_EXACT_IF(PacketTraits::HasFloor, numext::floor, internal::pfloor);
-  CHECK_CWISE1_EXACT_IF(PacketTraits::HasRint, numext::rint, internal::print);
+  CHECK_CWISE1_IF(PacketTraits::HasRound, numext::round, internal::pround);
+  CHECK_CWISE1_IF(PacketTraits::HasCeil, numext::ceil, internal::pceil);
+  CHECK_CWISE1_IF(PacketTraits::HasFloor, numext::floor, internal::pfloor);
+  CHECK_CWISE1_IF(PacketTraits::HasRint, numext::rint, internal::print);
   
   // Rounding edge cases.
   if (PacketTraits::HasRound || PacketTraits::HasCeil || PacketTraits::HasFloor || PacketTraits::HasRint) {
@@ -583,10 +583,10 @@ void packetmath_real() {
     
     for (size_t k=0; k<values.size(); ++k) {
       data1[0] = values[k];
-      CHECK_CWISE1_EXACT_IF(PacketTraits::HasRound, numext::round, internal::pround);
-      CHECK_CWISE1_EXACT_IF(PacketTraits::HasCeil, numext::ceil, internal::pceil);
-      CHECK_CWISE1_EXACT_IF(PacketTraits::HasFloor, numext::floor, internal::pfloor);
-      CHECK_CWISE1_EXACT_IF(PacketTraits::HasRint, numext::rint, internal::print);
+      CHECK_CWISE1_IF(PacketTraits::HasRound, numext::round, internal::pround);
+      CHECK_CWISE1_IF(PacketTraits::HasCeil, numext::ceil, internal::pceil);
+      CHECK_CWISE1_IF(PacketTraits::HasFloor, numext::floor, internal::pfloor);
+      CHECK_CWISE1_IF(PacketTraits::HasRint, numext::rint, internal::print);
     }
   }
 
@@ -644,7 +644,7 @@ void packetmath_real() {
   if (PacketTraits::HasExp) {
     data1[0] = Scalar(-1);
     // underflow to zero
-    data1[PacketSize] = Scalar(std::numeric_limits<Scalar>::min_exponent-55);
+    data1[PacketSize] = Scalar(std::numeric_limits<Scalar>::min_exponent-10);
     CHECK_CWISE2_IF(PacketTraits::HasExp, REF_LDEXP, internal::pldexp);
     // overflow to inf
     data1[PacketSize] = Scalar(std::numeric_limits<Scalar>::max_exponent+10);
