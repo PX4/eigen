@@ -10,7 +10,7 @@
 #ifndef EIGEN_STRIDE_H
 #define EIGEN_STRIDE_H
 
-namespace Eigen { 
+namespace Eigen {
 
 /** \class Stride
   * \ingroup Core_Module
@@ -26,7 +26,7 @@ namespace Eigen {
   *
   * The outer stride is the pointer increment between two consecutive rows of a row-major matrix or
   * between two consecutive columns of a column-major matrix.
-  * 
+  *
   * These two values can be passed either at compile-time as template parameters, or at runtime as
   * arguments to the constructor.
   *
@@ -41,7 +41,7 @@ namespace Eigen {
   * Both strides can be negative, however, a negative stride of -1 cannot be specified at compiletime
   * because of the ambiguity with Dynamic which is defined to -1 (historically, negative strides were
   * not allowed).
-  * 
+  *
   * \sa class InnerStride, class OuterStride, \ref TopicStorageOrders
   */
 template<int _OuterStrideAtCompileTime, int _InnerStrideAtCompileTime>
@@ -78,10 +78,10 @@ class Stride
     {}
 
     /** \returns the outer stride */
-    EIGEN_DEVICE_FUNC
+    EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR
     inline Index outer() const { return m_outer.value(); }
     /** \returns the inner stride */
-    EIGEN_DEVICE_FUNC
+    EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR
     inline Index inner() const { return m_inner.value(); }
 
   protected:

@@ -74,10 +74,10 @@ class CwiseNullaryOp : public internal::dense_xpr_base< CwiseNullaryOp<NullaryOp
             && (ColsAtCompileTime == Dynamic || ColsAtCompileTime == cols));
     }
 
-    EIGEN_DEVICE_FUNC
-    EIGEN_STRONG_INLINE Index rows() const { return m_rows.value(); }
-    EIGEN_DEVICE_FUNC
-    EIGEN_STRONG_INLINE Index cols() const { return m_cols.value(); }
+    EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE EIGEN_CONSTEXPR
+    Index rows() const { return m_rows.value(); }
+    EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE EIGEN_CONSTEXPR
+    Index cols() const { return m_cols.value(); }
 
     /** \returns the functor representing the nullary operation */
     EIGEN_DEVICE_FUNC
@@ -131,7 +131,7 @@ DenseBase<Derived>::NullaryExpr(Index rows, Index cols, const CustomNullaryOp& f
   *
   * Here is an example with C++11 random generators: \include random_cpp11.cpp
   * Output: \verbinclude random_cpp11.out
-  * 
+  *
   * \sa class CwiseNullaryOp
   */
 template<typename Derived>
