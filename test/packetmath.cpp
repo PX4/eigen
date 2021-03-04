@@ -299,6 +299,29 @@ void packetmath_minus_zero_add() {
   CHECK_CWISE2_IF(internal::packet_traits<Scalar>::HasAdd, REF_ADD, internal::padd);
 }
 
+// Ensure optimization barrier compiles and doesn't modify contents.
+// Only applies to raw types, so will not work for std::complex, Eigen::half
+// or Eigen::bfloat16. For those you would need to refer to an underlying
+// storage element.
+template<typename Packet, typename EnableIf = void>
+struct eigen_optimization_barrier_test {
+  static void run() {}
+};
+
+template<typename Packet>
+struct eigen_optimization_barrier_test<Packet, typename internal::enable_if<
+    !NumTraits<Packet>::IsComplex &&
+    !internal::is_same<Packet, Eigen::half>::value &&
+    !internal::is_same<Packet, Eigen::bfloat16>::value
+  >::type> {
+  static void run() {
+    typedef typename internal::unpacket_traits<Packet>::type Scalar;
+    Scalar s = internal::random<Scalar>();
+    Packet barrier = internal::pset1<Packet>(s);
+    EIGEN_OPTIMIZATION_BARRIER(barrier);
+    eigen_assert(s == internal::pfirst(barrier) && "EIGEN_OPTIMIZATION_BARRIER");
+  }
+};
 
 template <typename Scalar, typename Packet>
 void packetmath() {
@@ -317,6 +340,10 @@ void packetmath() {
   EIGEN_ALIGN_MAX Scalar data3[size];
   EIGEN_ALIGN_MAX Scalar ref[size];
   RealScalar refvalue = RealScalar(0);
+
+  eigen_optimization_barrier_test<Packet>::run();
+  eigen_optimization_barrier_test<Scalar>::run();
+
   for (int i = 0; i < size; ++i) {
     data1[i] = internal::random<Scalar>() / RealScalar(PacketSize);
     data2[i] = internal::random<Scalar>() / RealScalar(PacketSize);
@@ -543,10 +570,10 @@ void packetmath_real() {
   CHECK_CWISE1_IF(PacketTraits::HasCos, std::cos, internal::pcos);
   CHECK_CWISE1_IF(PacketTraits::HasTan, std::tan, internal::ptan);
 
-  CHECK_CWISE1_IF(PacketTraits::HasRound, numext::round, internal::pround);
-  CHECK_CWISE1_IF(PacketTraits::HasCeil, numext::ceil, internal::pceil);
-  CHECK_CWISE1_IF(PacketTraits::HasFloor, numext::floor, internal::pfloor);
-  CHECK_CWISE1_IF(PacketTraits::HasRint, numext::rint, internal::print);
+  CHECK_CWISE1_EXACT_IF(PacketTraits::HasRound, numext::round, internal::pround);
+  CHECK_CWISE1_EXACT_IF(PacketTraits::HasCeil, numext::ceil, internal::pceil);
+  CHECK_CWISE1_EXACT_IF(PacketTraits::HasFloor, numext::floor, internal::pfloor);
+  CHECK_CWISE1_EXACT_IF(PacketTraits::HasRint, numext::rint, internal::print);
   
   // Rounding edge cases.
   if (PacketTraits::HasRound || PacketTraits::HasCeil || PacketTraits::HasFloor || PacketTraits::HasRint) {
@@ -583,10 +610,10 @@ void packetmath_real() {
     
     for (size_t k=0; k<values.size(); ++k) {
       data1[0] = values[k];
-      CHECK_CWISE1_IF(PacketTraits::HasRound, numext::round, internal::pround);
-      CHECK_CWISE1_IF(PacketTraits::HasCeil, numext::ceil, internal::pceil);
-      CHECK_CWISE1_IF(PacketTraits::HasFloor, numext::floor, internal::pfloor);
-      CHECK_CWISE1_IF(PacketTraits::HasRint, numext::rint, internal::print);
+      CHECK_CWISE1_EXACT_IF(PacketTraits::HasRound, numext::round, internal::pround);
+      CHECK_CWISE1_EXACT_IF(PacketTraits::HasCeil, numext::ceil, internal::pceil);
+      CHECK_CWISE1_EXACT_IF(PacketTraits::HasFloor, numext::floor, internal::pfloor);
+      CHECK_CWISE1_EXACT_IF(PacketTraits::HasRint, numext::rint, internal::print);
     }
   }
 
@@ -644,7 +671,7 @@ void packetmath_real() {
   if (PacketTraits::HasExp) {
     data1[0] = Scalar(-1);
     // underflow to zero
-    data1[PacketSize] = Scalar(std::numeric_limits<Scalar>::min_exponent-10);
+    data1[PacketSize] = Scalar(std::numeric_limits<Scalar>::min_exponent-55);
     CHECK_CWISE2_IF(PacketTraits::HasExp, REF_LDEXP, internal::pldexp);
     // overflow to inf
     data1[PacketSize] = Scalar(std::numeric_limits<Scalar>::max_exponent+10);

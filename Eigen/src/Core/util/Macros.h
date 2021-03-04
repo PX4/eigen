@@ -51,7 +51,11 @@
 
 #ifndef EIGEN_STACK_ALLOCATION_LIMIT
 // 131072 == 128 KB
-#define EIGEN_STACK_ALLOCATION_LIMIT 131072
+#if defined(__AVX512F__)
+  #define EIGEN_STACK_ALLOCATION_LIMIT 0
+#else
+  #define EIGEN_STACK_ALLOCATION_LIMIT 16384
+#endif
 #endif
 
 //------------------------------------------------------------------------------------------
@@ -1062,6 +1066,64 @@ namespace Eigen {
   #endif
 #endif
 
+
+// Acts as a barrier preventing operations involving `X` from crossing. This
+// occurs, for example, in the fast rounding trick where a magic constant is
+// added then subtracted, which is otherwise compiled away with -ffast-math.
+//
+// See bug 1674
+#if !defined(EIGEN_OPTIMIZATION_BARRIER)
+  #if EIGEN_COMP_GNUC
+    // According to https://gcc.gnu.org/onlinedocs/gcc/Constraints.html:
+    //   X: Any operand whatsoever.
+    //   r: A register operand is allowed provided that it is in a general
+    //      register.
+    //   g: Any register, memory or immediate integer operand is allowed, except
+    //      for registers that are not general registers.
+    //   w: (AArch32/AArch64) Floating point register, Advanced SIMD vector
+    //      register or SVE vector register.
+    //   x: (SSE) Any SSE register.
+    //      (AArch64) Like w, but restricted to registers 0 to 15 inclusive.
+    //   v: (PowerPC) An Altivec vector register.
+    //   wa:(PowerPC) A VSX register.
+    //
+    // "X" (uppercase) should work for all cases, though this seems to fail for
+    // some versions of GCC for arm/aarch64 with
+    //   "error: inconsistent operand constraints in an 'asm'"
+    // Clang x86_64/arm/aarch64 seems to require "g" to support both scalars and
+    // vectors, otherwise
+    //   "error: non-trivial scalar-to-vector conversion, possible invalid
+    //    constraint for vector type"
+    //
+    // GCC for ppc64le generates an internal compiler error with x/X/g.
+    // GCC for AVX generates an internal compiler error with X.
+    //
+    // Tested on icc/gcc/clang for sse, avx, avx2, avx512dq
+    //           gcc for arm, aarch64,
+    //           gcc for ppc64le,
+    // both vectors and scalars.
+    //
+    // Note that this is restricted to plain types - this will not work
+    // directly for std::complex<T>, Eigen::half, Eigen::bfloat16. For these,
+    // you will need to apply to the underlying POD type.
+    #if EIGEN_ARCH_PPC
+      // General, Altivec, VSX.
+      #define EIGEN_OPTIMIZATION_BARRIER(X)  __asm__  ("" : "+r,v,wa" (X));
+    #elif EIGEN_ARCH_ARM_OR_ARM64
+      // General, NEON.
+      #define EIGEN_OPTIMIZATION_BARRIER(X)  __asm__  ("" : "+g,w" (X));
+    #elif EIGEN_ARCH_i386_OR_x86_64
+      // General, SSE.
+      #define EIGEN_OPTIMIZATION_BARRIER(X)  __asm__  ("" : "+g,x" (X));
+    #else
+      // Not implemented for other architectures.
+      #define EIGEN_OPTIMIZATION_BARRIER(X)
+    #endif
+  #else
+    // Not implemented for other compilers.
+    #define EIGEN_OPTIMIZATION_BARRIER(X)
+  #endif
+#endif
 
 #if EIGEN_COMP_MSVC
   // NOTE MSVC often gives C4127 warnings with compiletime if statements. See bug 1362.
