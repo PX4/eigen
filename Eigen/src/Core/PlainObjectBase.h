@@ -147,10 +147,10 @@ class PlainObjectBase : public internal::dense_xpr_base<Derived>::type
     EIGEN_DEVICE_FUNC
     const Base& base() const { return *static_cast<const Base*>(this); }
 
-    EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE EIGEN_CONSTEXPR
-    Index rows() const EIGEN_NOEXCEPT { return m_storage.rows(); }
-    EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE EIGEN_CONSTEXPR
-    Index cols() const EIGEN_NOEXCEPT { return m_storage.cols(); }
+    EIGEN_DEVICE_FUNC
+    EIGEN_STRONG_INLINE Index rows() const { return m_storage.rows(); }
+    EIGEN_DEVICE_FUNC
+    EIGEN_STRONG_INLINE Index cols() const { return m_storage.cols(); }
 
     /** This is an overloaded version of DenseCoeffsBase<Derived,ReadOnlyAccessors>::coeff(Index,Index) const
       * provided to by-pass the creation of an evaluator of the expression, thus saving compilation efforts.
@@ -530,11 +530,11 @@ class PlainObjectBase : public internal::dense_xpr_base<Derived>::type
     /** \brief Construct a row of column vector with fixed size from an arbitrary number of coefficients. \cpp11
       *
       * \only_for_vectors
-      *
+      * 
       * This constructor is for 1D array or vectors with more than 4 coefficients.
       * There exists C++98 analogue constructors for fixed-size array/vector having 1, 2, 3, or 4 coefficients.
-      *
-      * \warning To construct a column (resp. row) vector of fixed length, the number of values passed to this
+      * 
+      * \warning To construct a column (resp. row) vector of fixed length, the number of values passed to this 
       * constructor must match the the fixed number of rows (resp. columns) of \c *this.
       */
     template <typename... ArgTypes>
@@ -576,7 +576,7 @@ class PlainObjectBase : public internal::dense_xpr_base<Derived>::type
         eigen_assert(list.size() == static_cast<size_t>(RowsAtCompileTime) || RowsAtCompileTime == Dynamic);
         eigen_assert(list_size == static_cast<size_t>(ColsAtCompileTime) || ColsAtCompileTime == Dynamic);
         resize(list.size(), list_size);
-
+       
         Index row_index = 0;
         for (const std::initializer_list<Scalar>& row : list) {
           eigen_assert(list_size == row.size());

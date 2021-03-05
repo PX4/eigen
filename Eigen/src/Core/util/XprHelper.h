@@ -131,12 +131,9 @@ template<typename T, int Value> class variable_if_dynamic
   public:
     EIGEN_DEFAULT_EMPTY_CONSTRUCTOR_AND_DESTRUCTOR(variable_if_dynamic)
     EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE explicit variable_if_dynamic(T v) { EIGEN_ONLY_USED_FOR_DEBUG(v); eigen_assert(v == T(Value)); }
-    EIGEN_DEVICE_FUNC static EIGEN_STRONG_INLINE EIGEN_CONSTEXPR
-    T value() { return T(Value); }
-    EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE EIGEN_CONSTEXPR
-    operator T() const { return T(Value); }
-    EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE EIGEN_CONSTEXPR
-    void setValue(T) {}
+    EIGEN_DEVICE_FUNC static EIGEN_STRONG_INLINE T value() { return T(Value); }
+    EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE operator T() const { return T(Value); }
+    EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void setValue(T) {}
 };
 
 template<typename T> class variable_if_dynamic<T, Dynamic>
@@ -157,10 +154,8 @@ template<typename T, int Value> class variable_if_dynamicindex
   public:
     EIGEN_EMPTY_STRUCT_CTOR(variable_if_dynamicindex)
     EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE explicit variable_if_dynamicindex(T v) { EIGEN_ONLY_USED_FOR_DEBUG(v); eigen_assert(v == T(Value)); }
-    EIGEN_DEVICE_FUNC static EIGEN_STRONG_INLINE EIGEN_CONSTEXPR
-    T value() { return T(Value); }
-    EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE EIGEN_CONSTEXPR
-    void setValue(T) {}
+    EIGEN_DEVICE_FUNC static EIGEN_STRONG_INLINE T value() { return T(Value); }
+    EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void setValue(T) {}
 };
 
 template<typename T> class variable_if_dynamicindex<T, DynamicIndex>
@@ -433,7 +428,7 @@ struct ref_selector
     T const&,
     const T
   >::type type;
-
+  
   typedef typename conditional<
     bool(traits<T>::Flags & NestByRefBit),
     T &,
@@ -619,7 +614,7 @@ struct plain_row_type
   typedef typename conditional<
     is_same< typename traits<ExpressionType>::XprKind, MatrixXpr >::value,
     MatrixRowType,
-    ArrayRowType
+    ArrayRowType 
   >::type type;
 };
 
@@ -634,7 +629,7 @@ struct plain_col_type
   typedef typename conditional<
     is_same< typename traits<ExpressionType>::XprKind, MatrixXpr >::value,
     MatrixColType,
-    ArrayColType
+    ArrayColType 
   >::type type;
 };
 
@@ -650,7 +645,7 @@ struct plain_diag_type
   typedef typename conditional<
     is_same< typename traits<ExpressionType>::XprKind, MatrixXpr >::value,
     MatrixDiagType,
-    ArrayDiagType
+    ArrayDiagType 
   >::type type;
 };
 
@@ -766,7 +761,7 @@ std::string demangle_flags(int f)
   if(f&DirectAccessBit)             res += " | Direct";
   if(f&NestByRefBit)                res += " | NestByRef";
   if(f&NoPreferredStorageOrderBit)  res += " | NoPreferredStorageOrderBit";
-
+  
   return res;
 }
 #endif
@@ -863,7 +858,7 @@ struct ScalarBinaryOpTraits<void,void,BinaryOp>
 #define EIGEN_CHECK_BINARY_COMPATIBILIY(BINOP,LHS,RHS) \
   EIGEN_STATIC_ASSERT((Eigen::internal::has_ReturnType<ScalarBinaryOpTraits<LHS, RHS,BINOP> >::value), \
     YOU_MIXED_DIFFERENT_NUMERIC_TYPES__YOU_NEED_TO_USE_THE_CAST_METHOD_OF_MATRIXBASE_TO_CAST_NUMERIC_TYPES_EXPLICITLY)
-
+    
 } // end namespace Eigen
 
 #endif // EIGEN_XPRHELPER_H

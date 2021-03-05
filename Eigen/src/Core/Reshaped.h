@@ -240,14 +240,14 @@ class ReshapedImpl_dense<XprType, Rows, Cols, Order, true>
     XprType& nestedExpression() { return m_xpr; }
 
     /** \sa MapBase::innerStride() */
-    EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR
+    EIGEN_DEVICE_FUNC
     inline Index innerStride() const
     {
       return m_xpr.innerStride();
     }
 
     /** \sa MapBase::outerStride() */
-    EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR
+    EIGEN_DEVICE_FUNC
     inline Index outerStride() const
     {
       return ((Flags&RowMajorBit)==RowMajorBit) ? this->cols() : this->rows();

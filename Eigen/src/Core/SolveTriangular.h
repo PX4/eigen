@@ -213,8 +213,8 @@ template<int Side, typename TriangularType, typename Rhs> struct triangular_solv
     : m_triangularMatrix(tri), m_rhs(rhs)
   {}
 
-  inline EIGEN_CONSTEXPR Index rows() const EIGEN_NOEXCEPT { return m_rhs.rows(); }
-  inline EIGEN_CONSTEXPR Index cols() const EIGEN_NOEXCEPT { return m_rhs.cols(); }
+  inline Index rows() const { return m_rhs.rows(); }
+  inline Index cols() const { return m_rhs.cols(); }
 
   template<typename Dest> inline void evalTo(Dest& dst) const
   {

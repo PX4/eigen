@@ -1437,6 +1437,7 @@ subVector(Index i) const
   * \sa subVector(Index)
   */
 template<DirectionType Direction>
-EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE EIGEN_CONSTEXPR
+EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
 Index subVectors() const
 { return (Direction==Vertical)?cols():rows(); }
+
