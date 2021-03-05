@@ -63,10 +63,37 @@ struct half;
 
 namespace half_impl {
 
-#if !defined(EIGEN_HAS_GPU_FP16)
+// We want to use the __half_raw struct from the HIP header file only during the device compile phase.
+// This is required because of a quirk in the way TensorFlow GPU builds are done.
+// When compiling TensorFlow source code with GPU support, files that
+//  * contain GPU kernels (i.e. *.cu.cc files) are compiled via hipcc
+//  * do not contain GPU kernels ( i.e. *.cc files) are compiled via gcc (typically)
+//
+// Tensorflow uses the Eigen::half type as its FP16 type, and there are functions that
+//  * are defined in a file that gets compiled via hipcc AND
+//  * have Eigen::half as a pass-by-value argument AND
+//  * are called in a file that gets compiled via gcc
+//
+// In the scenario described above the caller and callee will see different versions
+// of the Eigen::half base class __half_raw, and they will be compiled by different compilers
+//
+// There appears to be an ABI mismatch between gcc and clang (which is called by hipcc) that results in
+// the callee getting corrupted values for the Eigen::half argument.
+//
+// Making the host side compile phase of hipcc use the same Eigen::half impl, as the gcc compile, resolves
+// this error, and hence the following convoluted #if condition
+#if !defined(EIGEN_HAS_GPU_FP16) || !defined(EIGEN_GPU_COMPILE_PHASE)
 // Make our own __half_raw definition that is similar to CUDA's.
 struct __half_raw {
+#if (defined(EIGEN_HAS_HIP_FP16) && !defined(EIGEN_HIP_DEVICE_COMPILE))
+  // Eigen::half can be used as the datatype for some shared memory declarations (in Eigen and TF)
+  // (In HIP) The element type for shared memory declaration cannot have non-trivial constructors
+  // and hence the following special casing (which skips the zero-initilization)
+  // Note that this check gets done even in the host compilation phase, and hence the need for this
+  EIGEN_DEVICE_FUNC __half_raw() {}
+#else
   EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR __half_raw() : x(0) {}
+#endif
 #if defined(EIGEN_HAS_ARM64_FP16_SCALAR_ARITHMETIC)
   explicit EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR __half_raw(numext::uint16_t raw) : x(numext::bit_cast<__fp16>(raw)) {
   }
@@ -115,7 +142,10 @@ struct half : public half_impl::half_base {
 
   // Writing this out as separate #if-else blocks to make the code easier to follow
   // The same applies to most #if-else blocks in this file
-#if !defined(EIGEN_HAS_GPU_FP16)
+#if !defined(EIGEN_HAS_GPU_FP16) || !defined(EIGEN_GPU_COMPILE_PHASE)
+  // Use the same base class for the following two scenarios
+  // * when compiling without GPU support enabled
+  // * during host compile phase when compiling with GPU support enabled
   typedef half_impl::__half_raw __half_raw;
 #elif defined(EIGEN_HAS_HIP_FP16)
   // Nothing to do here
@@ -161,6 +191,14 @@ struct half : public half_impl::half_base {
    EIGEN_DEVICE_FUNC operator float() const {  // NOLINT: Allow implicit conversion to float, because it is lossless.
     return half_impl::half_to_float(*this);
   }
+
+#if defined(EIGEN_HAS_GPU_FP16) && !defined(EIGEN_GPU_COMPILE_PHASE)
+  EIGEN_DEVICE_FUNC operator __half() const {
+    ::__half_raw hr;
+    hr.x = x;
+    return __half(hr);
+  }
+#endif
 };
 
 } // end namespace Eigen
