@@ -688,7 +688,7 @@ void big_sparse_triplet(Index rows, Index cols, double density) {
   typedef Triplet<Scalar,Index> TripletType;
   std::vector<TripletType> triplets;
   double nelements = density * rows*cols;
-  VERIFY(nelements>=0 && nelements <  NumTraits<StorageIndex>::highest());
+  VERIFY(nelements>=0 && nelements < static_cast<double>(NumTraits<StorageIndex>::highest()));
   Index ntriplets = Index(nelements);
   triplets.reserve(ntriplets);
   Scalar sum = Scalar(0);

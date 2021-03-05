@@ -62,14 +62,9 @@ static void test_move()
   moved_tensor3 = std::move(moved_tensor1);
   moved_tensor4 = std::move(moved_tensor2);
 
-  VERIFY_IS_EQUAL(moved_tensor1.size(), 8);
-  VERIFY_IS_EQUAL(moved_tensor2.size(), 8);
-
   for (int i = 0; i < 8; i++)
   {
     calc_indices(i, x, y, z);
-    VERIFY_IS_EQUAL(moved_tensor1(x,y,z), 0);
-    VERIFY_IS_EQUAL(moved_tensor2(x,y,z), 0);
     VERIFY_IS_EQUAL(moved_tensor3(x,y,z), i);
     VERIFY_IS_EQUAL(moved_tensor4(x,y,z), 2 * i);
   }

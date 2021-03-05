@@ -278,7 +278,7 @@ class Matrix
     EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
     Matrix& operator=(Matrix&& other) EIGEN_NOEXCEPT_IF(std::is_nothrow_move_assignable<Scalar>::value)
     {
-      other.swap(*this);
+      Base::operator=(std::move(other));
       return *this;
     }
 #endif

@@ -157,7 +157,7 @@ class Array
     EIGEN_DEVICE_FUNC
     Array& operator=(Array&& other) EIGEN_NOEXCEPT_IF(std::is_nothrow_move_assignable<Scalar>::value)
     {
-      other.swap(*this);
+      Base::operator=(std::move(other));
       return *this;
     }
 #endif

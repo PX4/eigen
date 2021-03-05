@@ -508,8 +508,8 @@ class PlainObjectBase : public internal::dense_xpr_base<Derived>::type
     EIGEN_DEVICE_FUNC
     PlainObjectBase& operator=(PlainObjectBase&& other) EIGEN_NOEXCEPT
     {
-      using std::swap;
-      swap(m_storage, other.m_storage);
+      _check_template_params();
+      m_storage = std::move(other.m_storage);
       return *this;
     }
 #endif

@@ -18,6 +18,36 @@
 
 using internal::UIntPtr;
 
+// A Scalar that asserts for uninitialized access.
+template<typename T>
+class SafeScalar {
+ public:
+  SafeScalar() : initialized_(false) {}
+  SafeScalar(const SafeScalar& other) {
+    *this = other;
+  }
+  SafeScalar& operator=(const SafeScalar& other) {
+    val_ = T(other);
+    initialized_ = true;
+    return *this;
+  }
+  
+  SafeScalar(T val) : val_(val), initialized_(true) {}
+  SafeScalar& operator=(T val) {
+    val_ = val;
+    initialized_ = true;
+  }
+  
+  operator T() const {
+    VERIFY(initialized_ && "Uninitialized access.");
+    return val_;
+  }
+ 
+ private:
+  T val_;
+  bool initialized_;
+};
+
 #if EIGEN_HAS_RVALUE_REFERENCES
 template <typename MatrixType>
 void rvalue_copyassign(const MatrixType& m)
@@ -94,19 +124,24 @@ void rvalue_move(const MatrixType& m)
     MatrixType d = m;
     VERIFY_IS_EQUAL(d, m);
 
-    // rvalue reference is moved
+    // rvalue reference is moved - copy constructor.
     MatrixType e_src(m);
     VERIFY_IS_EQUAL(e_src, m);
     MatrixType e_dst(std::move(e_src));
-    VERIFY_IS_EQUAL(e_src, MatrixType());
     VERIFY_IS_EQUAL(e_dst, m);
 
-    // rvalue reference is moved
+    // rvalue reference is moved - copy constructor.
     MatrixType f_src(m);
     VERIFY_IS_EQUAL(f_src, m);
     MatrixType f_dst = std::move(f_src);
-    VERIFY_IS_EQUAL(f_src, MatrixType());
     VERIFY_IS_EQUAL(f_dst, m);
+    
+    // rvalue reference is moved - copy assignment.
+    MatrixType g_src(m);
+    VERIFY_IS_EQUAL(g_src, m);
+    MatrixType g_dst;
+    g_dst = std::move(g_src);
+    VERIFY_IS_EQUAL(g_dst, m);
 }
 #else
 template <typename MatrixType>
@@ -144,6 +179,8 @@ EIGEN_DECLARE_TEST(rvalue_types)
 
 #if EIGEN_HAS_CXX11
     CALL_SUBTEST_5(rvalue_move(Eigen::Matrix<MovableScalar<float>,1,3>::Random().eval()));
+    CALL_SUBTEST_5(rvalue_move(Eigen::Matrix<SafeScalar<float>,1,3>::Random().eval()));
+    CALL_SUBTEST_5(rvalue_move(Eigen::Matrix<SafeScalar<float>,Eigen::Dynamic,Eigen::Dynamic>::Random(1,3).eval()));
 #endif
   }
 }

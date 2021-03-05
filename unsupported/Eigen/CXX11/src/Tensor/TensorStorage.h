@@ -108,6 +108,20 @@ class TensorStorage<T, DSizes<IndexType, NumIndices_>, Options_>
       return *this;
     }
 
+#if EIGEN_HAS_RVALUE_REFERENCES
+    EIGEN_DEVICE_FUNC TensorStorage(Self&& other) : TensorStorage()
+    {
+      *this = std::move(other);
+    }
+    
+    EIGEN_DEVICE_FUNC Self& operator=(Self&& other)
+    {
+      numext::swap(m_data, other.m_data);
+      numext::swap(m_dimensions, other.m_dimensions);
+      return *this;
+    }
+#endif
+
     EIGEN_DEVICE_FUNC  ~TensorStorage() { internal::conditional_aligned_delete_auto<T,(Options_&DontAlign)==0>(m_data, internal::array_prod(m_dimensions)); }
     EIGEN_DEVICE_FUNC  void swap(Self& other)
     { numext::swap(m_data,other.m_data); numext::swap(m_dimensions,other.m_dimensions); }
