@@ -51,11 +51,7 @@
 
 #ifndef EIGEN_STACK_ALLOCATION_LIMIT
 // 131072 == 128 KB
-#if defined(__AVX512F__)
-  #define EIGEN_STACK_ALLOCATION_LIMIT 0
-#else
-  #define EIGEN_STACK_ALLOCATION_LIMIT 16384
-#endif
+#define EIGEN_STACK_ALLOCATION_LIMIT 131072
 #endif
 
 //------------------------------------------------------------------------------------------
