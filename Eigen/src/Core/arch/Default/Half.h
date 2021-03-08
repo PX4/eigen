@@ -85,7 +85,7 @@ namespace half_impl {
 #if !defined(EIGEN_HAS_GPU_FP16) || !defined(EIGEN_GPU_COMPILE_PHASE)
 // Make our own __half_raw definition that is similar to CUDA's.
 struct __half_raw {
-#if (defined(EIGEN_HAS_GPU_FP16) && !defined(EIGEN_DEVICE_COMPILE_PHASE))
+#if (defined(EIGEN_HAS_GPU_FP16) && !defined(EIGEN_GPU_COMPILE_PHASE))
   // Eigen::half can be used as the datatype for shared memory declarations (in Eigen and TF)
   // The element type for shared memory cannot have non-trivial constructors
   // and hence the following special casing (which skips the zero-initilization).
