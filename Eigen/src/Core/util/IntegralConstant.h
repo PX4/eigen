@@ -52,7 +52,7 @@ template<int N> class FixedInt
 {
 public:
   static const int value = N;
-  operator int() const { return value; }
+  EIGEN_CONSTEXPR operator int() const { return value; }
   FixedInt() {}
   FixedInt( VariableAndFixedInt<N> other) {
     #ifndef EIGEN_INTERNAL_DEBUGGING
