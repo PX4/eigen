@@ -226,7 +226,7 @@
 //------------------------------------------------------------------------------------------
 
 
-#if defined(__x86_64__) || defined(_M_X64) || defined(__amd64)
+#if defined(__x86_64__) || (defined(_M_X64) && !defined(_M_ARM64EC)) || defined(__amd64)
   #define EIGEN_ARCH_x86_64 1
 #else
   #define EIGEN_ARCH_x86_64 0
@@ -252,7 +252,7 @@
 #endif
 
 /// \internal EIGEN_ARCH_ARM64 set to 1 if the architecture is ARM64
-#if defined(__aarch64__)
+#if defined(__aarch64__) || defined(_M_ARM64) || defined(_M_ARM64EC)
   #define EIGEN_ARCH_ARM64 1
 #else
   #define EIGEN_ARCH_ARM64 0
