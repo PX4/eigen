@@ -40,6 +40,13 @@
   #pragma GCC optimize ("-fno-ipa-cp-clone")
 #endif
 
+// Prevent ICC from specializing std::complex operators that silently fail
+// on device. This allows us to use our own device-compatible specializations
+// instead.
+#if defined(EIGEN_COMP_ICC) && defined(EIGEN_GPU_COMPILE_PHASE) \
+    && !defined(_OVERRIDE_COMPLEX_SPECIALIZATION_)
+#define _OVERRIDE_COMPLEX_SPECIALIZATION_ 1
+#endif
 #include <complex>
 
 // this include file manages BLAS and MKL related macros

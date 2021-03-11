@@ -40,6 +40,8 @@
 // definitions.
 #include <limits>
 #include <algorithm>
+// Disable ICC's std::complex operator specializations so we can use our own.
+#define _OVERRIDE_COMPLEX_SPECIALIZATION_ 1
 #include <complex>
 #include <deque>
 #include <queue>

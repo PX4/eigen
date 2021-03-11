@@ -905,7 +905,7 @@
 // but it still doesn't use GCC's always_inline. This is useful in (common) situations where MSVC needs forceinline
 // but GCC is still doing fine with just inline.
 #ifndef EIGEN_STRONG_INLINE
-#if EIGEN_COMP_MSVC || EIGEN_COMP_ICC
+#if (EIGEN_COMP_MSVC || EIGEN_COMP_ICC) && !defined(EIGEN_GPUCC)
 #define EIGEN_STRONG_INLINE __forceinline
 #else
 #define EIGEN_STRONG_INLINE inline

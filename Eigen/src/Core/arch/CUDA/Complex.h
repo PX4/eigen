@@ -12,15 +12,23 @@
 #define EIGEN_COMPLEX_CUDA_H
 
 // clang-format off
-
-#if defined(EIGEN_CUDACC) && defined(EIGEN_GPU_COMPILE_PHASE)
-
 // Many std::complex methods such as operator+, operator-, operator* and
 // operator/ are not constexpr. Due to this, GCC and older versions of clang do
 // not treat them as device functions and thus Eigen functors making use of
 // these operators fail to compile. Here, we manually specialize these
 // operators and functors for complex types when building for CUDA to enable
 // their use on-device.
+
+#if defined(EIGEN_CUDACC) && defined(EIGEN_GPU_COMPILE_PHASE)
+    
+// ICC already specializes std::complex<float> and std::complex<double>
+// operators, preventing us from making them device functions here.
+// This will lead to silent runtime errors if the operators are used on device.
+//
+// To allow std::complex operator use on device, define _OVERRIDE_COMPLEX_SPECIALIZATION_
+// prior to first inclusion of <complex>.  This prevents ICC from adding
+// its own specializations, so our custom ones below can be used instead.
+#if !(defined(EIGEN_COMP_ICC) && defined(_USE_COMPLEX_SPECIALIZATION_))
 
 // Import Eigen's internal operator specializations.
 #define EIGEN_USING_STD_COMPLEX_OPERATORS           \
@@ -244,6 +252,8 @@ EIGEN_USING_STD_COMPLEX_OPERATORS
 }  // namespace internal
 }  // namespace Eigen
 
-#endif
+#endif  // !(EIGEN_COMP_ICC && _USE_COMPLEX_SPECIALIZATION_)
+
+#endif  // EIGEN_CUDACC && EIGEN_GPU_COMPILE_PHASE
 
 #endif  // EIGEN_COMPLEX_CUDA_H
