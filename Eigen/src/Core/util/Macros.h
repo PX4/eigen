@@ -1117,7 +1117,10 @@ namespace Eigen {
     // Note that this is restricted to plain types - this will not work
     // directly for std::complex<T>, Eigen::half, Eigen::bfloat16. For these,
     // you will need to apply to the underlying POD type.
-    #if EIGEN_ARCH_PPC
+    #if EIGEN_ARCH_PPC && EIGEN_COMP_GNUC_STRICT
+      // This seems to be broken on clang.  Packet4f is loaded into a single
+      //   register rather than a vector, zeroing out some entries.  Integer
+      //   types also generate a compile error.
       // General, Altivec, VSX.
       #define EIGEN_OPTIMIZATION_BARRIER(X)  __asm__  ("" : "+r,v,wa" (X));
     #elif EIGEN_ARCH_ARM_OR_ARM64
