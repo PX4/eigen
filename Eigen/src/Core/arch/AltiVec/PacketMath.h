@@ -188,6 +188,7 @@ struct packet_traits<float> : default_packet_traits {
     HasRound = 1,
     HasFloor = 1,
     HasCeil = 1,
+    HasRint = 1,
     HasNegate = 1,
     HasBlend = 1
   };
@@ -229,6 +230,7 @@ struct packet_traits<bfloat16> : default_packet_traits {
     HasRound = 1,
     HasFloor = 1,
     HasCeil = 1,
+    HasRint = 1,
     HasNegate = 1,
     HasBlend = 1
   };
@@ -911,18 +913,35 @@ template<> EIGEN_STRONG_INLINE Packet4f pselect(const Packet4f& mask, const Pack
   return vec_sel(b, a, reinterpret_cast<Packet4ui>(mask));
 }
 
-template<> EIGEN_STRONG_INLINE Packet4f pround<Packet4f>(const Packet4f& a) {
+template<> EIGEN_STRONG_INLINE Packet4f pround<Packet4f>(const Packet4f& a)
+{
     Packet4f t = vec_add(reinterpret_cast<Packet4f>(vec_or(vec_and(reinterpret_cast<Packet4ui>(a), p4ui_SIGN), p4ui_PREV0DOT5)), a);
     Packet4f res;
 
+#ifdef __VSX__
+    __asm__("xvrspiz %x0, %x1\n\t"
+        : "=&wa" (res)
+        : "wa" (t));
+#else
     __asm__("vrfiz %0, %1\n\t"
         : "=v" (res)
         : "v" (t));
+#endif
 
     return res;
 }
 template<> EIGEN_STRONG_INLINE Packet4f pceil<Packet4f>(const  Packet4f& a) { return vec_ceil(a); }
 template<> EIGEN_STRONG_INLINE Packet4f pfloor<Packet4f>(const Packet4f& a) { return vec_floor(a); }
+template<> EIGEN_STRONG_INLINE Packet4f print<Packet4f>(const Packet4f& a)
+{
+    Packet4f res;
+
+    __asm__("xvrspic %x0, %x1\n\t"
+        : "=&wa" (res)
+        : "wa" (a));
+
+    return res;
+}
 
 template<typename Packet> EIGEN_STRONG_INLINE Packet ploadu_common(const __UNPACK_TYPE__(Packet)* from)
 {
@@ -1365,6 +1384,9 @@ template<> EIGEN_STRONG_INLINE Packet8bf pceil<Packet8bf> (const Packet8bf& a){
 }
 template<> EIGEN_STRONG_INLINE Packet8bf pround<Packet8bf> (const Packet8bf& a){
   BF16_TO_F32_UNARY_OP_WRAPPER(pround<Packet4f>, a);
+}
+template<> EIGEN_STRONG_INLINE Packet8bf print<Packet8bf> (const Packet8bf& a){
+  BF16_TO_F32_UNARY_OP_WRAPPER(print<Packet4f>, a);
 }
 template<> EIGEN_STRONG_INLINE Packet8bf pmadd(const Packet8bf& a, const Packet8bf& b, const Packet8bf& c) {
   Packet4f a_even = Bf16ToF32Even(a);
@@ -2234,6 +2256,8 @@ typedef __vector __bool long         Packet2bl;
 
 static Packet2l  p2l_ONE  = { 1, 1 };
 static Packet2l  p2l_ZERO = reinterpret_cast<Packet2l>(p4i_ZERO);
+static Packet2ul p2ul_SIGN = { 0x8000000000000000ull, 0x8000000000000000ull };
+static Packet2ul p2ul_PREV0DOT5 = { 0x3FDFFFFFFFFFFFFFull, 0x3FDFFFFFFFFFFFFFull };
 static Packet2d  p2d_ONE  = { 1.0, 1.0 };
 static Packet2d  p2d_ZERO = reinterpret_cast<Packet2d>(p4f_ZERO);
 static Packet2d  p2d_MZERO = { -0.0, -0.0 };
@@ -2244,16 +2268,9 @@ static Packet2d p2d_COUNTDOWN = reinterpret_cast<Packet2d>(vec_sld(reinterpret_c
 static Packet2d p2d_COUNTDOWN = reinterpret_cast<Packet2d>(vec_sld(reinterpret_cast<Packet4f>(p2d_ONE), reinterpret_cast<Packet4f>(p2d_ZERO), 8));
 #endif
 
-template<int index> Packet2d vec_splat_dbl(Packet2d& a);
-
-template<> EIGEN_STRONG_INLINE Packet2d vec_splat_dbl<0>(Packet2d& a)
+template<int index> Packet2d vec_splat_dbl(Packet2d& a)
 {
-  return reinterpret_cast<Packet2d>(vec_perm(a, a, p16uc_PSET64_HI));
-}
-
-template<> EIGEN_STRONG_INLINE Packet2d vec_splat_dbl<1>(Packet2d& a)
-{
-  return reinterpret_cast<Packet2d>(vec_perm(a, a, p16uc_PSET64_LO));
+  return vec_splat(a, index);
 }
 
 template<> struct packet_traits<double> : default_packet_traits
@@ -2282,6 +2299,7 @@ template<> struct packet_traits<double> : default_packet_traits
     HasRound = 1,
     HasFloor = 1,
     HasCeil = 1,
+    HasRint = 1,
     HasNegate = 1,
     HasBlend = 1
   };
@@ -2408,9 +2426,29 @@ template<> EIGEN_STRONG_INLINE Packet2d pxor<Packet2d>(const Packet2d& a, const 
 
 template<> EIGEN_STRONG_INLINE Packet2d pandnot<Packet2d>(const Packet2d& a, const Packet2d& b) { return vec_and(a, vec_nor(b, b)); }
 
-template<> EIGEN_STRONG_INLINE Packet2d pround<Packet2d>(const Packet2d& a) { return vec_round(a); }
+template<> EIGEN_STRONG_INLINE Packet2d pround<Packet2d>(const Packet2d& a)
+{
+    Packet2d t = vec_add(reinterpret_cast<Packet2d>(vec_or(vec_and(reinterpret_cast<Packet2ul>(a), p2ul_SIGN), p2ul_PREV0DOT5)), a);
+    Packet2d res;
+
+    __asm__("xvrdpiz %x0, %x1\n\t"
+        : "=&wa" (res)
+        : "wa" (t));
+
+    return res;
+}
 template<> EIGEN_STRONG_INLINE Packet2d pceil<Packet2d>(const  Packet2d& a) { return vec_ceil(a); }
 template<> EIGEN_STRONG_INLINE Packet2d pfloor<Packet2d>(const Packet2d& a) { return vec_floor(a); }
+template<> EIGEN_STRONG_INLINE Packet2d print<Packet2d>(const Packet2d& a)
+{
+    Packet2d res;
+
+    __asm__("xvrdpic %x0, %x1\n\t"
+        : "=&wa" (res)
+        : "wa" (a));
+
+    return res;
+}
 
 template<> EIGEN_STRONG_INLINE Packet2d ploadu<Packet2d>(const double* from)
 {
