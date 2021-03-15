@@ -465,6 +465,28 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half operator / (const half& a, Index b) {
   return half(static_cast<float>(a) / static_cast<float>(b));
 }
 
+EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half operator++(half& a) {
+  a += half(1);
+  return a;
+}
+
+EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half operator--(half& a) {
+  a -= half(1);
+  return a;
+}
+
+EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half operator++(half& a, int) {
+  half original_value = a;
+  ++a;
+  return original_value;
+}
+
+EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half operator--(half& a, int) {
+  half original_value = a;
+  --a;
+  return original_value;
+}
+
 // Conversion routines, including fallbacks for the host or older CUDA.
 // Note that newer Intel CPUs (Haswell or newer) have vectorized versions of
 // these in hardware. If we need more performance on older/other CPUs, they are

@@ -168,6 +168,20 @@ void test_arithmetic()
   VERIFY_IS_APPROX(float(half(1.0f) / half(3.0f)), 0.33333f);
   VERIFY_IS_EQUAL(float(-half(4096.0f)), -4096.0f);
   VERIFY_IS_EQUAL(float(-half(-4096.0f)), 4096.0f);
+  
+  half x(3);
+  half y = ++x;
+  VERIFY_IS_EQUAL(x, half(4));
+  VERIFY_IS_EQUAL(y, half(4));
+  y = --x;
+  VERIFY_IS_EQUAL(x, half(3));
+  VERIFY_IS_EQUAL(y, half(3));
+  y = x++;
+  VERIFY_IS_EQUAL(x, half(4));
+  VERIFY_IS_EQUAL(y, half(3));
+  y = x--;
+  VERIFY_IS_EQUAL(x, half(3));
+  VERIFY_IS_EQUAL(y, half(4));
 }
 
 void test_comparison()
