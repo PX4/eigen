@@ -101,7 +101,7 @@ namespace internal
   template<typename Scalar>
   inline void putVectorElt(std::complex<Scalar> value, std::ofstream& out)
   {
-    out << value.real << " " << value.imag()<< "\n"; 
+    out << value.real() << " " << value.imag()<< "\n"; 
   }
 
 } // end namespace internal
