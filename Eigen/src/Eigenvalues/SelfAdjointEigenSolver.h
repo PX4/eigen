@@ -44,9 +44,13 @@ ComputationInfo computeFromTridiagonal_impl(DiagType& diag, SubDiagType& subdiag
   * \f$ v \f$ such that \f$ Av = \lambda v \f$.  The eigenvalues of a
   * selfadjoint matrix are always real. If \f$ D \f$ is a diagonal matrix with
   * the eigenvalues on the diagonal, and \f$ V \f$ is a matrix with the
-  * eigenvectors as its columns, then \f$ A = V D V^{-1} \f$ (for selfadjoint
-  * matrices, the matrix \f$ V \f$ is always invertible). This is called the
+  * eigenvectors as its columns, then \f$ A = V D V^{-1} \f$. This is called the
   * eigendecomposition.
+  *
+  * For a selfadjoint matrix, \f$ V \f$ is unitary, meaning its inverse is equal
+  * to its adjoint, \f$ V^{-1} = V^{\dagger} \f$. If \f$ A \f$ is real, then
+  * \f$ V \f$ is also real and therefore orthogonal, meaning its inverse is
+  * equal to its transpose, \f$ V^{-1} = V^T \f$.
   *
   * The algorithm exploits the fact that the matrix is selfadjoint, making it
   * faster and more accurate than the general purpose eigenvalue algorithms
@@ -255,6 +259,11 @@ template<typename _MatrixType> class SelfAdjointEigenSolver
       * this object was used to solve the eigenproblem for the selfadjoint
       * matrix \f$ A \f$, then the matrix returned by this function is the
       * matrix \f$ V \f$ in the eigendecomposition \f$ A = V D V^{-1} \f$.
+      *
+      * For a selfadjoint matrix, \f$ V \f$ is unitary, meaning its inverse is equal
+      * to its adjoint, \f$ V^{-1} = V^{\dagger} \f$. If \f$ A \f$ is real, then
+      * \f$ V \f$ is also real and therefore orthogonal, meaning its inverse is
+      * equal to its transpose, \f$ V^{-1} = V^T \f$.
       *
       * Example: \include SelfAdjointEigenSolver_eigenvectors.cpp
       * Output: \verbinclude SelfAdjointEigenSolver_eigenvectors.out
