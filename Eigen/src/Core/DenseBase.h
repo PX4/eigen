@@ -459,22 +459,48 @@ template<typename Derived> class DenseBase
     // used.
     // TODO(rmlarsen): Replace with default template argument when we move to
     // c++11 or beyond.
-    EIGEN_DEVICE_FUNC typename internal::traits<Derived>::Scalar minCoeff() const {
+    EIGEN_DEVICE_FUNC inline typename internal::traits<Derived>::Scalar minCoeff() const {
       return minCoeff<PropagateFast>();
     }
-    EIGEN_DEVICE_FUNC typename internal::traits<Derived>::Scalar maxCoeff() const {
+    EIGEN_DEVICE_FUNC inline typename internal::traits<Derived>::Scalar maxCoeff() const {
       return maxCoeff<PropagateFast>();
     }
 
-    template<typename IndexType> EIGEN_DEVICE_FUNC
+    template<int NaNPropagation, typename IndexType>
+    EIGEN_DEVICE_FUNC
     typename internal::traits<Derived>::Scalar minCoeff(IndexType* row, IndexType* col) const;
-    template<typename IndexType> EIGEN_DEVICE_FUNC
+    template<int NaNPropagation, typename IndexType>
+    EIGEN_DEVICE_FUNC
     typename internal::traits<Derived>::Scalar maxCoeff(IndexType* row, IndexType* col) const;
-    template<typename IndexType> EIGEN_DEVICE_FUNC
+    template<int NaNPropagation, typename IndexType>
+    EIGEN_DEVICE_FUNC
     typename internal::traits<Derived>::Scalar minCoeff(IndexType* index) const;
-    template<typename IndexType> EIGEN_DEVICE_FUNC
+    template<int NaNPropagation, typename IndexType>
+    EIGEN_DEVICE_FUNC
     typename internal::traits<Derived>::Scalar maxCoeff(IndexType* index) const;
 
+    // TODO(rmlarsen): Replace these methods with a default template argument.
+    template<typename IndexType>
+    EIGEN_DEVICE_FUNC inline
+    typename internal::traits<Derived>::Scalar minCoeff(IndexType* row, IndexType* col) const {
+      return minCoeff<PropagateFast>(row, col);
+    }
+    template<typename IndexType>
+    EIGEN_DEVICE_FUNC inline
+    typename internal::traits<Derived>::Scalar maxCoeff(IndexType* row, IndexType* col) const {
+      return maxCoeff<PropagateFast>(row, col);
+    }
+    template<typename IndexType>
+     EIGEN_DEVICE_FUNC inline
+    typename internal::traits<Derived>::Scalar minCoeff(IndexType* index) const {
+      return minCoeff<PropagateFast>(index);
+    }
+    template<typename IndexType>
+    EIGEN_DEVICE_FUNC inline
+    typename internal::traits<Derived>::Scalar maxCoeff(IndexType* index) const {
+      return maxCoeff<PropagateFast>(index);
+    }
+  
     template<typename BinaryOp>
     EIGEN_DEVICE_FUNC
     Scalar redux(const BinaryOp& func) const;
