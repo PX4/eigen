@@ -14,18 +14,18 @@
 template<typename Scalar>
 void pow_test() {
   const Scalar zero = Scalar(0);
-  const Scalar eps = Eigen::NumTraits<Scalar>::epsilon();
+  const Scalar eps = std::numeric_limits<Scalar>::epsilon();
   const Scalar one = Scalar(1);
   const Scalar two = Scalar(2);
   const Scalar three = Scalar(3);
   const Scalar sqrt_half = Scalar(std::sqrt(0.5));
   const Scalar sqrt2 = Scalar(std::sqrt(2));
-  const Scalar inf = Eigen::NumTraits<Scalar>::infinity();
-  const Scalar nan = Eigen::NumTraits<Scalar>::quiet_NaN();
+  const Scalar inf = std::numeric_limits<Scalar>::infinity();
+  const Scalar nan = std::numeric_limits<Scalar>::quiet_NaN();
   const Scalar denorm_min = std::numeric_limits<Scalar>::denorm_min();
   const Scalar min = (std::numeric_limits<Scalar>::min)();
   const Scalar max = (std::numeric_limits<Scalar>::max)();
-  const Scalar max_exp = (static_cast<Scalar>(int(Eigen::NumTraits<Scalar>::max_exponent())) * Scalar(EIGEN_LN2)) / eps;
+  const Scalar max_exp = (static_cast<Scalar>(int(std::numeric_limits<Scalar>::max_exponent)) * Scalar(EIGEN_LN2)) / eps;
 
   const static Scalar abs_vals[] = {zero,
                                     denorm_min,
@@ -613,7 +613,7 @@ template<typename ArrayType> void min_max(const ArrayType& m)
 
   // min/max with various NaN propagation options.
   if (m1.size() > 1 && !NumTraits<Scalar>::IsInteger) {
-    m1(0,0) = NumTraits<Scalar>::quiet_NaN();
+    m1(0,0) = std::numeric_limits<Scalar>::quiet_NaN();
     maxM1 = m1.template maxCoeff<PropagateNaN>();
     minM1 = m1.template minCoeff<PropagateNaN>();
     VERIFY((numext::isnan)(maxM1));
