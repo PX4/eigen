@@ -177,19 +177,21 @@ namespace Eigen
     EigenTest(const char* a_name, void (*func)(void))
       : m_name(a_name), m_func(func)
     {
-      ms_registered_tests.push_back(this);
+      get_registered_tests().push_back(this);
     }
     const std::string& name() const { return m_name; }
     void operator()() const { m_func(); }
 
-    static const std::vector<EigenTest*>& all() { return ms_registered_tests; }
+    static const std::vector<EigenTest*>& all() { return get_registered_tests(); }
   protected:
+    static std::vector<EigenTest*>& get_registered_tests()
+    {
+      static std::vector<EigenTest*>* ms_registered_tests = new std::vector<EigenTest*>();
+      return *ms_registered_tests;
+    }
     std::string m_name;
     void (*m_func)(void);
-    static std::vector<EigenTest*> ms_registered_tests;
   };
-
-  std::vector<EigenTest*> EigenTest::ms_registered_tests;
 
   // Declare and register a test, e.g.:
   //    EIGEN_DECLARE_TEST(mytest) { ... }
