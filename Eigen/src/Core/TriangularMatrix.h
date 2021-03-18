@@ -968,7 +968,7 @@ struct Assignment<DstXprType, Product<Lhs,Rhs,DefaultProduct>, internal::assign_
     if((dst.rows()!=dstRows) || (dst.cols()!=dstCols))
       dst.resize(dstRows, dstCols);
 
-    dst._assignProduct(src, 1, 0);
+    dst._assignProduct(src, Scalar(1), false);
   }
 };
 
@@ -979,7 +979,7 @@ struct Assignment<DstXprType, Product<Lhs,Rhs,DefaultProduct>, internal::add_ass
   typedef Product<Lhs,Rhs,DefaultProduct> SrcXprType;
   static void run(DstXprType &dst, const SrcXprType &src, const internal::add_assign_op<Scalar,typename SrcXprType::Scalar> &)
   {
-    dst._assignProduct(src, 1, 1);
+    dst._assignProduct(src, Scalar(1), true);
   }
 };
 
@@ -990,7 +990,7 @@ struct Assignment<DstXprType, Product<Lhs,Rhs,DefaultProduct>, internal::sub_ass
   typedef Product<Lhs,Rhs,DefaultProduct> SrcXprType;
   static void run(DstXprType &dst, const SrcXprType &src, const internal::sub_assign_op<Scalar,typename SrcXprType::Scalar> &)
   {
-    dst._assignProduct(src, -1, 1);
+    dst._assignProduct(src, Scalar(-1), true);
   }
 };
 
