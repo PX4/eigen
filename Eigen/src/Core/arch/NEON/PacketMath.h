@@ -4053,7 +4053,7 @@ struct packet_traits<Eigen::half> : default_packet_traits {
     HasRsqrt = 1,
     HasErf = EIGEN_FAST_MATH,
     HasBessel = 0,  // Issues with accuracy.
-    HasNdtri = 0,
+    HasNdtri = 0
   };
 };
 
