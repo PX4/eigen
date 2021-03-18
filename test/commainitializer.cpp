@@ -73,8 +73,7 @@ struct test_block_recursion<0,N>
   }
 };
 
-EIGEN_DECLARE_TEST(commainitializer)
-{
+void test_basics() {
   Matrix3d m3;
   Matrix4d m4;
 
@@ -107,8 +106,13 @@ EIGEN_DECLARE_TEST(commainitializer)
         4, 5, 6,
         vec[2].transpose();
   VERIFY_IS_APPROX(m3, ref);
+}
 
+EIGEN_DECLARE_TEST(commainitializer)
+{
+
+  CALL_SUBTEST_1(test_basics());
 
   // recursively test all block-sizes from 0 to 3:
-  test_block_recursion<8>::run();
+  CALL_SUBTEST_2(test_block_recursion<8>::run());
 }
