@@ -166,51 +166,51 @@ build:aarch64:linux:clang-10:cxx11-on:
 # Currently all ppc64le jobs are allowed to fail
 
 # GCC-10
-# build:ppc64le:linux:gcc-10:cxx11-off:
-#   allow_failure: true
-#   extends: .build:linux:base
-#   variables:
-#     EIGEN_CI_CXX_COMPILER: "g++-10"
-#     EIGEN_CI_CC_COMPILER: "gcc-10"
-#     EIGEN_TEST_CXX11: "off"
-#   tags:
-#     - eigen-runner
-#     - linux
-#     - ppc64le
+build:ppc64le:linux:gcc-10:cxx11-off:
+  allow_failure: true
+  extends: .build:linux:base
+  variables:
+    EIGEN_CI_CXX_COMPILER: "g++-10"
+    EIGEN_CI_CC_COMPILER: "gcc-10"
+    EIGEN_TEST_CXX11: "off"
+  tags:
+    - eigen-runner
+    - linux
+    - ppc64le
 
-# build:ppc64le:linux:gcc-10:cxx11-on:
-#   allow_failure: true
-#   extends: .build:linux:base
-#   variables:
-#     EIGEN_CI_CXX_COMPILER: "g++-10"
-#     EIGEN_CI_CC_COMPILER: "gcc-10"
-#     EIGEN_TEST_CXX11: "on"
-#   tags:
-#     - eigen-runner
-#     - linux
-#     - ppc64le
+build:ppc64le:linux:gcc-10:cxx11-on:
+  allow_failure: true
+  extends: .build:linux:base
+  variables:
+    EIGEN_CI_CXX_COMPILER: "g++-10"
+    EIGEN_CI_CC_COMPILER: "gcc-10"
+    EIGEN_TEST_CXX11: "on"
+  tags:
+    - eigen-runner
+    - linux
+    - ppc64le
 
 # # Clang-10
-# build:ppc64le:linux:clang-10:cxx11-off:
-#   allow_failure: true
-#   extends: .build:linux:base
-#   variables:
-#     EIGEN_CI_CXX_COMPILER: "clang++-10"
-#     EIGEN_CI_CC_COMPILER: "clang-10"
-#     EIGEN_TEST_CXX11: "off"
-#   tags:
-#     - eigen-runner
-#     - linux
-#     - ppc64le
+build:ppc64le:linux:clang-10:cxx11-off:
+  allow_failure: true
+  extends: .build:linux:base
+  variables:
+    EIGEN_CI_CXX_COMPILER: "clang++-10"
+    EIGEN_CI_CC_COMPILER: "clang-10"
+    EIGEN_TEST_CXX11: "off"
+  tags:
+    - eigen-runner
+    - linux
+    - ppc64le
 
-# build:ppc64le:linux:clang-10:cxx11-on:
-#   allow_failure: true
-#   extends: .build:linux:base
-#   variables:
-#     EIGEN_CI_CXX_COMPILER: "clang++-10"
-#     EIGEN_CI_CC_COMPILER: "clang-10"
-#     EIGEN_TEST_CXX11: "on"
-#   tags:
-#     - eigen-runner
-#     - linux
-#     - ppc64le
+build:ppc64le:linux:clang-10:cxx11-on:
+  allow_failure: true
+  extends: .build:linux:base
+  variables:
+    EIGEN_CI_CXX_COMPILER: "clang++-10"
+    EIGEN_CI_CC_COMPILER: "clang-10"
+    EIGEN_TEST_CXX11: "on"
+  tags:
+    - eigen-runner
+    - linux
+    - ppc64le
