@@ -718,9 +718,6 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half floor(const half& a) {
   return half(::floorf(float(a)));
 #endif
 }
-EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half rint(const half& a) {
-  return half(::rintf(float(a)));
-}
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half ceil(const half& a) {
 #if (EIGEN_CUDA_SDK_VER >= 80000 && defined EIGEN_CUDA_ARCH && EIGEN_CUDA_ARCH >= 300) || \
   defined(EIGEN_HIP_DEVICE_COMPILE)
@@ -728,6 +725,12 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half ceil(const half& a) {
 #else
   return half(::ceilf(float(a)));
 #endif
+}
+EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half rint(const half& a) {
+  return half(::rintf(float(a)));
+}
+EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half round(const half& a) {
+  return half(::roundf(float(a)));
 }
 EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC half fmod(const half& a, const half& b) {
   return half(::fmodf(float(a), float(b)));
