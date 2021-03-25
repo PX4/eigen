@@ -112,6 +112,11 @@ EIGEN_DECLARE_TEST(product_large)
     CALL_SUBTEST_1( test_aliasing<float>() );
 
     CALL_SUBTEST_6( bug_1622<1>() );
+
+    CALL_SUBTEST_7( product(MatrixXcd(internal::random<int>(1,EIGEN_TEST_MAX_SIZE/2), internal::random<int>(1,EIGEN_TEST_MAX_SIZE/2))) );
+    CALL_SUBTEST_8( product(Matrix<double,Dynamic,Dynamic,RowMajor>(internal::random<int>(1,EIGEN_TEST_MAX_SIZE), internal::random<int>(1,EIGEN_TEST_MAX_SIZE))) );
+    CALL_SUBTEST_9( product(Matrix<std::complex<float>,Dynamic,Dynamic,RowMajor>(internal::random<int>(1,EIGEN_TEST_MAX_SIZE), internal::random<int>(1,EIGEN_TEST_MAX_SIZE))) );
+    CALL_SUBTEST_10( product(Matrix<std::complex<double>,Dynamic,Dynamic,RowMajor>(internal::random<int>(1,EIGEN_TEST_MAX_SIZE), internal::random<int>(1,EIGEN_TEST_MAX_SIZE))) );
   }
 
   CALL_SUBTEST_6( product_large_regressions<0>() );
