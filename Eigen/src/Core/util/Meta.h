@@ -275,7 +275,7 @@ template<bool Condition, typename T=void> struct enable_if;
 template<typename T> struct enable_if<true,T>
 { typedef T type; };
 
-#if defined(EIGEN_GPU_COMPILE_PHASE)
+#if defined(EIGEN_GPU_COMPILE_PHASE) && !EIGEN_HAS_CXX11
 #if !defined(__FLT_EPSILON__)
 #define __FLT_EPSILON__ FLT_EPSILON
 #define __DBL_EPSILON__ DBL_EPSILON
@@ -296,7 +296,7 @@ template<> struct numeric_limits<float>
 {
   EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR
   static float epsilon() { return __FLT_EPSILON__; }
-  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR
+  EIGEN_DEVICE_FUNC
   static float (max)() {
   #if defined(EIGEN_CUDA_ARCH)
     return CUDART_MAX_NORMAL_F;
@@ -306,7 +306,7 @@ template<> struct numeric_limits<float>
   }
   EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR
   static float (min)() { return FLT_MIN; }
-  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR
+  EIGEN_DEVICE_FUNC
   static float infinity() {
   #if defined(EIGEN_CUDA_ARCH)
     return CUDART_INF_F;
@@ -314,7 +314,7 @@ template<> struct numeric_limits<float>
     return HIPRT_INF_F;
   #endif
   }
-  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR
+  EIGEN_DEVICE_FUNC
   static float quiet_NaN() {
   #if defined(EIGEN_CUDA_ARCH)
     return CUDART_NAN_F;
@@ -331,7 +331,7 @@ template<> struct numeric_limits<double>
   static double (max)() { return DBL_MAX; }
   EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR
   static double (min)() { return DBL_MIN; }
-  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR
+  EIGEN_DEVICE_FUNC
   static double infinity() {
   #if defined(EIGEN_CUDA_ARCH)
     return CUDART_INF;
@@ -339,7 +339,7 @@ template<> struct numeric_limits<double>
     return HIPRT_INF;
   #endif
   }
-  EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR
+  EIGEN_DEVICE_FUNC
   static double quiet_NaN() {
   #if defined(EIGEN_CUDA_ARCH)
     return CUDART_NAN;
@@ -414,7 +414,7 @@ template<> struct numeric_limits<bool>
 
 }
 
-#endif
+#endif // defined(EIGEN_GPU_COMPILE_PHASE) && !EIGEN_HAS_CXX11
 
 /** \internal
   * A base class do disable default copy ctor and copy assignment operator.
@@ -761,7 +761,7 @@ template<typename T> EIGEN_DEVICE_FUNC   void swap(T &a, T &b) { T tmp = b; b = 
 template<typename T> EIGEN_STRONG_INLINE void swap(T &a, T &b) { std::swap(a,b); }
 #endif
 
-#if defined(EIGEN_GPU_COMPILE_PHASE)
+#if defined(EIGEN_GPU_COMPILE_PHASE) && !EIGEN_HAS_CXX11
 using internal::device::numeric_limits;
 #else
 using std::numeric_limits;

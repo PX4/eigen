@@ -763,8 +763,6 @@
     #if EIGEN_MAX_CPP_VER>=14 && (EIGEN_COMP_CXXVER >= 11 && (EIGEN_COMP_CLANG || EIGEN_COMP_NVCC >= 70500))
       #define EIGEN_HAS_CONSTEXPR 1
     #endif
-  #elif defined(EIGEN_HIPCC)
-  // Skip const_expr on the HIP platform
   #elif EIGEN_MAX_CPP_VER>=14 && (__has_feature(cxx_relaxed_constexpr) || (EIGEN_COMP_CXXVER >= 14) || \
     (EIGEN_GNUC_AT_LEAST(4,8) && (EIGEN_COMP_CXXVER >= 11)) || \
     (EIGEN_COMP_CLANG >= 306 && (EIGEN_COMP_CXXVER >= 11)))
