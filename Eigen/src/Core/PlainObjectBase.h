@@ -13,10 +13,10 @@
 
 #if defined(EIGEN_INITIALIZE_MATRICES_BY_ZERO)
 # define EIGEN_INITIALIZE_COEFFS
-# define EIGEN_INITIALIZE_COEFFS_IF_THAT_OPTION_IS_ENABLED for(int i=0;i<base().size();++i) coeffRef(i)=Scalar(0);
+# define EIGEN_INITIALIZE_COEFFS_IF_THAT_OPTION_IS_ENABLED for(Index i=0;i<base().size();++i) coeffRef(i)=Scalar(0);
 #elif defined(EIGEN_INITIALIZE_MATRICES_BY_NAN)
 # define EIGEN_INITIALIZE_COEFFS
-# define EIGEN_INITIALIZE_COEFFS_IF_THAT_OPTION_IS_ENABLED for(int i=0;i<base().size();++i) coeffRef(i)=std::numeric_limits<Scalar>::quiet_NaN();
+# define EIGEN_INITIALIZE_COEFFS_IF_THAT_OPTION_IS_ENABLED for(Index i=0;i<base().size();++i) coeffRef(i)=std::numeric_limits<Scalar>::quiet_NaN();
 #else
 # undef EIGEN_INITIALIZE_COEFFS
 # define EIGEN_INITIALIZE_COEFFS_IF_THAT_OPTION_IS_ENABLED
@@ -540,7 +540,7 @@ class PlainObjectBase : public internal::dense_xpr_base<Derived>::type
       m_storage.data()[1] = a1;
       m_storage.data()[2] = a2;
       m_storage.data()[3] = a3;
-      int i = 4;
+      Index i = 4;
       auto x = {(m_storage.data()[i++] = args, 0)...};
       static_cast<void>(x);
     }
