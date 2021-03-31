@@ -460,3 +460,7 @@ cmake_dependent_option(EIGEN_TEST_BUILD_DOCUMENTATION "Test building the doxygen
 if(EIGEN_TEST_BUILD_DOCUMENTATION)
   add_dependencies(buildtests doc)
 endif()
+
+# Register all smoke tests
+include("EigenSmokeTestList")
+ei_add_smoke_tests("${ei_smoke_test_list}")
