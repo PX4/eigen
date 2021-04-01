@@ -716,12 +716,15 @@ macro(ei_split_testsuite num_splits)
   endforeach()
 endmacro(ei_split_testsuite num_splits)
 
-# Defines two custom commands buildsmoketests and smoketests that build and run
-# a number of tests specified in smoke_test_list.
+# Defines the custom command buildsmoketests to build a number of tests
+# specified in smoke_test_list.
 # 
 # Test in smoke_test_list can be either test targets (e.g. packetmath) or
 # subtests targets (e.g. packetmath_2). If any of the test are not available
 # in the current configuration they are just skipped. 
+#
+# All tests added via this macro are labeled with the smoketest label. This
+# allows running smoketests only using ctest.
 #
 # Smoke tests are intended to be run before the whole test suite is invoked,
 # e.g., to smoke test patches.
@@ -729,9 +732,6 @@ macro(ei_add_smoke_tests smoke_test_list)
   # Set the build target to build smoketests
   set(buildtarget "buildsmoketests")
   add_custom_target("${buildtarget}")
-
-  # We build a regex that matches our smoketests only and will pass it to ctest
-  set(ctest_regex "")
 
   # Get list of all tests and translate it into a CMake list
   get_property(EIGEN_TESTS_LIST GLOBAL PROPERTY EIGEN_TESTS_LIST)
@@ -762,16 +762,9 @@ macro(ei_add_smoke_tests smoke_test_list)
     # is currently available, i.e., is in EIGEN_SUBTESTS_LIST
     if ("${test}" IN_LIST EIGEN_SUBTESTS_LIST)
       add_dependencies("${buildtarget}" "${test}")
-      # In the case of a subtest we match exactly
-      set(ctest_regex "${ctest_regex}^${test}$$|")
+      # Add label smoketest to be able to run smoketests using ctest
+      get_property(test_labels TEST ${test} PROPERTY LABELS)
+      set_property(TEST ${test} PROPERTY LABELS "${test_labels};smoketest")
     endif()
   endforeach()
-
-  # Remove trailing '|' in ctest regex
-  string(REGEX REPLACE "\\|$" "" ctest_regex "${ctest_regex}")
-  message(STATUS "${ctest_regex}")
-  # Set the test target to run smoketests
-  set(testtarget "smoketests")
-  add_custom_target("${testtarget}" COMMAND ctest -R '${ctest_regex}' --random-shuffle)
-  add_dependencies("${testtarget}" "${buildtarget}")
 endmacro(ei_add_smoke_tests)
