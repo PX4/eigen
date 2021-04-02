@@ -139,8 +139,8 @@ EIGEN_STRONG_INLINE Packet2cf pload2(const std::complex<float>* from0, const std
   __asm__ ("xxpermdi %x0, %x2, %x1, 0" : "=wa" (res0) : "wa" (res0), "wa" (res1));
 #endif
 #else
-  *((std::complex<float> *)&res0[0]) = *from0;
-  *((std::complex<float> *)&res1[0]) = *from1;
+  *reinterpret_cast<std::complex<float> *>(&res0) = *from0;
+  *reinterpret_cast<std::complex<float> *>(&res1) = *from1;
   res0 = vec_perm(res0, res1, p16uc_TRANSPOSE64_HI);
 #endif
   return Packet2cf(res0);

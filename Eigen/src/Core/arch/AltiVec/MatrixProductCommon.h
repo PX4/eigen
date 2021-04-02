@@ -214,7 +214,7 @@ EIGEN_STRONG_INLINE void bcouple_common<Packet2d, Packet1cd>(PacketBlock<Packet2
 template<typename Scalar, typename Packet>
 EIGEN_STRONG_INLINE Packet ploadRhs(const Scalar* rhs)
 {
-  return *((Packet *)rhs);
+  return *reinterpret_cast<Packet *>(const_cast<Scalar *>(rhs));
 }
 
 } // end namespace internal

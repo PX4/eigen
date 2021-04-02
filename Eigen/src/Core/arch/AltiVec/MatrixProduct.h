@@ -486,19 +486,28 @@ struct dhs_cpack {
         if(((StorageOrder == ColMajor) && UseLhs) || (((StorageOrder == RowMajor) && !UseLhs)))
         {
           if (UseLhs) {
-            cblock.packet[0] = pload<PacketC>(&lhs(j + 0, i));
-            cblock.packet[1] = pload<PacketC>(&lhs(j + 2, i));
+            cblock.packet[0] = lhs.template loadPacket<PacketC>(j + 0, i);
+            cblock.packet[1] = lhs.template loadPacket<PacketC>(j + 2, i);
           } else {
-            cblock.packet[0] = pload<PacketC>(&lhs(i, j + 0));
-            cblock.packet[1] = pload<PacketC>(&lhs(i, j + 2));
+            cblock.packet[0] = lhs.template loadPacket<PacketC>(i, j + 0);
+            cblock.packet[1] = lhs.template loadPacket<PacketC>(i, j + 2);
           }
         } else {
+          const std::complex<Scalar> *lhs0, *lhs1;
           if (UseLhs) {
-            cblock.packet[0] = pload2(&lhs(j + 0, i), &lhs(j + 1, i));
-            cblock.packet[1] = pload2(&lhs(j + 2, i), &lhs(j + 3, i));
+            lhs0 = &lhs(j + 0, i);
+            lhs1 = &lhs(j + 1, i);
+            cblock.packet[0] = pload2(lhs0, lhs1);
+            lhs0 = &lhs(j + 2, i);
+            lhs1 = &lhs(j + 3, i);
+            cblock.packet[1] = pload2(lhs0, lhs1);
           } else {
-            cblock.packet[0] = pload2(&lhs(i, j + 0), &lhs(i, j + 1));
-            cblock.packet[1] = pload2(&lhs(i, j + 2), &lhs(i, j + 3));
+            lhs0 = &lhs(i, j + 0);
+            lhs1 = &lhs(i, j + 1);
+            cblock.packet[0] = pload2(lhs0, lhs1);
+            lhs0 = &lhs(i, j + 2);
+            lhs1 = &lhs(i, j + 3);
+            cblock.packet[1] = pload2(lhs0, lhs1);
           }
         }
 
@@ -859,8 +868,8 @@ struct dhs_cpack<double, Index, DataMapper, Packet, PacketC, StorageOrder, Conju
         PacketBlock<Packet,1> blockr, blocki;
         PacketBlock<PacketC,2> cblock;
 
-        cblock.packet[0] = pload<PacketC>(&lhs(j + 0, i));
-        cblock.packet[1] = pload<PacketC>(&lhs(j + 1, i));
+        cblock.packet[0] = lhs.template loadPacket<PacketC>(j + 0, i);
+        cblock.packet[1] = lhs.template loadPacket<PacketC>(j + 1, i);
 
         blockr.packet[0] = vec_perm(cblock.packet[0].v, cblock.packet[1].v, p16uc_GETREAL64);
         blocki.packet[0] = vec_perm(cblock.packet[0].v, cblock.packet[1].v, p16uc_GETIMAG64);
@@ -1100,7 +1109,7 @@ EIGEN_STRONG_INLINE void pgerc(PacketBlock<Packet,N>* accReal, PacketBlock<Packe
 template<typename Scalar, typename Packet>
 EIGEN_STRONG_INLINE Packet ploadLhs(const Scalar* lhs)
 {
-  return *((Packet *)lhs);
+  return *reinterpret_cast<Packet *>(const_cast<Scalar *>(lhs));
 }
 
 // Zero the accumulator on PacketBlock.
@@ -1799,24 +1808,6 @@ EIGEN_STRONG_INLINE void MICRO_COMPLEX_EXTRA_COL(
   else EIGEN_UNUSED_VARIABLE(rhs_ptr_imag);
 }
 
-template<typename Scalar, typename Packetc, typename Index, const Index accCols>
-EIGEN_STRONG_INLINE void pstore_add_half(std::complex<Scalar>* to, Packetc &from)
-{
-#ifdef __VSX__
-  Packetc from2;
-#ifndef _BIG_ENDIAN
-  __asm__ ("xxswapd %x0, %x0" : : "wa" (from.v));
-#endif
-  __asm__ ("lxsdx %x0,%y1" : "=wa" (from2.v) : "Z" (*to));
-  from2 += from;
-  __asm__ ("stxsdx %x0,%y1" : : "wa" (from2.v), "Z" (*to));
-#else
-  std::complex<Scalar> mem[accColsC];
-  pstoreu<std::complex<Scalar> >(mem, from);
-  *to += *mem;
-#endif
-}
-
 template<typename Scalar, typename Packet, typename Packetc, typename DataMapper, typename Index, const Index accRows, const Index accCols, bool ConjugateLhs, bool ConjugateRhs, bool LhsIsReal, bool RhsIsReal>
 EIGEN_STRONG_INLINE void gemm_complex_extra_col(
   const DataMapper& res,
@@ -1886,12 +1877,12 @@ EIGEN_STRONG_INLINE void gemm_complex_extra_col(
 
   if ((sizeof(Scalar) == sizeof(float)) && (remaining_rows == 1))
   {
-    pstore_add_half<Scalar, Packetc, Index, accCols>(&res(row + 0, col + 0), acc0.packet[0]);
+    res(row + 0, col + 0) += pfirst<Packetc>(acc0.packet[0]);
   } else {
     acc0.packet[0] += res.template loadPacket<Packetc>(row + 0, col + 0);
     res.template storePacketBlock<Packetc,1>(row + 0, col + 0, acc0);
     if(remaining_rows > accColsC) {
-      pstore_add_half<Scalar, Packetc, Index, accCols>(&res(row + accColsC, col + 0), acc1.packet[0]);
+      res(row + accColsC, col + 0) += pfirst<Packetc>(acc1.packet[0]);
     }
   }
 }
@@ -1997,7 +1988,7 @@ asm("#gemm_complex begin");
     if ((sizeof(Scalar) == sizeof(float)) && (remaining_rows == 1))
     {
       for(Index j = 0; j < 4; j++) {
-        pstore_add_half<Scalar, Packetc, Index, accCols>(&res(row + 0, col + j), acc0.packet[j]);
+        res(row + 0, col + j) += pfirst<Packetc>(acc0.packet[j]);
       }
     } else {
       for(Index j = 0; j < 4; j++) {
@@ -2005,7 +1996,7 @@ asm("#gemm_complex begin");
         acc2.packet[0] = res.template loadPacket<Packetc>(row + 0, col + j) + acc0.packet[j];
         res.template storePacketBlock<Packetc,1>(row + 0, col + j, acc2);
         if(remaining_rows > accColsC) {
-          pstore_add_half<Scalar, Packetc, Index, accCols>(&res(row + accColsC, col + j), acc1.packet[j]);
+          res(row + accColsC, col + j) += pfirst<Packetc>(acc1.packet[j]);
         }
       }
     }
