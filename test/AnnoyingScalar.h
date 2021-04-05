@@ -145,12 +145,12 @@ bool (isfinite)(const AnnoyingScalar& x) {
 }
 
 namespace internal {
-  template<> AnnoyingScalar pcmp_eq(const AnnoyingScalar& x, const AnnoyingScalar& y)
-  { return AnnoyingScalar(pcmp_eq(*x.v, *y.v)); }
-  template<> AnnoyingScalar pselect(const AnnoyingScalar& cond, const AnnoyingScalar& x, const AnnoyingScalar& y)
-  { return numext::equal_strict(*cond.v, 0.f) ? y : x; }
-  template<> double cast(const AnnoyingScalar& x) { return double(*x.v); }
-  template<> float  cast(const AnnoyingScalar& x) { return *x.v; }
+  template<> EIGEN_STRONG_INLINE AnnoyingScalar pcmp_eq(const AnnoyingScalar& a, const AnnoyingScalar& b)
+  { return AnnoyingScalar(pcmp_eq(*a.v, *b.v)); }
+  template<> EIGEN_STRONG_INLINE AnnoyingScalar pselect(const AnnoyingScalar& mask, const AnnoyingScalar& a, const AnnoyingScalar& b)
+  { return numext::equal_strict(*mask.v, 0.f) ? b : a; }
+  template<> EIGEN_STRONG_INLINE double cast(const AnnoyingScalar& x) { return double(*x.v); }
+  template<> EIGEN_STRONG_INLINE float  cast(const AnnoyingScalar& x) { return *x.v; }
 }
 }  // namespace Eigen
 
