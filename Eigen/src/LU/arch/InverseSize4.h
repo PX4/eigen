@@ -141,8 +141,8 @@ struct compute_inverse_size4<Architecture::Target, float, MatrixType, ResultType
     iC = psub(iC, pmul(vec4f_swizzle2(A, A, 1, 0, 3, 2), vec4f_swizzle2(DC, DC, 2, 1, 2, 1)));
     iC = psub(pmul(B, vec4f_duplane(dC, 0)), iC);
 
-    const int bits[4] = {0, -2147483648, -2147483648, 0};
-    const Packet4f p4f_sign_PNNP = preinterpret<Packet4f, Packet4i>(pgather<int, Packet4i>(bits, static_cast<Eigen::Index>(1)));
+    const float sign_mask[4] = {0.0f, -0.0f, -0.0f, 0.0f};
+    const Packet4f p4f_sign_PNNP = pset<Packet4f>(sign_mask);
     rd = pxor(rd, p4f_sign_PNNP);
     iA = pmul(iA, rd);
     iB = pmul(iB, rd);
@@ -323,12 +323,12 @@ struct compute_inverse_size4<Architecture::Target, double, MatrixType, ResultTyp
     iC1 = psub(pmul(B1, dC), iC1);
     iC2 = psub(pmul(B2, dC), iC2);
 
-    const int bits1[4] = {0, -2147483648, 0, 0};
-    const int bits2[4] = {0, 0, 0, -2147483648};
-    const Packet2d _Sign_NP = preinterpret<Packet2d, Packet4i>(pgather<int, Packet4i>(bits1, static_cast<Eigen::Index>(1)));
-    const Packet2d _Sign_PN = preinterpret<Packet2d, Packet4i>(pgather<int, Packet4i>(bits2, static_cast<Eigen::Index>(1)));
-    d1 = pxor(rd, _Sign_PN);
-    d2 = pxor(rd, _Sign_NP);
+    const double sign_mask1[2] = {0.0, -0.0};
+    const double sign_mask2[2] = {-0.0, 0.0};
+    const Packet2d sign_PN = pset<Packet2d>(sign_mask1);
+    const Packet2d sign_NP = pset<Packet2d>(sign_mask2);
+    d1 = pxor(rd, sign_PN);
+    d2 = pxor(rd, sign_NP);
 
     Index res_stride = result.outerStride();
     double *res = result.data();
