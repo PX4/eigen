@@ -556,7 +556,7 @@ template<typename Packet> EIGEN_DEVICE_FUNC inline Packet
 peven_mask(const Packet& /*a*/) {
   typedef typename unpacket_traits<Packet>::type Scalar;
   const size_t n = unpacket_traits<Packet>::size;
-  Scalar elements[n];
+  EIGEN_ALIGN_TO_BOUNDARY(sizeof(Packet)) Scalar elements[n];
   for(size_t i = 0; i < n; ++i) {
     memset(elements+i, ((i & 1) == 0 ? 0xff : 0), sizeof(Scalar));
   }
@@ -731,7 +731,7 @@ EIGEN_DEVICE_FUNC inline typename unpacket_traits<Packet>::type
 predux_helper(const Packet& a, Op op) {
   typedef typename unpacket_traits<Packet>::type Scalar;
   const size_t n = unpacket_traits<Packet>::size;
-  Scalar elements[n];
+  EIGEN_ALIGN_TO_BOUNDARY(sizeof(Packet)) Scalar elements[n];
   pstoreu<Scalar>(elements, a);
   for(size_t k = n / 2; k > 0; k /= 2)  {
     for(size_t i = 0; i < k; ++i) {
