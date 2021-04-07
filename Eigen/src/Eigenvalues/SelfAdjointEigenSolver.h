@@ -508,7 +508,7 @@ ComputationInfo computeFromTridiagonal_impl(DiagType& diag, SubDiagType& subdiag
   
   typedef typename DiagType::RealScalar RealScalar;
   const RealScalar considerAsZero = (std::numeric_limits<RealScalar>::min)();
-  const RealScalar precision_inv = RealScalar(2)/NumTraits<RealScalar>::epsilon();
+  const RealScalar precision_inv = RealScalar(1)/NumTraits<RealScalar>::epsilon();
   while (end>0)
   {
     for (Index i = start; i<end; ++i) {
