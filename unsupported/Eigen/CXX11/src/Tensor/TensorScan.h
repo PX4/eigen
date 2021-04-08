@@ -357,8 +357,8 @@ __global__ EIGEN_HIP_LAUNCH_BOUNDS_1024 void ScanKernel(Self self, Index total_s
 
 }
 
-template <typename Self, typename Reducer>
-struct ScanLauncher<Self, Reducer, GpuDevice, false> {
+template <typename Self, typename Reducer, bool Vectorize>
+struct ScanLauncher<Self, Reducer, GpuDevice, Vectorize> {
   void operator()(const Self& self, typename Self::CoeffReturnType* data) {
      Index total_size = internal::array_prod(self.dimensions());
      Index num_blocks = (total_size / self.size() + 63) / 64;
