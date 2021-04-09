@@ -7,9 +7,9 @@
 // Public License v. 2.0. If a copy of the MPL was not distributed
 // with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "main.h"
 #include <iterator>
 #include <numeric>
-#include "main.h"
 
 template< class Iterator >
 std::reverse_iterator<Iterator>
@@ -46,6 +46,18 @@ bool is_pointer_based_stl_iterator(const internal::pointer_based_stl_iterator<Xp
 
 template<typename XprType>
 bool is_generic_randaccess_stl_iterator(const internal::generic_randaccess_stl_iterator<XprType> &) { return true; }
+
+template<typename Iter>
+bool is_default_constructible_and_assignable(const Iter& it)
+{
+#if EIGEN_HAS_CXX11
+  VERIFY(std::is_default_constructible<Iter>::value);
+  VERIFY(std::is_nothrow_default_constructible<Iter>::value);
+#endif
+  Iter it2;
+  it2 = it;
+  return (it==it2);
+}
 
 template<typename Xpr>
 void check_begin_end_for_loop(Xpr xpr)
@@ -123,6 +135,22 @@ void test_stl_iterators(int rows=Rows, int cols=Cols)
   RowMatrixType B = RowMatrixType::Random(rows,cols);
   
   Index i, j;
+
+  // Verify that iterators are default constructible (See bug #1900)
+  {
+    VERIFY( is_default_constructible_and_assignable(v.begin()));
+    VERIFY( is_default_constructible_and_assignable(v.end()));
+    VERIFY( is_default_constructible_and_assignable(cv.begin()));
+    VERIFY( is_default_constructible_and_assignable(cv.end()));
+
+    VERIFY( is_default_constructible_and_assignable(A.row(0).begin()));
+    VERIFY( is_default_constructible_and_assignable(A.row(0).end()));
+    VERIFY( is_default_constructible_and_assignable(cA.row(0).begin()));
+    VERIFY( is_default_constructible_and_assignable(cA.row(0).end()));
+
+    VERIFY( is_default_constructible_and_assignable(B.row(0).begin()));
+    VERIFY( is_default_constructible_and_assignable(B.row(0).end()));
+  }
 
   // Check we got a fast pointer-based iterator when expected
   {
