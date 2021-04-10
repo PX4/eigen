@@ -123,10 +123,8 @@ template<typename SparseMatrixType> void sparse_extra(const SparseMatrixType& re
     #ifdef EIGEN_UNORDERED_MAP_SUPPORT
     VERIFY(( test_random_setter<RandomSetter<SparseMatrixType, StdUnorderedMapTraits> >(m,refMat,nonzeroCoords) ));
     #endif
-    #ifdef _DENSE_HASH_MAP_H_
+    #ifdef EIGEN_GOOGLEHASH_SUPPORT
     VERIFY(( test_random_setter<RandomSetter<SparseMatrixType, GoogleDenseHashMapTraits> >(m,refMat,nonzeroCoords) ));
-    #endif
-    #ifdef _SPARSE_HASH_MAP_H_
     VERIFY(( test_random_setter<RandomSetter<SparseMatrixType, GoogleSparseHashMapTraits> >(m,refMat,nonzeroCoords) ));
     #endif
 
