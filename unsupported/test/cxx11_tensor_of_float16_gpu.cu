@@ -444,7 +444,7 @@ void test_gpu_forced_evals() {
       d_float, num_elem);
   Eigen::TensorMap<Eigen::Tensor<float, 1>, Eigen::Aligned> gpu_res_half1(
       d_res_half1, num_elem);
- Eigen::TensorMap<Eigen::Tensor<float, 1>, Eigen::Unaligned> gpu_res_half2(
+  Eigen::TensorMap<Eigen::Tensor<float, 1>, Eigen::Unaligned> gpu_res_half2(
       d_res_half2, num_elem);
   Eigen::TensorMap<Eigen::Tensor<float, 1>, Eigen::Aligned> gpu_res_float(
       d_res_float, num_elem);
@@ -461,7 +461,7 @@ void test_gpu_forced_evals() {
   Tensor<float, 1> half_prec2(num_elem);
   Tensor<float, 1> full_prec(num_elem);
   gpu_device.memcpyDeviceToHost(half_prec1.data(), d_res_half1, num_elem*sizeof(float));
-  gpu_device.memcpyDeviceToHost(half_prec2.data(), d_res_half1, num_elem*sizeof(float));
+  gpu_device.memcpyDeviceToHost(half_prec2.data(), d_res_half2, num_elem*sizeof(float));
   gpu_device.memcpyDeviceToHost(full_prec.data(), d_res_float, num_elem*sizeof(float));
   gpu_device.synchronize();
 
