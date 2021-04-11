@@ -684,8 +684,7 @@
 // Does the compiler support result_of?
 // result_of was deprecated in c++17 and removed in c++ 20
 #ifndef EIGEN_HAS_STD_RESULT_OF
-#if EIGEN_MAX_CPP_VER >= 11 && \
-    (defined(__cplusplus) && __cplusplus >= 201103L && __cplusplus < 201703L)
+#if EIGEN_HAS_CXX11 && EIGEN_COMP_CXXVER < 17
 #define EIGEN_HAS_STD_RESULT_OF 1
 #else
 #define EIGEN_HAS_STD_RESULT_OF 0
@@ -704,8 +703,7 @@
 #endif  // EIGEN_HAS_STD_HASH
 
 #ifndef EIGEN_HAS_STD_INVOKE_RESULT
-#if EIGEN_MAX_CPP_VER >= 17 && \
-    (defined(__cplusplus) && __cplusplus >= 201703L)
+#if EIGEN_MAX_CPP_VER >= 17 && EIGEN_COMP_CXXVER >= 17
 #define EIGEN_HAS_STD_INVOKE_RESULT 1
 #else
 #define EIGEN_HAS_STD_INVOKE_RESULT 0
