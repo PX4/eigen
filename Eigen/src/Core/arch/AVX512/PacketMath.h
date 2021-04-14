@@ -929,7 +929,8 @@ template<> EIGEN_STRONG_INLINE Packet8d pldexp<Packet8d>(const Packet8d& a, cons
   Packet8i b = parithmetic_shift_right<2>(e);  // floor(e/4)
   
   // 2^b
-  Packet8i hi = _mm256_shuffle_epi32(padd(b, bias), _MM_SHUFFLE(3, 1, 2, 0));
+  const Packet8i permute_idx = _mm256_setr_epi32(0, 4, 1, 5, 2, 6, 3, 7);
+  Packet8i hi = _mm256_permutevar8x32_epi32(padd(b, bias), permute_idx);
   Packet8i lo = _mm256_slli_epi64(hi, 52);
   hi = _mm256_slli_epi64(_mm256_srli_epi64(hi, 32), 52);
   Packet8d c = _mm512_castsi512_pd(_mm512_inserti64x4(_mm512_castsi256_si512(lo), hi, 1));
@@ -937,7 +938,7 @@ template<> EIGEN_STRONG_INLINE Packet8d pldexp<Packet8d>(const Packet8d& a, cons
   
   // 2^(e - 3b)
   b = psub(psub(psub(e, b), b), b);  // e - 3b
-  hi = _mm256_shuffle_epi32(padd(b, bias), _MM_SHUFFLE(3, 1, 2, 0));
+  hi = _mm256_permutevar8x32_epi32(padd(b, bias), permute_idx);
   lo = _mm256_slli_epi64(hi, 52);
   hi = _mm256_slli_epi64(_mm256_srli_epi64(hi, 32), 52);
   c = _mm512_castsi512_pd(_mm512_inserti64x4(_mm512_castsi256_si512(lo), hi, 1));
