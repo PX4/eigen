@@ -184,6 +184,15 @@ EIGEN_DEVICE_FUNC std::complex<T> complex_rsqrt(const std::complex<T>& z) {
       : std::complex<T>(numext::abs(y) / (2 * w * abs_z), y < zero ? woz : -woz );
 }
 
+template<typename T>
+EIGEN_DEVICE_FUNC std::complex<T> complex_log(const std::complex<T>& z) {
+  // Computes complex log.
+  T a = numext::abs(z);
+  EIGEN_USING_STD(atan2);
+  T b = atan2(z.imag(), z.real());
+  return std::complex<T>(numext::log(a), b);
+}
+
 } // end namespace internal
 
 } // end namespace Eigen
