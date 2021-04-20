@@ -99,11 +99,9 @@ EIGEN_STRONG_INLINE void pgerMMA(__vector_quad* acc, const __vector_pair& a, con
 }
 
 template<typename LhsPacket, typename RhsPacket, bool NegativeAccumulate>
-EIGEN_STRONG_INLINE void pgerMMA(__vector_quad* acc, const __vector_pair& a, const Packet4f& b)
+EIGEN_STRONG_INLINE void pgerMMA(__vector_quad*, const __vector_pair&, const Packet4f&)
 {
-  EIGEN_UNUSED_VARIABLE(acc); // Just for compilation
-  EIGEN_UNUSED_VARIABLE(a);
-  EIGEN_UNUSED_VARIABLE(b);
+  // Just for compilation
 }
 
 template<typename Scalar, typename Packet, typename RhsPacket, bool ConjugateLhs, bool ConjugateRhs, bool LhsIsReal, bool RhsIsReal>
@@ -150,11 +148,9 @@ EIGEN_STRONG_INLINE void ploadRhsMMA<double, __vector_pair>(const double* rhs, _
 }
 
 template<>
-EIGEN_STRONG_INLINE void ploadRhsMMA(const float* rhs, __vector_pair& rhsV)
+EIGEN_STRONG_INLINE void ploadRhsMMA(const float*, __vector_pair&)
 {
   // Just for compilation
-  EIGEN_UNUSED_VARIABLE(rhs);
-  EIGEN_UNUSED_VARIABLE(rhsV);
 }
 
 // PEEL_MMA loop factor.

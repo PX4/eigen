@@ -493,21 +493,21 @@ struct dhs_cpack {
             cblock.packet[1] = lhs.template loadPacket<PacketC>(i, j + 2);
           }
         } else {
-          const std::complex<Scalar> *lhs0, *lhs1;
+          std::complex<Scalar> lhs0, lhs1;
           if (UseLhs) {
-            lhs0 = &lhs(j + 0, i);
-            lhs1 = &lhs(j + 1, i);
-            cblock.packet[0] = pload2(lhs0, lhs1);
-            lhs0 = &lhs(j + 2, i);
-            lhs1 = &lhs(j + 3, i);
-            cblock.packet[1] = pload2(lhs0, lhs1);
+            lhs0 = lhs(j + 0, i);
+            lhs1 = lhs(j + 1, i);
+            cblock.packet[0] = pload2(&lhs0, &lhs1);
+            lhs0 = lhs(j + 2, i);
+            lhs1 = lhs(j + 3, i);
+            cblock.packet[1] = pload2(&lhs0, &lhs1);
           } else {
-            lhs0 = &lhs(i, j + 0);
-            lhs1 = &lhs(i, j + 1);
-            cblock.packet[0] = pload2(lhs0, lhs1);
-            lhs0 = &lhs(i, j + 2);
-            lhs1 = &lhs(i, j + 3);
-            cblock.packet[1] = pload2(lhs0, lhs1);
+            lhs0 = lhs(i, j + 0);
+            lhs1 = lhs(i, j + 1);
+            cblock.packet[0] = pload2(&lhs0, &lhs1);
+            lhs0 = lhs(i, j + 2);
+            lhs1 = lhs(i, j + 3);
+            cblock.packet[1] = pload2(&lhs0, &lhs1);
           }
         }
 
