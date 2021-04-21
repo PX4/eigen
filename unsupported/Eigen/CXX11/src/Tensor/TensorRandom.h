@@ -34,9 +34,9 @@ EIGEN_DEVICE_FUNC uint64_t get_random_seed() {
   // we try to generate seeds faster than the clock resolution.
   // We need 2 random values since the generator only generate 16 bits at
   // a time (https://msdn.microsoft.com/en-us/library/398ax69y.aspx)
-  int rnd1 = ::rand();
-  int rnd2 = ::rand();
-  uint64_t rnd = (rnd1 | rnd2 << 16) ^ time;
+  unsigned rnd1 = static_cast<unsigned>(::rand());
+  unsigned rnd2 = static_cast<unsigned>(::rand());
+  uint64_t rnd = (rnd1 ^ (rnd2 << 16)) ^ time;
   return rnd;
 
 #elif defined __APPLE__
@@ -45,23 +45,29 @@ EIGEN_DEVICE_FUNC uint64_t get_random_seed() {
   uint64_t rnd = ::random() ^ mach_absolute_time();
   return rnd;
 
-#elif defined __native_client__
-  // Same approach as for win32, except using clock_gettime
-  timespec ts;
-  clock_gettime(CLOCK_REALTIME, &ts);
-  int rnd1 = ::rand();
-  int rnd2 = ::rand();
-  uint64_t rnd = (rnd1 | rnd2 << 16) ^ ts.tv_nsec;
-  return rnd;
-
 #else
   // Augment the current time with pseudo random number generation
   // to ensure that we get different seeds if we try to generate seeds
   // faster than the clock resolution.
   timespec ts;
   clock_gettime(CLOCK_REALTIME, &ts);
-  uint64_t rnd = ::random() ^ ts.tv_nsec;
-  return rnd;
+
+
+  // Check for BSD random().
+#if EIGEN_COMP_GNUC && (\
+  defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 500 \
+               || /* Glibc since 2.19: */ (defined(_DEFAULT_SOURCE) && _DEFAULT_SOURCE) \
+               || /* Glibc <= 2.19: */ (defined(_SVID_SOURCE) && _SVID_SOURCE) \
+                                    || (defined(_BSD_SOURCE) && _BSD_SOURCE) \
+  )
+  uint64_t rnd = ::random();
+#else
+  // Build random from rand()
+  unsigned rnd1 = static_cast<unsigned>(::rand());
+  unsigned rnd2 = static_cast<unsigned>(::rand());
+  uint64_t rnd = (rnd1 ^ (rnd2 << 16));
+#endif
+  return rnd ^ ts.tv_nsec;
 #endif
 }
 
