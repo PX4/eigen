@@ -566,6 +566,17 @@ template<typename T> struct smart_memmove_helper<T,false> {
   }
 };
 
+#if EIGEN_HAS_RVALUE_REFERENCES
+template<typename T> EIGEN_DEVICE_FUNC T* smart_move(T* start, T* end, T* target)
+{
+  return std::move(start, end, target);
+}
+#else
+template<typename T> EIGEN_DEVICE_FUNC T* smart_move(T* start, T* end, T* target)
+{
+  return std::copy(start, end, target);
+}
+#endif
 
 /*****************************************************************************
 *** Implementation of runtime stack allocation (falling back to malloc)    ***
