@@ -38,9 +38,7 @@
 #include "src/LU/Determinant.h"
 #include "src/LU/InverseImpl.h"
 
-// Use the SSE optimized version whenever possible. At the moment the
-// SSE version doesn't compile when AVX is enabled
-#if (defined EIGEN_VECTORIZE_SSE && !defined EIGEN_VECTORIZE_AVX) || defined EIGEN_VECTORIZE_NEON
+#if defined EIGEN_VECTORIZE_SSE || defined EIGEN_VECTORIZE_NEON
   #include "src/LU/arch/InverseSize4.h"
 #endif
 
