@@ -42,11 +42,18 @@ class StreamInterface {
   virtual unsigned int* semaphore() const = 0;
 };
 
-static gpuDeviceProp_t* m_deviceProperties;
-static bool m_devicePropInitialized = false;
+EIGEN_STRONG_INLINE gpuDeviceProp_t*& getDeviceProperties() {
+  static gpuDeviceProp_t* deviceProperties;
+  return deviceProperties;
+}
+
+EIGEN_STRONG_INLINE bool& getDevicePropInitialized() {
+  static bool devicePropInitialized = false;
+  return devicePropInitialized;
+}
 
 static void initializeDeviceProp() {
-  if (!m_devicePropInitialized) {
+  if (!getDevicePropInitialized()) {
     // Attempts to ensure proper behavior in the case of multiple threads
     // calling this function simultaneously. This would be trivial to
     // implement if we could use std::mutex, but unfortunately mutex don't
@@ -64,9 +71,9 @@ static void initializeDeviceProp() {
                   << std::endl;
         gpu_assert(status == gpuSuccess);
       }
-      m_deviceProperties = new gpuDeviceProp_t[num_devices];
+      getDeviceProperties() = new gpuDeviceProp_t[num_devices];
       for (int i = 0; i < num_devices; ++i) {
-        status = gpuGetDeviceProperties(&m_deviceProperties[i], i);
+        status = gpuGetDeviceProperties(&getDeviceProperties()[i], i);
         if (status != gpuSuccess) {
           std::cerr << "Failed to initialize GPU device #"
                     << i
@@ -78,10 +85,10 @@ static void initializeDeviceProp() {
       }
 
       std::atomic_thread_fence(std::memory_order_release);
-      m_devicePropInitialized = true;
+      getDevicePropInitialized() = true;
     } else {
       // Wait for the other thread to inititialize the properties.
-      while (!m_devicePropInitialized) {
+      while (!getDevicePropInitialized()) {
         std::atomic_thread_fence(std::memory_order_acquire);
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
       }
@@ -129,7 +136,7 @@ class GpuStreamDevice : public StreamInterface {
 
   const gpuStream_t& stream() const { return *stream_; }
   const gpuDeviceProp_t& deviceProperties() const {
-    return m_deviceProperties[device_];
+    return getDeviceProperties()[device_];
   }
   virtual void* allocate(size_t num_bytes) const {
     gpuError_t err = gpuSetDevice(device_);
