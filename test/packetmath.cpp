@@ -280,6 +280,36 @@ void packetmath_boolean_mask_ops() {
 }
 
 template <typename Scalar, typename Packet>
+void packetmath_boolean_mask_ops_real() {
+  const int PacketSize = internal::unpacket_traits<Packet>::size;
+  const int size = 2 * PacketSize;
+  EIGEN_ALIGN_MAX Scalar data1[size];
+  EIGEN_ALIGN_MAX Scalar data2[size];
+  EIGEN_ALIGN_MAX Scalar ref[size];
+
+  for (int i = 0; i < PacketSize; ++i) {
+    data1[i] = internal::random<Scalar>();
+    data1[i + PacketSize] = internal::random<bool>() ? data1[i] : Scalar(0);
+  }
+
+  CHECK_CWISE2_IF(true, internal::pcmp_lt_or_nan, internal::pcmp_lt_or_nan);
+
+  //Test (-0) <=/< (0) for signed operations
+  for (int i = 0; i < PacketSize; ++i) {
+    data1[i] = Scalar(-0.0);
+    data1[i + PacketSize] = internal::random<bool>() ? data1[i] : Scalar(0);
+  }
+  CHECK_CWISE2_IF(true, internal::pcmp_lt_or_nan, internal::pcmp_lt_or_nan);
+
+  //Test NaN
+  for (int i = 0; i < PacketSize; ++i) {
+    data1[i] = NumTraits<Scalar>::quiet_NaN();
+    data1[i + PacketSize] = internal::random<bool>() ? data1[i] : Scalar(0);
+  }
+  CHECK_CWISE2_IF(true, internal::pcmp_lt_or_nan, internal::pcmp_lt_or_nan);
+}
+
+template <typename Scalar, typename Packet>
 void packetmath_boolean_mask_ops_notcomplex() {
   const int PacketSize = internal::unpacket_traits<Packet>::size;
   const int size = 2 * PacketSize;
@@ -609,6 +639,8 @@ void packetmath_real() {
   CHECK_CWISE1_EXACT_IF(PacketTraits::HasCeil, numext::ceil, internal::pceil);
   CHECK_CWISE1_EXACT_IF(PacketTraits::HasFloor, numext::floor, internal::pfloor);
   CHECK_CWISE1_EXACT_IF(PacketTraits::HasRint, numext::rint, internal::print);
+
+  packetmath_boolean_mask_ops_real<Scalar,Packet>();
   
   // Rounding edge cases.
   if (PacketTraits::HasRound || PacketTraits::HasCeil || PacketTraits::HasFloor || PacketTraits::HasRint) {
