@@ -41,14 +41,6 @@
 #include <random>
 #include <thread>
 
-#ifdef _WIN32
-#include <windows.h>
-#elif defined(__APPLE__)
-#include <mach/mach_time.h>
-#else
-#include <time.h>
-#endif
-
 #if defined(EIGEN_USE_THREADS) || defined(EIGEN_USE_SYCL)
 #include "ThreadPool"
 #endif

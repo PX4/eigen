@@ -21,53 +21,11 @@ EIGEN_DEVICE_FUNC uint64_t get_random_seed() {
   // We don't support 3d kernels since we currently only use 1 and
   // 2d kernels.
   gpu_assert(threadIdx.z == 0);
-  return clock64() +
-      blockIdx.x * blockDim.x + threadIdx.x +
-      gridDim.x * blockDim.x * (blockIdx.y * blockDim.y + threadIdx.y);
-
-#elif defined _WIN32
-  // Use the current time as a baseline.
-  SYSTEMTIME st;
-  GetSystemTime(&st);
-  int time = st.wSecond + 1000 * st.wMilliseconds;
-  // Mix in a random number to make sure that we get different seeds if
-  // we try to generate seeds faster than the clock resolution.
-  // We need 2 random values since the generator only generate 16 bits at
-  // a time (https://msdn.microsoft.com/en-us/library/398ax69y.aspx)
-  unsigned rnd1 = static_cast<unsigned>(::rand());
-  unsigned rnd2 = static_cast<unsigned>(::rand());
-  uint64_t rnd = (rnd1 ^ (rnd2 << 16)) ^ time;
-  return rnd;
-
-#elif defined __APPLE__
-  // Same approach as for win32, except that the random number generator
-  // is better (// https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man3/random.3.html#//apple_ref/doc/man/3/random).
-  uint64_t rnd = ::random() ^ mach_absolute_time();
-  return rnd;
-
+  return blockIdx.x * blockDim.x + threadIdx.x 
+         + gridDim.x * blockDim.x * (blockIdx.y * blockDim.y + threadIdx.y);
 #else
-  // Augment the current time with pseudo random number generation
-  // to ensure that we get different seeds if we try to generate seeds
-  // faster than the clock resolution.
-  timespec ts;
-  clock_gettime(CLOCK_REALTIME, &ts);
-
-
-  // Check for BSD random().
-#if EIGEN_COMP_GNUC && (\
-  defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 500 \
-               || /* Glibc since 2.19: */ (defined(_DEFAULT_SOURCE) && _DEFAULT_SOURCE) \
-               || /* Glibc <= 2.19: */ (defined(_SVID_SOURCE) && _SVID_SOURCE) \
-                                    || (defined(_BSD_SOURCE) && _BSD_SOURCE) \
-  )
-  uint64_t rnd = ::random();
-#else
-  // Build random from rand()
-  unsigned rnd1 = static_cast<unsigned>(::rand());
-  unsigned rnd2 = static_cast<unsigned>(::rand());
-  uint64_t rnd = (rnd1 ^ (rnd2 << 16));
-#endif
-  return rnd ^ ts.tv_nsec;
+  // Rely on Eigen's random implementation.
+  return random<uint64_t>();
 #endif
 }
 
