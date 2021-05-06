@@ -66,12 +66,6 @@ template<> struct unpacket_traits<Packet2cf> {
 
 template<> EIGEN_STRONG_INLINE Packet2cf padd<Packet2cf>(const Packet2cf& a, const Packet2cf& b) { return Packet2cf(_mm_add_ps(a.v,b.v)); }
 template<> EIGEN_STRONG_INLINE Packet2cf psub<Packet2cf>(const Packet2cf& a, const Packet2cf& b) { return Packet2cf(_mm_sub_ps(a.v,b.v)); }
-template<> EIGEN_STRONG_INLINE Packet2cf pxor<Packet2cf>(const Packet2cf& a, const Packet2cf& b);
-template<> EIGEN_STRONG_INLINE Packet2cf paddsub<Packet2cf>(const Packet2cf& a, const Packet2cf& b)
-{
-  const Packet4f mask = _mm_castsi128_ps(_mm_setr_epi32(0x80000000,0x80000000,0x0,0x0));
-  return Packet2cf(padd(a.v, pxor(mask, b.v)));
-}
 
 template<> EIGEN_STRONG_INLINE Packet2cf pnegate(const Packet2cf& a)
 {

@@ -124,13 +124,6 @@ template<> EIGEN_STRONG_INLINE Packet1cf psub<Packet1cf>(const Packet1cf& a, con
 template<> EIGEN_STRONG_INLINE Packet2cf psub<Packet2cf>(const Packet2cf& a, const Packet2cf& b)
 { return Packet2cf(psub<Packet4f>(a.v, b.v)); }
 
-template<> EIGEN_STRONG_INLINE Packet2cf pxor<Packet2cf>(const Packet2cf& a, const Packet2cf& b);
-template<> EIGEN_STRONG_INLINE Packet2cf paddsub<Packet2cf>(const Packet2cf& a, const Packet2cf& b)
-{
-  Packet4f mask = {-0.0f, -0.0f, 0.0f, 0.0f};
-  return Packet2cf(padd(a.v, pxor(mask, b.v)));  
-}
-
 template<> EIGEN_STRONG_INLINE Packet1cf pnegate(const Packet1cf& a) { return Packet1cf(pnegate<Packet2f>(a.v)); }
 template<> EIGEN_STRONG_INLINE Packet2cf pnegate(const Packet2cf& a) { return Packet2cf(pnegate<Packet4f>(a.v)); }
 
