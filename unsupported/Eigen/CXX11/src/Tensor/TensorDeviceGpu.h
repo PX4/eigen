@@ -42,58 +42,84 @@ class StreamInterface {
   virtual unsigned int* semaphore() const = 0;
 };
 
-EIGEN_STRONG_INLINE gpuDeviceProp_t*& getDeviceProperties() {
-  static gpuDeviceProp_t* deviceProperties;
-  return deviceProperties;
-}
+class GpuDeviceProperties {
+ public:
+  GpuDeviceProperties() : 
+      initialized_(false), first_(true), device_properties_(nullptr) {}
+ 
+  ~GpuDeviceProperties() {
+    if (device_properties_) {
+      delete[] device_properties_;
+    }
+  }
+  
+  EIGEN_STRONG_INLINE const gpuDeviceProp_t& get(int device) const {
+    return device_properties_[device];
+  }
 
-EIGEN_STRONG_INLINE bool& getDevicePropInitialized() {
-  static bool devicePropInitialized = false;
-  return devicePropInitialized;
-}
+  EIGEN_STRONG_INLINE bool isInitialized() const {
+    return initialized_;
+  }
 
-static void initializeDeviceProp() {
-  if (!getDevicePropInitialized()) {
-    // Attempts to ensure proper behavior in the case of multiple threads
-    // calling this function simultaneously. This would be trivial to
-    // implement if we could use std::mutex, but unfortunately mutex don't
-    // compile with nvcc, so we resort to atomics and thread fences instead.
-    // Note that if the caller uses a compiler that doesn't support c++11 we
-    // can't ensure that the initialization is thread safe.
-    static std::atomic<bool> first(true);
-    if (first.exchange(false)) {
-      // We're the first thread to reach this point.
-      int num_devices;
-      gpuError_t status = gpuGetDeviceCount(&num_devices);
-      if (status != gpuSuccess) {
-        std::cerr << "Failed to get the number of GPU devices: "
-                  << gpuGetErrorString(status)
-                  << std::endl;
-        gpu_assert(status == gpuSuccess);
-      }
-      getDeviceProperties() = new gpuDeviceProp_t[num_devices];
-      for (int i = 0; i < num_devices; ++i) {
-        status = gpuGetDeviceProperties(&getDeviceProperties()[i], i);
+  void initialize() {
+    if (!initialized_) {
+      // Attempts to ensure proper behavior in the case of multiple threads
+      // calling this function simultaneously. This would be trivial to
+      // implement if we could use std::mutex, but unfortunately mutex don't
+      // compile with nvcc, so we resort to atomics and thread fences instead.
+      // Note that if the caller uses a compiler that doesn't support c++11 we
+      // can't ensure that the initialization is thread safe.
+      if (first_.exchange(false)) {
+        // We're the first thread to reach this point.
+        int num_devices;
+        gpuError_t status = gpuGetDeviceCount(&num_devices);
         if (status != gpuSuccess) {
-          std::cerr << "Failed to initialize GPU device #"
-                    << i
-                    << ": "
+          std::cerr << "Failed to get the number of GPU devices: "
                     << gpuGetErrorString(status)
                     << std::endl;
           gpu_assert(status == gpuSuccess);
         }
-      }
+        device_properties_ = new gpuDeviceProp_t[num_devices];
+        for (int i = 0; i < num_devices; ++i) {
+          status = gpuGetDeviceProperties(&device_properties_[i], i);
+          if (status != gpuSuccess) {
+            std::cerr << "Failed to initialize GPU device #"
+                      << i
+                      << ": "
+                      << gpuGetErrorString(status)
+                      << std::endl;
+            gpu_assert(status == gpuSuccess);
+          }
+        }
 
-      std::atomic_thread_fence(std::memory_order_release);
-      getDevicePropInitialized() = true;
-    } else {
-      // Wait for the other thread to inititialize the properties.
-      while (!getDevicePropInitialized()) {
-        std::atomic_thread_fence(std::memory_order_acquire);
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        std::atomic_thread_fence(std::memory_order_release);
+        initialized_ = true;
+      } else {
+        // Wait for the other thread to inititialize the properties.
+        while (!initialized_) {
+          std::atomic_thread_fence(std::memory_order_acquire);
+          std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        }
       }
     }
   }
+
+ private:
+  volatile bool initialized_;
+  std::atomic<bool> first_;
+  gpuDeviceProp_t* device_properties_;
+};
+
+EIGEN_ALWAYS_INLINE const GpuDeviceProperties& GetGpuDeviceProperties() {
+  static GpuDeviceProperties* deviceProperties = new GpuDeviceProperties();
+  if (!deviceProperties->isInitialized()) {
+    deviceProperties->initialize();
+  }
+  return *deviceProperties;
+}
+
+EIGEN_ALWAYS_INLINE const gpuDeviceProp_t& GetGpuDeviceProperties(int device) {
+  return GetGpuDeviceProperties().get(device);
 }
 
 static const gpuStream_t default_stream = gpuStreamDefault;
@@ -103,12 +129,9 @@ class GpuStreamDevice : public StreamInterface {
   // Use the default stream on the current device
   GpuStreamDevice() : stream_(&default_stream), scratch_(NULL), semaphore_(NULL) {
     gpuGetDevice(&device_);
-    initializeDeviceProp();
   }
   // Use the default stream on the specified device
-  GpuStreamDevice(int device) : stream_(&default_stream), device_(device), scratch_(NULL), semaphore_(NULL) {
-    initializeDeviceProp();
-  }
+  GpuStreamDevice(int device) : stream_(&default_stream), device_(device), scratch_(NULL), semaphore_(NULL) {}
   // Use the specified stream. Note that it's the
   // caller responsibility to ensure that the stream can run on
   // the specified device. If no device is specified the code
@@ -125,7 +148,6 @@ class GpuStreamDevice : public StreamInterface {
       gpu_assert(device < num_devices);
       device_ = device;
     }
-    initializeDeviceProp();
   }
 
   virtual ~GpuStreamDevice() {
@@ -136,7 +158,7 @@ class GpuStreamDevice : public StreamInterface {
 
   const gpuStream_t& stream() const { return *stream_; }
   const gpuDeviceProp_t& deviceProperties() const {
-    return getDeviceProperties()[device_];
+    return GetGpuDeviceProperties(device_);
   }
   virtual void* allocate(size_t num_bytes) const {
     gpuError_t err = gpuSetDevice(device_);
