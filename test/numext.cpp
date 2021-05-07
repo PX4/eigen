@@ -62,6 +62,20 @@ void check_abs() {
 }
 
 template<typename T>
+void check_arg() {
+  typedef typename NumTraits<T>::Real Real;
+  VERIFY_IS_EQUAL(numext::abs(T(0)), T(0));
+  VERIFY_IS_EQUAL(numext::abs(T(1)), T(1));
+
+  for(int k=0; k<100; ++k)
+  {
+    T x = internal::random<T>();
+    Real y = numext::arg(x);
+    VERIFY_IS_APPROX( y, std::arg(x) );
+  }
+}
+
+template<typename T>
 struct check_sqrt_impl {
   static void run() {
     for (int i=0; i<1000; ++i) {
@@ -242,9 +256,11 @@ EIGEN_DECLARE_TEST(numext) {
     CALL_SUBTEST( check_abs<float>() );
     CALL_SUBTEST( check_abs<double>() );
     CALL_SUBTEST( check_abs<long double>() );
-
     CALL_SUBTEST( check_abs<std::complex<float> >() );
     CALL_SUBTEST( check_abs<std::complex<double> >() );
+
+    CALL_SUBTEST( check_arg<std::complex<float> >() );
+    CALL_SUBTEST( check_arg<std::complex<double> >() );
 
     CALL_SUBTEST( check_sqrt<float>() );
     CALL_SUBTEST( check_sqrt<double>() );

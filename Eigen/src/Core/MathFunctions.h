@@ -592,8 +592,9 @@ struct arg_default_impl;
 
 template<typename Scalar>
 struct arg_default_impl<Scalar, true> {
+  typedef typename NumTraits<Scalar>::Real RealScalar;
   EIGEN_DEVICE_FUNC
-  static inline Scalar run(const Scalar& x)
+  static inline RealScalar run(const Scalar& x)
   {
     #if defined(EIGEN_HIP_DEVICE_COMPILE)
     // HIP does not seem to have a native device side implementation for the math routine "arg"
@@ -601,7 +602,7 @@ struct arg_default_impl<Scalar, true> {
     #else
     EIGEN_USING_STD(arg);
     #endif
-    return static_cast<Scalar>(arg(x));
+    return static_cast<RealScalar>(arg(x));
   }
 };
 
@@ -612,7 +613,7 @@ struct arg_default_impl<Scalar, false> {
   EIGEN_DEVICE_FUNC
   static inline RealScalar run(const Scalar& x)
   {
-    return (x < Scalar(0)) ? Scalar(EIGEN_PI) : Scalar(0);
+    return (x < Scalar(0)) ? RealScalar(EIGEN_PI) : RealScalar(0);
   }
 };
 #else
@@ -623,7 +624,7 @@ struct arg_default_impl
   EIGEN_DEVICE_FUNC
   static inline RealScalar run(const Scalar& x)
   {
-    return (x < Scalar(0)) ? Scalar(EIGEN_PI) : Scalar(0);
+    return (x < RealScalar(0)) ? RealScalar(EIGEN_PI) : RealScalar(0);
   }
 };
 
