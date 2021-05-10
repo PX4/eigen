@@ -19,7 +19,7 @@ struct Packet2cf
 {
   EIGEN_STRONG_INLINE Packet2cf() {}
   EIGEN_STRONG_INLINE explicit Packet2cf(const __m128& a) : v(a) {}
-  __m128  v;
+  Packet4f v;
 };
 
 // Use the packet_traits defined in AVX/PacketMath.h instead if we're going
@@ -240,7 +240,7 @@ struct Packet1cd
 {
   EIGEN_STRONG_INLINE Packet1cd() {}
   EIGEN_STRONG_INLINE explicit Packet1cd(const __m128d& a) : v(a) {}
-  __m128d  v;
+  Packet2d v;
 };
 
 // Use the packet_traits defined in AVX/PacketMath.h instead if we're going
