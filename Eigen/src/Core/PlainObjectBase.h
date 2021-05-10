@@ -1019,7 +1019,7 @@ struct conservative_resize_like_impl
     else
     {
       // The storage order does not allow us to use reallocation.
-      typename Derived::PlainObject tmp(rows,cols);
+      Derived tmp(rows,cols);
       const Index common_rows = numext::mini(rows, _this.rows());
       const Index common_cols = numext::mini(cols, _this.cols());
       tmp.block(0,0,common_rows,common_cols) = _this.block(0,0,common_rows,common_cols);
@@ -1054,7 +1054,7 @@ struct conservative_resize_like_impl
     else
     {
       // The storage order does not allow us to use reallocation.
-      typename Derived::PlainObject tmp(other);
+      Derived tmp(other);
       const Index common_rows = numext::mini(tmp.rows(), _this.rows());
       const Index common_cols = numext::mini(tmp.cols(), _this.cols());
       tmp.block(0,0,common_rows,common_cols) = _this.block(0,0,common_rows,common_cols);

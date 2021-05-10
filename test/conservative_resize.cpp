@@ -148,6 +148,7 @@ EIGEN_DECLARE_TEST(conservative_resize)
     CALL_SUBTEST_4((run_matrix_tests<std::complex<float>, Eigen::ColMajor>()));
     CALL_SUBTEST_5((run_matrix_tests<std::complex<double>, Eigen::RowMajor>()));
     CALL_SUBTEST_5((run_matrix_tests<std::complex<double>, Eigen::ColMajor>()));
+    CALL_SUBTEST_1((run_matrix_tests<int, Eigen::RowMajor | Eigen::DontAlign>()));
 
     CALL_SUBTEST_1((run_vector_tests<int>()));
     CALL_SUBTEST_2((run_vector_tests<float>()));
