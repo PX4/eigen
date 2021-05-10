@@ -263,18 +263,6 @@ struct conj_default_impl<Scalar,true>
 template<typename Scalar, bool IsComplex = NumTraits<Scalar>::IsComplex>
 struct conj_impl : conj_default_impl<Scalar, IsComplex> {};
 
-#if defined(EIGEN_GPU_COMPILE_PHASE)
-template<typename T>
-struct conj_impl<std::complex<T>, true>
-{
-  EIGEN_DEVICE_FUNC
-  static inline std::complex<T> run(const std::complex<T>& x)
-  {
-    return std::complex<T>(numext::real(x), -numext::imag(x));
-  }
-};
-#endif
-
 template<typename Scalar>
 struct conj_retval
 {
@@ -2023,6 +2011,18 @@ struct rsqrt_impl {
     return T(1)/numext::sqrt(x);
   }
 };
+
+#if defined(EIGEN_GPU_COMPILE_PHASE)
+template<typename T>
+struct conj_impl<std::complex<T>, true>
+{
+  EIGEN_DEVICE_FUNC
+  static inline std::complex<T> run(const std::complex<T>& x)
+  {
+    return std::complex<T>(numext::real(x), -numext::imag(x));
+  }
+};
+#endif
 
 } // end namespace internal
 
