@@ -194,7 +194,7 @@ struct TensorEvaluator<const TensorVolumePatchOp<Planes, Rows, Cols, ArgType>, D
   typedef internal::TensorBlockNotImplemented TensorBlock;
   //===--------------------------------------------------------------------===//
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorEvaluator(const XprType& op, const Device& device) :
+  EIGEN_STRONG_INLINE TensorEvaluator(const XprType& op, const Device& device) :
  m_impl(op.expression(), device)
   {
     EIGEN_STATIC_ASSERT((NumDims >= 5), YOU_MADE_A_PROGRAMMING_MISTAKE);
@@ -352,12 +352,12 @@ struct TensorEvaluator<const TensorVolumePatchOp<Planes, Rows, Cols, ArgType>, D
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Dimensions& dimensions() const { return m_dimensions; }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType /*data*/) {
+  EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType /*data*/) {
     m_impl.evalSubExprsIfNeeded(NULL);
     return true;
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void cleanup() {
+  EIGEN_STRONG_INLINE void cleanup() {
     m_impl.cleanup();
   }
 
@@ -518,21 +518,21 @@ struct TensorEvaluator<const TensorVolumePatchOp<Planes, Rows, Cols, ArgType>, D
   const TensorEvaluator<ArgType, Device>& impl() const { return m_impl; }
 
 
-  Index planePaddingTop() const { return m_planePaddingTop; }
-  Index rowPaddingTop() const { return m_rowPaddingTop; }
-  Index colPaddingLeft() const { return m_colPaddingLeft; }
-  Index outputPlanes() const { return m_outputPlanes; }
-  Index outputRows() const { return m_outputRows; }
-  Index outputCols() const { return m_outputCols; }
-  Index userPlaneStride() const { return m_plane_strides; }
-  Index userRowStride() const { return m_row_strides; }
-  Index userColStride() const { return m_col_strides; }
-  Index userInPlaneStride() const { return m_in_plane_strides; }
-  Index userInRowStride() const { return m_in_row_strides; }
-  Index userInColStride() const { return m_in_col_strides; }
-  Index planeInflateStride() const { return m_plane_inflate_strides; }
-  Index rowInflateStride() const { return m_row_inflate_strides; }
-  Index colInflateStride() const { return m_col_inflate_strides; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index planePaddingTop() const { return m_planePaddingTop; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index rowPaddingTop() const { return m_rowPaddingTop; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index colPaddingLeft() const { return m_colPaddingLeft; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index outputPlanes() const { return m_outputPlanes; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index outputRows() const { return m_outputRows; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index outputCols() const { return m_outputCols; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index userPlaneStride() const { return m_plane_strides; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index userRowStride() const { return m_row_strides; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index userColStride() const { return m_col_strides; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index userInPlaneStride() const { return m_in_plane_strides; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index userInRowStride() const { return m_in_row_strides; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index userInColStride() const { return m_in_col_strides; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index planeInflateStride() const { return m_plane_inflate_strides; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index rowInflateStride() const { return m_row_inflate_strides; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index colInflateStride() const { return m_col_inflate_strides; }
 
 #ifdef EIGEN_USE_SYCL
   // binding placeholder accessors to a command group handler for SYCL

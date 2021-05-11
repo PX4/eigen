@@ -63,7 +63,7 @@ struct TensorEvaluator
       TensorBlock;
   //===--------------------------------------------------------------------===//
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorEvaluator(const Derived& m, const Device& device)
+  EIGEN_STRONG_INLINE TensorEvaluator(const Derived& m, const Device& device)
       : m_data(device.get((const_cast<TensorPointerType>(m.data())))),
         m_dims(m.dimensions()),
         m_device(device)
@@ -72,7 +72,7 @@ struct TensorEvaluator
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Dimensions& dimensions() const { return m_dims; }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType dest) {
+  EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType dest) {
     if (!NumTraits<typename internal::remove_const<Scalar>::type>::RequireInitialization && dest) {
       m_device.memcpy((void*)(m_device.get(dest)), m_device.get(m_data), m_dims.TotalSize() * sizeof(Scalar));
       return false;
@@ -82,14 +82,14 @@ struct TensorEvaluator
 
 #ifdef EIGEN_USE_THREADS
   template <typename EvalSubExprsCallback>
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void evalSubExprsIfNeededAsync(
+  EIGEN_STRONG_INLINE void evalSubExprsIfNeededAsync(
       EvaluatorPointerType dest, EvalSubExprsCallback done) {
     // TODO(ezhulenev): ThreadPoolDevice memcpy is blockign operation.
     done(evalSubExprsIfNeeded(dest));
   }
 #endif  // EIGEN_USE_THREADS
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void cleanup() {}
+  EIGEN_STRONG_INLINE void cleanup() {}
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE CoeffReturnType coeff(Index index) const {
     eigen_assert(m_data != NULL);
@@ -262,13 +262,13 @@ struct TensorEvaluator<const Derived, Device>
       TensorBlock;
   //===--------------------------------------------------------------------===//
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorEvaluator(const Derived& m, const Device& device)
+  EIGEN_STRONG_INLINE TensorEvaluator(const Derived& m, const Device& device)
       : m_data(device.get(m.data())), m_dims(m.dimensions()), m_device(device)
   { }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Dimensions& dimensions() const { return m_dims; }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType data) {
+  EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType data) {
     if (!NumTraits<typename internal::remove_const<Scalar>::type>::RequireInitialization && data) {
       m_device.memcpy((void*)(m_device.get(data)),m_device.get(m_data), m_dims.TotalSize() * sizeof(Scalar));
       return false;
@@ -278,14 +278,14 @@ struct TensorEvaluator<const Derived, Device>
 
 #ifdef EIGEN_USE_THREADS
   template <typename EvalSubExprsCallback>
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void evalSubExprsIfNeededAsync(
+  EIGEN_STRONG_INLINE void evalSubExprsIfNeededAsync(
       EvaluatorPointerType dest, EvalSubExprsCallback done) {
     // TODO(ezhulenev): ThreadPoolDevice memcpy is a blockign operation.
     done(evalSubExprsIfNeeded(dest));
   }
 #endif  // EIGEN_USE_THREADS
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void cleanup() { }
+  EIGEN_STRONG_INLINE void cleanup() { }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE CoeffReturnType coeff(Index index) const {
     eigen_assert(m_data != NULL);
@@ -357,7 +357,6 @@ struct TensorEvaluator<const TensorCwiseNullaryOp<NullaryOp, ArgType>, Device>
 {
   typedef TensorCwiseNullaryOp<NullaryOp, ArgType> XprType;
 
-  EIGEN_DEVICE_FUNC
   TensorEvaluator(const XprType& op, const Device& device)
       : m_functor(op.functor()), m_argImpl(op.nestedExpression(), device), m_wrapper()
   { }
@@ -391,17 +390,17 @@ struct TensorEvaluator<const TensorCwiseNullaryOp<NullaryOp, ArgType>, Device>
 
   EIGEN_DEVICE_FUNC const Dimensions& dimensions() const { return m_argImpl.dimensions(); }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType) { return true; }
+  EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType) { return true; }
 
 #ifdef EIGEN_USE_THREADS
   template <typename EvalSubExprsCallback>
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void evalSubExprsIfNeededAsync(
+  EIGEN_STRONG_INLINE void evalSubExprsIfNeededAsync(
       EvaluatorPointerType, EvalSubExprsCallback done) {
     done(true);
   }
 #endif  // EIGEN_USE_THREADS
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void cleanup() { }
+  EIGEN_STRONG_INLINE void cleanup() { }
 
   EIGEN_DEVICE_FUNC CoeffReturnType coeff(Index index) const
   {
@@ -455,7 +454,7 @@ struct TensorEvaluator<const TensorCwiseUnaryOp<UnaryOp, ArgType>, Device>
     RawAccess          = false
   };
 
-  EIGEN_DEVICE_FUNC TensorEvaluator(const XprType& op, const Device& device)
+  TensorEvaluator(const XprType& op, const Device& device)
     : m_device(device),
       m_functor(op.functor()),
       m_argImpl(op.nestedExpression(), device)
@@ -485,20 +484,20 @@ struct TensorEvaluator<const TensorCwiseUnaryOp<UnaryOp, ArgType>, Device>
 
   EIGEN_DEVICE_FUNC const Dimensions& dimensions() const { return m_argImpl.dimensions(); }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType) {
+  EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType) {
     m_argImpl.evalSubExprsIfNeeded(NULL);
     return true;
   }
 
 #ifdef EIGEN_USE_THREADS
   template <typename EvalSubExprsCallback>
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void evalSubExprsIfNeededAsync(
+  EIGEN_STRONG_INLINE void evalSubExprsIfNeededAsync(
       EvaluatorPointerType, EvalSubExprsCallback done) {
     m_argImpl.evalSubExprsIfNeededAsync(nullptr, [done](bool) { done(true); });
   }
 #endif  // EIGEN_USE_THREADS
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void cleanup() {
+  EIGEN_STRONG_INLINE void cleanup() {
     m_argImpl.cleanup();
   }
 
@@ -571,7 +570,7 @@ struct TensorEvaluator<const TensorCwiseBinaryOp<BinaryOp, LeftArgType, RightArg
     RawAccess         = false
   };
 
-  EIGEN_DEVICE_FUNC TensorEvaluator(const XprType& op, const Device& device)
+  TensorEvaluator(const XprType& op, const Device& device)
     : m_device(device),
       m_functor(op.functor()),
       m_leftImpl(op.lhsExpression(), device),
@@ -613,7 +612,7 @@ struct TensorEvaluator<const TensorCwiseBinaryOp<BinaryOp, LeftArgType, RightArg
     return m_leftImpl.dimensions();
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType) {
+  EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType) {
     m_leftImpl.evalSubExprsIfNeeded(NULL);
     m_rightImpl.evalSubExprsIfNeeded(NULL);
     return true;
@@ -621,7 +620,7 @@ struct TensorEvaluator<const TensorCwiseBinaryOp<BinaryOp, LeftArgType, RightArg
 
 #ifdef EIGEN_USE_THREADS
   template <typename EvalSubExprsCallback>
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void evalSubExprsIfNeededAsync(
+  EIGEN_STRONG_INLINE void evalSubExprsIfNeededAsync(
       EvaluatorPointerType, EvalSubExprsCallback done) {
     // TODO(ezhulenev): Evaluate two expression in parallel?
     m_leftImpl.evalSubExprsIfNeededAsync(nullptr, [this, done](bool) {
@@ -631,7 +630,7 @@ struct TensorEvaluator<const TensorCwiseBinaryOp<BinaryOp, LeftArgType, RightArg
   }
 #endif  // EIGEN_USE_THREADS
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void cleanup() {
+  EIGEN_STRONG_INLINE void cleanup() {
     m_leftImpl.cleanup();
     m_rightImpl.cleanup();
   }
@@ -709,7 +708,7 @@ struct TensorEvaluator<const TensorCwiseTernaryOp<TernaryOp, Arg1Type, Arg2Type,
     RawAccess         = false
   };
 
-  EIGEN_DEVICE_FUNC TensorEvaluator(const XprType& op, const Device& device)
+  TensorEvaluator(const XprType& op, const Device& device)
     : m_functor(op.functor()),
       m_arg1Impl(op.arg1Expression(), device),
       m_arg2Impl(op.arg2Expression(), device),
@@ -752,13 +751,13 @@ struct TensorEvaluator<const TensorCwiseTernaryOp<TernaryOp, Arg1Type, Arg2Type,
     return m_arg1Impl.dimensions();
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType) {
+  EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType) {
     m_arg1Impl.evalSubExprsIfNeeded(NULL);
     m_arg2Impl.evalSubExprsIfNeeded(NULL);
     m_arg3Impl.evalSubExprsIfNeeded(NULL);
     return true;
   }
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void cleanup() {
+  EIGEN_STRONG_INLINE void cleanup() {
     m_arg1Impl.cleanup();
     m_arg2Impl.cleanup();
     m_arg3Impl.cleanup();
@@ -829,7 +828,7 @@ struct TensorEvaluator<const TensorSelectOp<IfArgType, ThenArgType, ElseArgType>
     RawAccess         = false
   };
 
-  EIGEN_DEVICE_FUNC TensorEvaluator(const XprType& op, const Device& device)
+  TensorEvaluator(const XprType& op, const Device& device)
     : m_condImpl(op.ifExpression(), device),
       m_thenImpl(op.thenExpression(), device),
       m_elseImpl(op.elseExpression(), device)
@@ -886,7 +885,7 @@ struct TensorEvaluator<const TensorSelectOp<IfArgType, ThenArgType, ElseArgType>
     return m_condImpl.dimensions();
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType) {
+  EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType) {
     m_condImpl.evalSubExprsIfNeeded(NULL);
     m_thenImpl.evalSubExprsIfNeeded(NULL);
     m_elseImpl.evalSubExprsIfNeeded(NULL);
@@ -895,7 +894,7 @@ struct TensorEvaluator<const TensorSelectOp<IfArgType, ThenArgType, ElseArgType>
 
 #ifdef EIGEN_USE_THREADS
   template <typename EvalSubExprsCallback>
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void evalSubExprsIfNeededAsync(
+  EIGEN_STRONG_INLINE void evalSubExprsIfNeededAsync(
       EvaluatorPointerType, EvalSubExprsCallback done) {
     m_condImpl.evalSubExprsIfNeeded(nullptr, [this, done](bool) {
       m_thenImpl.evalSubExprsIfNeeded(nullptr, [this, done](bool) {
@@ -905,7 +904,7 @@ struct TensorEvaluator<const TensorSelectOp<IfArgType, ThenArgType, ElseArgType>
   }
 #endif  // EIGEN_USE_THREADS
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void cleanup() {
+  EIGEN_STRONG_INLINE void cleanup() {
     m_condImpl.cleanup();
     m_thenImpl.cleanup();
     m_elseImpl.cleanup();

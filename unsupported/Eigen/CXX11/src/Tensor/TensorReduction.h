@@ -549,7 +549,7 @@ struct TensorReductionEvaluatorBase<const TensorReductionOp<Op, Dims, ArgType, M
   static const bool PreservingInnerMostDims = internal::preserve_inner_most_dims<Dims, NumInputDims, Layout>::value;
   static const bool RunningFullReduction = (NumOutputDims==0);
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorReductionEvaluatorBase(const XprType& op, const Device& device)
+  EIGEN_STRONG_INLINE TensorReductionEvaluatorBase(const XprType& op, const Device& device)
       : m_impl(op.expression(), device), m_reducer(op.reducer()), m_result(NULL), m_device(device)
   {
     EIGEN_STATIC_ASSERT((NumInputDims >= NumReducedDims), YOU_MADE_A_PROGRAMMING_MISTAKE);
@@ -631,13 +631,6 @@ struct TensorReductionEvaluatorBase<const TensorReductionOp<Op, Dims, ArgType, M
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Dimensions& dimensions() const { return m_dimensions; }
 
   EIGEN_STRONG_INLINE
-#if !defined(EIGEN_HIPCC)
-  // Marking this as EIGEN_DEVICE_FUNC for HIPCC requires also doing the same
-  // for all the functions being called within here, which then leads to
-  // proliferation of EIGEN_DEVICE_FUNC markings, one of which will eventually
-  // result in an NVCC error
-  EIGEN_DEVICE_FUNC
-#endif
   bool evalSubExprsIfNeededCommon(EvaluatorPointerType data) {
     // Use the FullReducer if possible.
     if ((RunningFullReduction && RunningOnSycl) ||(RunningFullReduction &&
@@ -746,9 +739,6 @@ struct TensorReductionEvaluatorBase<const TensorReductionOp<Op, Dims, ArgType, M
 #ifdef EIGEN_USE_THREADS
   template <typename EvalSubExprsCallback>
   EIGEN_STRONG_INLINE
-#if !defined(EIGEN_HIPCC)
-      EIGEN_DEVICE_FUNC
-#endif
       void
       evalSubExprsIfNeededAsync(EvaluatorPointerType data,
                                 EvalSubExprsCallback done) {
@@ -759,19 +749,12 @@ struct TensorReductionEvaluatorBase<const TensorReductionOp<Op, Dims, ArgType, M
 #endif
 
   EIGEN_STRONG_INLINE
-#if !defined(EIGEN_HIPCC)
-  // Marking this as EIGEN_DEVICE_FUNC for HIPCC requires also doing the same
-  // for all the functions being called within here, which then leads to
-  // proliferation of EIGEN_DEVICE_FUNC markings, one of which will eventually
-  // result in an NVCC error
-  EIGEN_DEVICE_FUNC
-#endif
   bool evalSubExprsIfNeeded(EvaluatorPointerType data) {
     m_impl.evalSubExprsIfNeeded(NULL);
     return evalSubExprsIfNeededCommon(data);
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void cleanup() {
+  EIGEN_STRONG_INLINE void cleanup() {
     m_impl.cleanup();
     if (m_result) {
       m_device.deallocate_temp(m_result);
@@ -987,7 +970,7 @@ template<typename Op, typename Dims, typename ArgType, template <class> class Ma
 struct TensorEvaluator<const TensorReductionOp<Op, Dims, ArgType, MakePointer_>, Device>
 : public TensorReductionEvaluatorBase<const TensorReductionOp<Op, Dims, ArgType, MakePointer_>, Device> {
   typedef TensorReductionEvaluatorBase<const TensorReductionOp<Op, Dims, ArgType, MakePointer_>, Device> Base;
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorEvaluator(const typename Base::XprType& op, const Device& device) : Base(op, device){}
+  EIGEN_STRONG_INLINE TensorEvaluator(const typename Base::XprType& op, const Device& device) : Base(op, device){}
 };
 
 
@@ -996,7 +979,7 @@ struct TensorEvaluator<const TensorReductionOp<Op, Dims, ArgType, MakePointer_>,
 : public TensorReductionEvaluatorBase<const TensorReductionOp<Op, Dims, ArgType, MakePointer_>, Eigen::SyclDevice> {
 
   typedef TensorReductionEvaluatorBase<const TensorReductionOp<Op, Dims, ArgType, MakePointer_>, Eigen::SyclDevice> Base;
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorEvaluator(const typename Base::XprType& op, const Eigen::SyclDevice& device) : Base(op, device){}
+  EIGEN_STRONG_INLINE TensorEvaluator(const typename Base::XprType& op, const Eigen::SyclDevice& device) : Base(op, device){}
   // The coeff function in the base the recursive method which is not an standard layout and cannot be used in the SYCL kernel
   //Therefore the coeff function should be overridden by for SYCL kernel
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE typename Base::CoeffReturnType coeff(typename Base::Index index) const {

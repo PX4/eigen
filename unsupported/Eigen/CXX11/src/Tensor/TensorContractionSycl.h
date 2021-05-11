@@ -1340,10 +1340,10 @@ struct TensorEvaluator<const TensorContractionOp<Indices, LeftArgType, RightArgT
         (RDims == 2 && ContractDims == 1) || (rhs_inner_dim_contiguous && !rhs_inner_dim_reordered);
   };
 
-  EIGEN_DEVICE_FUNC TensorEvaluator(const XprType &op, const Device &device) : Base(op, device) {}
+  TensorEvaluator(const XprType &op, const Device &device) : Base(op, device) {}
 
   // We need to redefine this method to make nvcc happy
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(typename Base::EvaluatorPointerType data) {
+  EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(typename Base::EvaluatorPointerType data) {
     this->m_leftImpl.evalSubExprsIfNeeded(NULL);
     this->m_rightImpl.evalSubExprsIfNeeded(NULL);
     if (!data) {
@@ -1630,7 +1630,7 @@ struct TensorEvaluator<const TensorContractionOp<Indices, LeftArgType, RightArgT
   }
 #endif
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void cleanup() {
+  EIGEN_STRONG_INLINE void cleanup() {
     this->m_leftImpl.cleanup();
     this->m_rightImpl.cleanup();
 

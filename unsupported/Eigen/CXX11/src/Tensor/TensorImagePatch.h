@@ -242,7 +242,7 @@ struct TensorEvaluator<const TensorImagePatchOp<Rows, Cols, ArgType>, Device>
   typedef internal::TensorBlockNotImplemented TensorBlock;
   //===--------------------------------------------------------------------===//
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorEvaluator( const XprType& op, const Device& device)
+  EIGEN_STRONG_INLINE TensorEvaluator( const XprType& op, const Device& device)
       : m_device(device), m_impl(op.expression(), device)
   {
     EIGEN_STATIC_ASSERT((NumDims >= 4), YOU_MADE_A_PROGRAMMING_MISTAKE);
@@ -389,20 +389,20 @@ struct TensorEvaluator<const TensorImagePatchOp<Rows, Cols, ArgType>, Device>
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Dimensions& dimensions() const { return m_dimensions; }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType /*data*/) {
+  EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType /*data*/) {
     m_impl.evalSubExprsIfNeeded(NULL);
     return true;
   }
 
 #ifdef EIGEN_USE_THREADS
   template <typename EvalSubExprsCallback>
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void evalSubExprsIfNeededAsync(
+  EIGEN_STRONG_INLINE void evalSubExprsIfNeededAsync(
       EvaluatorPointerType, EvalSubExprsCallback done) {
     m_impl.evalSubExprsIfNeededAsync(nullptr, [done](bool) { done(true); });
   }
 #endif  // EIGEN_USE_THREADS
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void cleanup() {
+  EIGEN_STRONG_INLINE void cleanup() {
     m_impl.cleanup();
   }
 
@@ -514,16 +514,16 @@ struct TensorEvaluator<const TensorImagePatchOp<Rows, Cols, ArgType>, Device>
   }
 #endif
 
-  Index rowPaddingTop() const { return m_rowPaddingTop; }
-  Index colPaddingLeft() const { return m_colPaddingLeft; }
-  Index outputRows() const { return m_outputRows; }
-  Index outputCols() const { return m_outputCols; }
-  Index userRowStride() const { return m_row_strides; }
-  Index userColStride() const { return m_col_strides; }
-  Index userInRowStride() const { return m_in_row_strides; }
-  Index userInColStride() const { return m_in_col_strides; }
-  Index rowInflateStride() const { return m_row_inflate_strides; }
-  Index colInflateStride() const { return m_col_inflate_strides; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index rowPaddingTop() const { return m_rowPaddingTop; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index colPaddingLeft() const { return m_colPaddingLeft; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index outputRows() const { return m_outputRows; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index outputCols() const { return m_outputCols; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index userRowStride() const { return m_row_strides; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index userColStride() const { return m_col_strides; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index userInRowStride() const { return m_in_row_strides; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index userInColStride() const { return m_in_col_strides; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index rowInflateStride() const { return m_row_inflate_strides; }
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Index colInflateStride() const { return m_col_inflate_strides; }
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorOpCost
   costPerCoeff(bool vectorized) const {

@@ -417,7 +417,7 @@ struct TensorContractionEvaluatorBase : internal::no_assignment_operator
 
   typedef DSizes<Index, NumDims> Dimensions;
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
+  EIGEN_STRONG_INLINE
   TensorContractionEvaluatorBase(const XprType& op, const Device& device)
       : m_leftImpl(choose(Cond<static_cast<int>(Layout) == static_cast<int>(ColMajor)>(),
                           op.lhsExpression(), op.rhsExpression()), device),
@@ -602,7 +602,7 @@ struct TensorContractionEvaluatorBase : internal::no_assignment_operator
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Dimensions& dimensions() const { return m_dimensions; }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType data) {
+  EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType data) {
     m_leftImpl.evalSubExprsIfNeeded(NULL);
     m_rightImpl.evalSubExprsIfNeeded(NULL);
     if (data) {
@@ -617,7 +617,7 @@ struct TensorContractionEvaluatorBase : internal::no_assignment_operator
 
 #ifdef EIGEN_USE_THREADS
   template <typename EvalSubExprsCallback>
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void evalSubExprsIfNeededAsync(
+  EIGEN_STRONG_INLINE void evalSubExprsIfNeededAsync(
       EvaluatorPointerType dest, EvalSubExprsCallback done) {
     m_leftImpl.evalSubExprsIfNeededAsync(nullptr, [this, done, dest](bool) {
       m_rightImpl.evalSubExprsIfNeededAsync(nullptr, [this, done, dest](bool) {
@@ -908,7 +908,7 @@ struct TensorContractionEvaluatorBase : internal::no_assignment_operator
     kernel.deallocate(this->m_device, packed_mem);
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void cleanup() {
+  EIGEN_STRONG_INLINE void cleanup() {
     m_leftImpl.cleanup();
     m_rightImpl.cleanup();
 
@@ -1005,7 +1005,7 @@ struct TensorEvaluator<const TensorContractionOp<Indices, LeftArgType, RightArgT
   // Could we use NumDimensions here?
   typedef DSizes<Index, NumDims> Dimensions;
 
-  EIGEN_DEVICE_FUNC TensorEvaluator(const XprType& op, const Device& device) :
+  TensorEvaluator(const XprType& op, const Device& device) :
       Base(op, device) { }
 
   template <int Alignment>

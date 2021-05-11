@@ -402,8 +402,7 @@ struct TensorEvaluator<const TensorScanOp<Op, ArgType>, Device> {
   typedef internal::TensorBlockNotImplemented TensorBlock;
   //===--------------------------------------------------------------------===//
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorEvaluator(const XprType& op,
-                                                        const Device& device)
+  EIGEN_STRONG_INLINE TensorEvaluator(const XprType& op, const Device& device)
       : m_impl(op.expression(), device),
         m_device(device),
         m_exclusive(op.exclusive()),
@@ -498,7 +497,7 @@ struct TensorEvaluator<const TensorScanOp<Op, ArgType>, Device> {
     return TensorOpCost(sizeof(CoeffReturnType), 0, 0);
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void cleanup() {
+  EIGEN_STRONG_INLINE void cleanup() {
     if (m_output) {
       m_device.deallocate_temp(m_output);
       m_output = NULL;

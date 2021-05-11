@@ -135,16 +135,13 @@ struct TensorEvaluator<const TensorForcedEvalOp<ArgType_>, Device>
       TensorBlock;
   //===--------------------------------------------------------------------===//
 
-  EIGEN_DEVICE_FUNC TensorEvaluator(const XprType& op, const Device& device)
+  TensorEvaluator(const XprType& op, const Device& device)
       : m_impl(op.expression(), device), m_op(op.expression()),
       m_device(device), m_buffer(NULL)
   { }
 
   EIGEN_DEVICE_FUNC const Dimensions& dimensions() const { return m_impl.dimensions(); }
 
-  #if !defined(EIGEN_HIPCC)
-  EIGEN_DEVICE_FUNC
-  #endif
   EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType) {
     const Index numValues =  internal::array_prod(m_impl.dimensions());
     m_buffer = m_device.get((CoeffReturnType*)m_device.allocate_temp(numValues * sizeof(CoeffReturnType)));
@@ -165,7 +162,7 @@ struct TensorEvaluator<const TensorForcedEvalOp<ArgType_>, Device>
 
 #ifdef EIGEN_USE_THREADS
   template <typename EvalSubExprsCallback>
-  EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC void evalSubExprsIfNeededAsync(
+  EIGEN_STRONG_INLINE void evalSubExprsIfNeededAsync(
       EvaluatorPointerType, EvalSubExprsCallback done) {
     const Index numValues = internal::array_prod(m_impl.dimensions());
     m_buffer = m_device.get((CoeffReturnType*)m_device.allocate_temp(
@@ -185,7 +182,7 @@ struct TensorEvaluator<const TensorForcedEvalOp<ArgType_>, Device>
   }
 #endif
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void cleanup() {
+  EIGEN_STRONG_INLINE void cleanup() {
     m_device.deallocate_temp(m_buffer);
     m_buffer = NULL;
   }

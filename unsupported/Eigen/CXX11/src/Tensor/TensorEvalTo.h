@@ -131,17 +131,17 @@ struct TensorEvaluator<const TensorEvalToOp<ArgType, MakePointer_>, Device>
       TensorBlockAssignment;
   //===--------------------------------------------------------------------===//
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorEvaluator(const XprType& op, const Device& device)
+  EIGEN_STRONG_INLINE TensorEvaluator(const XprType& op, const Device& device)
       : m_impl(op.expression(), device), m_buffer(device.get(op.buffer())), m_expression(op.expression()){}
 
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE ~TensorEvaluator() {
+  EIGEN_STRONG_INLINE ~TensorEvaluator() {
   }
 
 
   EIGEN_DEVICE_FUNC const Dimensions& dimensions() const { return m_impl.dimensions(); }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType scalar) {
+  EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType scalar) {
     EIGEN_UNUSED_VARIABLE(scalar);
     eigen_assert(scalar == NULL);
     return m_impl.evalSubExprsIfNeeded(m_buffer);
@@ -149,7 +149,7 @@ struct TensorEvaluator<const TensorEvalToOp<ArgType, MakePointer_>, Device>
 
 #ifdef EIGEN_USE_THREADS
   template <typename EvalSubExprsCallback>
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void evalSubExprsIfNeededAsync(
+  EIGEN_STRONG_INLINE void evalSubExprsIfNeededAsync(
       EvaluatorPointerType scalar, EvalSubExprsCallback done) {
     EIGEN_UNUSED_VARIABLE(scalar);
     eigen_assert(scalar == NULL);
@@ -191,7 +191,7 @@ struct TensorEvaluator<const TensorEvalToOp<ArgType, MakePointer_>, Device>
     block.cleanup();
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void cleanup() {
+  EIGEN_STRONG_INLINE void cleanup() {
     m_impl.cleanup();
   }
 

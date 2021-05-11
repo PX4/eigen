@@ -106,7 +106,7 @@ struct TensorEvaluator<const TensorCustomUnaryOp<CustomUnaryFunc, XprType>, Devi
   typedef internal::TensorBlockNotImplemented TensorBlock;
   //===--------------------------------------------------------------------===//
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorEvaluator(const ArgType& op, const Device& device)
+  EIGEN_STRONG_INLINE TensorEvaluator(const ArgType& op, const Device& device)
       : m_op(op), m_device(device), m_result(NULL)
   {
     m_dimensions = op.func().dimensions(op.expression());
@@ -114,7 +114,7 @@ struct TensorEvaluator<const TensorCustomUnaryOp<CustomUnaryFunc, XprType>, Devi
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Dimensions& dimensions() const { return m_dimensions; }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType data) {
+  EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType data) {
     if (data) {
       evalTo(data);
       return false;
@@ -126,7 +126,7 @@ struct TensorEvaluator<const TensorCustomUnaryOp<CustomUnaryFunc, XprType>, Devi
     }
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void cleanup() {
+  EIGEN_STRONG_INLINE void cleanup() {
     if (m_result) {
       m_device.deallocate_temp(m_result);
       m_result = NULL;
@@ -157,7 +157,7 @@ struct TensorEvaluator<const TensorCustomUnaryOp<CustomUnaryFunc, XprType>, Devi
 #endif
 
  protected:
-  EIGEN_DEVICE_FUNC void evalTo(EvaluatorPointerType data) {
+  void evalTo(EvaluatorPointerType data) {
     TensorMap<Tensor<CoeffReturnType, NumDims, Layout, Index> > result(m_device.get(data), m_dimensions);
     m_op.func().eval(m_op.expression(), result, m_device);
   }
@@ -279,7 +279,7 @@ struct TensorEvaluator<const TensorCustomBinaryOp<CustomBinaryFunc, LhsXprType, 
   typedef internal::TensorBlockNotImplemented TensorBlock;
   //===--------------------------------------------------------------------===//
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE TensorEvaluator(const XprType& op, const Device& device)
+  EIGEN_STRONG_INLINE TensorEvaluator(const XprType& op, const Device& device)
       : m_op(op), m_device(device), m_result(NULL)
   {
     m_dimensions = op.func().dimensions(op.lhsExpression(), op.rhsExpression());
@@ -287,7 +287,7 @@ struct TensorEvaluator<const TensorCustomBinaryOp<CustomBinaryFunc, LhsXprType, 
 
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const Dimensions& dimensions() const { return m_dimensions; }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType data) {
+  EIGEN_STRONG_INLINE bool evalSubExprsIfNeeded(EvaluatorPointerType data) {
     if (data) {
       evalTo(data);
       return false;
@@ -299,7 +299,7 @@ struct TensorEvaluator<const TensorCustomBinaryOp<CustomBinaryFunc, LhsXprType, 
     }
   }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void cleanup() {
+  EIGEN_STRONG_INLINE void cleanup() {
     if (m_result != NULL) {
       m_device.deallocate_temp(m_result);
       m_result = NULL;
@@ -330,7 +330,7 @@ struct TensorEvaluator<const TensorCustomBinaryOp<CustomBinaryFunc, LhsXprType, 
 #endif
 
  protected:
-  EIGEN_DEVICE_FUNC void evalTo(EvaluatorPointerType data) {
+  void evalTo(EvaluatorPointerType data) {
     TensorMap<Tensor<CoeffReturnType, NumDims, Layout> > result(m_device.get(data), m_dimensions);
     m_op.func().eval(m_op.lhsExpression(), m_op.rhsExpression(), result, m_device);
   }
