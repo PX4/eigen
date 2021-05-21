@@ -518,9 +518,7 @@ void packetmath() {
   for (int i = 0; i < PacketSize; ++i) ref[0] += data1[i];
   VERIFY(test::isApproxAbs(ref[0], internal::predux(internal::pload<Packet>(data1)), refvalue) && "internal::predux");
 
-  if (PacketSize == 8 && internal::unpacket_traits<typename internal::unpacket_traits<Packet>::half>::size ==
-                             4)  // so far, predux_half_downto4 is only required in such a case
-  {
+  if (!internal::is_same<Packet, typename internal::unpacket_traits<Packet>::half>::value) {
     int HalfPacketSize = PacketSize > 4 ? PacketSize / 2 : PacketSize;
     for (int i = 0; i < HalfPacketSize; ++i) ref[i] = Scalar(0);
     for (int i = 0; i < PacketSize; ++i) ref[i % HalfPacketSize] += data1[i];
