@@ -184,7 +184,7 @@ template<int N, int DynamicKey> struct cleanup_index_type<std::integral_constant
 
 #ifndef EIGEN_PARSED_BY_DOXYGEN
 
-#if EIGEN_HAS_CXX14
+#if EIGEN_HAS_CXX14_VARIABLE_TEMPLATES
 template<int N>
 static const internal::FixedInt<N> fix{};
 #else
