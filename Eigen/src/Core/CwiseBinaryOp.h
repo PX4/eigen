@@ -102,7 +102,7 @@ class CwiseBinaryOp :
 
 #if EIGEN_COMP_MSVC && EIGEN_HAS_CXX11
     //Required for Visual Studio or the Copy constructor will probably not get inlined!
-    EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE
+    EIGEN_STRONG_INLINE
     CwiseBinaryOp(const CwiseBinaryOp<BinaryOp,LhsType,RhsType>&) = default;
 #endif
 
