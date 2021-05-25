@@ -546,22 +546,24 @@ void packetmath() {
     }
   }
 
-  const int m_size = PacketSize < 4 ? 1 : 4;
-  internal::PacketBlock<Packet, m_size> kernel2;
-  for (int i = 0; i < m_size; ++i) {
-    kernel2.packet[i] = internal::pload<Packet>(data1 + i * PacketSize);
-  }
-  ptranspose(kernel2);
-  int data_counter = 0;
-  for (int i = 0; i < PacketSize; ++i) {
-    for (int j = 0; j < m_size; ++j) {
-      data2[data_counter++] = data1[j*PacketSize + i];
+  // GeneralBlockPanelKernel also checks PacketBlock<Packet,(PacketSize%4)==0?4:PacketSize>;
+  if (PacketSize > 4 && PacketSize % 4 == 0) {
+    internal::PacketBlock<Packet, PacketSize%4==0?4:PacketSize> kernel2;
+    for (int i = 0; i < 4; ++i) {
+      kernel2.packet[i] = internal::pload<Packet>(data1 + i * PacketSize);
     }
-  }
-  for (int i = 0; i < m_size; ++i) {
-    internal::pstore(data3, kernel2.packet[i]);
-    for (int j = 0; j < PacketSize; ++j) {
-      VERIFY(test::isApproxAbs(data3[j], data2[i*PacketSize + j], refvalue) && "ptranspose");
+    ptranspose(kernel2);
+    int data_counter = 0;
+    for (int i = 0; i < PacketSize; ++i) {
+      for (int j = 0; j < 4; ++j) {
+        data2[data_counter++] = data1[j*PacketSize + i];
+      }
+    }
+    for (int i = 0; i < 4; ++i) {
+      internal::pstore(data3, kernel2.packet[i]);
+      for (int j = 0; j < PacketSize; ++j) {
+        VERIFY(test::isApproxAbs(data3[j], data2[i*PacketSize + j], refvalue) && "ptranspose");
+      }
     }
   }
 
