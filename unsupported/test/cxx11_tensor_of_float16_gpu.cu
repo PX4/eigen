@@ -329,26 +329,22 @@ void test_gpu_reductions(int size1, int size2, int redux) {
   int num_elem = size1*size2;
   int result_size = (redux == 1 ? size1 : size2);
 
-  float* d_float1 = (float*)gpu_device.allocate(num_elem * sizeof(float));
-  float* d_float2 = (float*)gpu_device.allocate(num_elem * sizeof(float));
+  float* d_float = (float*)gpu_device.allocate(num_elem * sizeof(float));
   Eigen::half* d_res_half = (Eigen::half*)gpu_device.allocate(result_size * sizeof(Eigen::half));
   Eigen::half* d_res_float = (Eigen::half*)gpu_device.allocate(result_size * sizeof(Eigen::half));
 
-  Eigen::TensorMap<Eigen::Tensor<float, 2>, Eigen::Aligned> gpu_float1(
-      d_float1, size1, size2);
-  Eigen::TensorMap<Eigen::Tensor<float, 2>, Eigen::Aligned> gpu_float2(
-      d_float2, size1, size2);
+  Eigen::TensorMap<Eigen::Tensor<float, 2>, Eigen::Aligned> gpu_float(
+      d_float, size1, size2);
   Eigen::TensorMap<Eigen::Tensor<Eigen::half, 1>, Eigen::Aligned> gpu_res_half(
       d_res_half, result_size);
   Eigen::TensorMap<Eigen::Tensor<Eigen::half, 1>, Eigen::Aligned> gpu_res_float(
       d_res_float, result_size);
 
-  gpu_float1.device(gpu_device) = gpu_float1.random() * 2.0f;
-  gpu_float2.device(gpu_device) = gpu_float2.random() * 2.0f;
+  gpu_float.device(gpu_device) = gpu_float.random() * 2.0f;
 
   Eigen::array<int, 1> redux_dim = {redux};
-  gpu_res_float.device(gpu_device) = gpu_float1.sum(redux_dim).cast<Eigen::half>();
-  gpu_res_half.device(gpu_device) = gpu_float1.cast<Eigen::half>().sum(redux_dim);
+  gpu_res_float.device(gpu_device) = gpu_float.sum(redux_dim).cast<Eigen::half>();
+  gpu_res_half.device(gpu_device) = gpu_float.cast<Eigen::half>().sum(redux_dim);
 
   Tensor<Eigen::half, 1> half_prec(result_size);
   Tensor<Eigen::half, 1> full_prec(result_size);
@@ -361,8 +357,7 @@ void test_gpu_reductions(int size1, int size2, int redux) {
     VERIFY_IS_APPROX(full_prec(i), half_prec(i));
   }
 
-  gpu_device.deallocate(d_float1);
-  gpu_device.deallocate(d_float2);
+  gpu_device.deallocate(d_float);
   gpu_device.deallocate(d_res_half);
   gpu_device.deallocate(d_res_float);
 }
@@ -386,25 +381,21 @@ void test_gpu_full_reductions() {
   int size = 13;
   int num_elem = size*size;
 
-  float* d_float1 = (float*)gpu_device.allocate(num_elem * sizeof(float));
-  float* d_float2 = (float*)gpu_device.allocate(num_elem * sizeof(float));
+  float* d_float = (float*)gpu_device.allocate(num_elem * sizeof(float));
   Eigen::half* d_res_half = (Eigen::half*)gpu_device.allocate(1 * sizeof(Eigen::half));
   Eigen::half* d_res_float = (Eigen::half*)gpu_device.allocate(1 * sizeof(Eigen::half));
 
-  Eigen::TensorMap<Eigen::Tensor<float, 2>, Eigen::Aligned> gpu_float1(
-      d_float1, size, size);
-  Eigen::TensorMap<Eigen::Tensor<float, 2>, Eigen::Aligned> gpu_float2(
-      d_float2, size, size);
+  Eigen::TensorMap<Eigen::Tensor<float, 2>, Eigen::Aligned> gpu_float(
+      d_float, size, size);
   Eigen::TensorMap<Eigen::Tensor<Eigen::half, 0>, Eigen::Aligned> gpu_res_half(
       d_res_half);
   Eigen::TensorMap<Eigen::Tensor<Eigen::half, 0>, Eigen::Aligned> gpu_res_float(
       d_res_float);
 
-  gpu_float1.device(gpu_device) = gpu_float1.random();
-  gpu_float2.device(gpu_device) = gpu_float2.random();
+  gpu_float.device(gpu_device) = gpu_float.random();
 
-  gpu_res_float.device(gpu_device) = gpu_float1.sum().cast<Eigen::half>();
-  gpu_res_half.device(gpu_device) = gpu_float1.cast<Eigen::half>().sum();
+  gpu_res_float.device(gpu_device) = gpu_float.sum().cast<Eigen::half>();
+  gpu_res_half.device(gpu_device) = gpu_float.cast<Eigen::half>().sum();
 
   Tensor<Eigen::half, 0> half_prec;
   Tensor<Eigen::half, 0> full_prec;
@@ -414,16 +405,15 @@ void test_gpu_full_reductions() {
 
   VERIFY_IS_APPROX(full_prec(), half_prec());
 
-  gpu_res_float.device(gpu_device) = gpu_float1.maximum().cast<Eigen::half>();
-  gpu_res_half.device(gpu_device) = gpu_float1.cast<Eigen::half>().maximum();
+  gpu_res_float.device(gpu_device) = gpu_float.maximum().cast<Eigen::half>();
+  gpu_res_half.device(gpu_device) = gpu_float.cast<Eigen::half>().maximum();
   gpu_device.memcpyDeviceToHost(half_prec.data(), d_res_half, sizeof(Eigen::half));
   gpu_device.memcpyDeviceToHost(full_prec.data(), d_res_float, sizeof(Eigen::half));
   gpu_device.synchronize();
 
   VERIFY_IS_APPROX(full_prec(), half_prec());
 
-  gpu_device.deallocate(d_float1);
-  gpu_device.deallocate(d_float2);
+  gpu_device.deallocate(d_float);
   gpu_device.deallocate(d_res_half);
   gpu_device.deallocate(d_res_float);
 }
