@@ -633,6 +633,7 @@ struct TensorContractionEvaluatorBase : internal::no_assignment_operator
   }
 #endif  // EIGEN_USE_THREADS
 
+#ifndef TENSOR_CONTRACTION_DISPATCH
 #define TENSOR_CONTRACTION_DISPATCH(METHOD, ALIGNMENT, ARGS) \
   if (this->m_lhs_inner_dim_contiguous) {                    \
     if (this->m_rhs_inner_dim_contiguous) {                  \
@@ -663,7 +664,9 @@ struct TensorContractionEvaluatorBase : internal::no_assignment_operator
       }                                                      \
     }                                                        \
   }
+#endif
 
+#ifndef TENSOR_CONTRACTION_ASYNC_DISPATCH
 #define TENSOR_CONTRACTION_ASYNC_DISPATCH(METHOD, DONE, ALIGNMENT, ARGS, FN) \
   if (this->m_lhs_inner_dim_contiguous) {                                    \
     if (this->m_rhs_inner_dim_contiguous) {                                  \
@@ -694,6 +697,7 @@ struct TensorContractionEvaluatorBase : internal::no_assignment_operator
       }                                                                      \
     }                                                                        \
   }
+#endif
 
   EIGEN_DEVICE_FUNC void evalTo(Scalar* buffer) const {
    static_cast<const Derived*>(this)->template evalProduct<Unaligned>(buffer);
