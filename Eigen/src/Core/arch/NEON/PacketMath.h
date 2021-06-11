@@ -866,12 +866,12 @@ template<> EIGEN_STRONG_INLINE Packet2ul psub<Packet2ul>(const Packet2ul& a, con
 
 template<> EIGEN_STRONG_INLINE Packet2f pxor<Packet2f>(const Packet2f& a, const Packet2f& b);
 template<> EIGEN_STRONG_INLINE Packet2f paddsub<Packet2f>(const Packet2f& a, const Packet2f & b) {
-  Packet2f mask = {-0.0f, 0.0f};
+  Packet2f mask = {numext::bit_cast<float>(0x80000000u), 0.0f};
   return padd(a, pxor(mask, b));
 }
 template<> EIGEN_STRONG_INLINE Packet4f pxor<Packet4f>(const Packet4f& a, const Packet4f& b);
 template<> EIGEN_STRONG_INLINE Packet4f paddsub<Packet4f>(const Packet4f& a, const Packet4f& b) {
-  Packet4f mask = {-0.0f, 0.0f, -0.0f, 0.0f};
+  Packet4f mask = {numext::bit_cast<float>(0x80000000u), 0.0f, numext::bit_cast<float>(0x80000000u), 0.0f};
   return padd(a, pxor(mask, b));
 }
 
@@ -3751,7 +3751,7 @@ template<> EIGEN_STRONG_INLINE Packet2d psub<Packet2d>(const Packet2d& a, const 
 
 template<> EIGEN_STRONG_INLINE Packet2d pxor<Packet2d>(const Packet2d& , const Packet2d& );
 template<> EIGEN_STRONG_INLINE Packet2d paddsub<Packet2d>(const Packet2d& a, const Packet2d& b){
-  const Packet2d mask = {-0.0,0.0};
+  const Packet2d mask = {numext::bit_cast<double>(0x8000000000000000ull),0.0};
   return padd(a, pxor(mask, b));
 }
 

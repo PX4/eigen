@@ -146,8 +146,9 @@ struct quat_conj<Architecture::Target, Derived, double>
   {
     evaluator<typename Derived::Coefficients> qe(q.coeffs());
     Quaternion<double> res;
-    double arr1[2] = {-0.0, -0.0};
-    double arr2[2] = {-0.0,  0.0};
+    const double neg_zero = numext::bit_cast<double>(0x8000000000000000ull);
+    double arr1[2] = {neg_zero, neg_zero};
+    double arr2[2] = {neg_zero,  0.0};
     const Packet2d mask0 = pset<Packet2d>(arr1);
     const Packet2d mask2 = pset<Packet2d>(arr2);
     pstoret<double,Packet2d,ResAlignment>(&res.x(), pxor(mask0, qe.template packet<traits<Derived>::Alignment,Packet2d>(0)));

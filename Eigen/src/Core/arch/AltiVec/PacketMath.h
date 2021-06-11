@@ -2260,7 +2260,8 @@ static Packet2ul p2ul_SIGN = { 0x8000000000000000ull, 0x8000000000000000ull };
 static Packet2ul p2ul_PREV0DOT5 = { 0x3FDFFFFFFFFFFFFFull, 0x3FDFFFFFFFFFFFFFull };
 static Packet2d  p2d_ONE  = { 1.0, 1.0 };
 static Packet2d  p2d_ZERO = reinterpret_cast<Packet2d>(p4f_ZERO);
-static Packet2d  p2d_MZERO = { -0.0, -0.0 };
+static Packet2d  p2d_MZERO = { numext::bit_cast<double>(0x8000000000000000ull),
+                               numext::bit_cast<double>(0x8000000000000000ull) };
 
 #ifdef _BIG_ENDIAN
 static Packet2d p2d_COUNTDOWN = reinterpret_cast<Packet2d>(vec_sld(reinterpret_cast<Packet4f>(p2d_ZERO), reinterpret_cast<Packet4f>(p2d_ONE), 8));

@@ -94,8 +94,9 @@ static _EIGEN_DECLARE_CONST_FAST_Packet2d(ZERO, 0);
 static _EIGEN_DECLARE_CONST_FAST_Packet2l(ZERO, 0);
 static _EIGEN_DECLARE_CONST_FAST_Packet2l(ONE, 1);
 
-static Packet2d p2d_ONE = { 1.0, 1.0 }; 
-static Packet2d p2d_ZERO_ = { -0.0, -0.0 };
+static Packet2d p2d_ONE = { 1.0, 1.0 };
+static Packet2d p2d_ZERO_ = { numext::bit_cast<double>0x8000000000000000ull),
+                              numext::bit_cast<double>0x8000000000000000ull) };
 
 #if !defined(__ARCH__) || (defined(__ARCH__) && __ARCH__ >= 12)
 #define _EIGEN_DECLARE_CONST_FAST_Packet4f(NAME,X) \
