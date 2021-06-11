@@ -488,9 +488,10 @@ macro(ei_get_compilerver VAR)
 endmacro()
 
 # Extract compiler name and version from a raw version string
-# WARNING: if you edit thid macro, then please test it by  uncommenting
+# WARNING: if you edit this macro, then please test it by uncommenting
 # the testing macro call in ei_init_testing() of the EigenTesting.cmake file.
-# See also the ei_test_get_compilerver_from_cxx_version_string macro at the end of the file
+# See also the ei_test_get_compilerver_from_cxx_version_string macro at the end
+# of the file
 macro(ei_get_compilerver_from_cxx_version_string VERSTRING CNAME CVER)
   # extract possible compiler names
   string(REGEX MATCH "g\\+\\+"      ei_has_gpp    ${VERSTRING})
@@ -498,6 +499,7 @@ macro(ei_get_compilerver_from_cxx_version_string VERSTRING CNAME CVER)
   string(REGEX MATCH "gcc|GCC"      ei_has_gcc    ${VERSTRING})
   string(REGEX MATCH "icpc|ICC"     ei_has_icpc   ${VERSTRING})
   string(REGEX MATCH "clang|CLANG"  ei_has_clang  ${VERSTRING})
+  string(REGEX MATCH "mingw32"      ei_has_mingw  ${VERSTRING})
 
   # combine them
   if((ei_has_llvm) AND (ei_has_gpp OR ei_has_gcc))
@@ -506,6 +508,8 @@ macro(ei_get_compilerver_from_cxx_version_string VERSTRING CNAME CVER)
     set(${CNAME} "llvm-clang++")
   elseif(ei_has_clang)
     set(${CNAME} "clang++")
+  elseif ((ei_has_mingw) AND (ei_has_gpp OR ei_has_gcc))
+    set(${CNAME} "mingw32-g++")
   elseif(ei_has_icpc)
     set(${CNAME} "icpc")
   elseif(ei_has_gpp OR ei_has_gcc)
@@ -526,10 +530,16 @@ macro(ei_get_compilerver_from_cxx_version_string VERSTRING CNAME CVER)
       if(NOT eicver)
         # try to extract 2:
         string(REGEX MATCH "[^0-9][0-9]+\\.[0-9]+" eicver ${VERSTRING})
-      else()
-        set(eicver " _")
+        if (NOT eicver AND ei_has_mingw)
+          # try to extract 1 number plus suffix:
+          string(REGEX MATCH "[^0-9][0-9]+-win32" eicver ${VERSTRING})          
+        endif()
       endif()
     endif()
+  endif()
+  
+  if (NOT eicver)
+    set(eicver " _")
   endif()
 
   string(REGEX REPLACE ".(.*)" "\\1" ${CVER} ${eicver})
@@ -655,6 +665,7 @@ macro(ei_test_get_compilerver_from_cxx_version_string)
   ei_test1_get_compilerver_from_cxx_version_string("i686-apple-darwin11-llvm-g++-4.2 (GCC) 4.2.1 (Based on Apple Inc. build 5658) (LLVM build 2335.15.00)" "llvm-g++" "4.2.1")
   ei_test1_get_compilerver_from_cxx_version_string("g++-mp-4.4 (GCC) 4.4.6" "g++" "4.4.6")
   ei_test1_get_compilerver_from_cxx_version_string("g++-mp-4.4 (GCC) 2011" "g++" "4.4")
+  ei_test1_get_compilerver_from_cxx_version_string("x86_64-w64-mingw32-g++ (GCC) 10-win32 20210110" "mingw32-g++" "10-win32")
 endmacro()
 
 # Split all tests listed in EIGEN_TESTS_LIST into num_splits many targets

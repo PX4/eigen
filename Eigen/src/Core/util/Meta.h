@@ -189,6 +189,8 @@ template<> struct make_unsigned<signed int>       { typedef unsigned int type; }
 template<> struct make_unsigned<unsigned int>     { typedef unsigned int type; };
 template<> struct make_unsigned<signed long>      { typedef unsigned long type; };
 template<> struct make_unsigned<unsigned long>    { typedef unsigned long type; };
+template<> struct make_unsigned<signed long long>      { typedef unsigned long long type; };
+template<> struct make_unsigned<unsigned long long>    { typedef unsigned long long type; };
 #if EIGEN_COMP_MSVC
 template<> struct make_unsigned<signed __int64>   { typedef unsigned __int64 type; };
 template<> struct make_unsigned<unsigned __int64> { typedef unsigned __int64 type; };
