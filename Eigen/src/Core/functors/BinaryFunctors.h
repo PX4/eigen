@@ -50,7 +50,7 @@ struct scalar_sum_op : binary_op_base<LhsScalar,RhsScalar>
 template<typename LhsScalar,typename RhsScalar>
 struct functor_traits<scalar_sum_op<LhsScalar,RhsScalar> > {
   enum {
-    Cost = (NumTraits<LhsScalar>::AddCost+NumTraits<RhsScalar>::AddCost)/2, // rough estimate!
+    Cost = (int(NumTraits<LhsScalar>::AddCost) + int(NumTraits<RhsScalar>::AddCost)) / 2, // rough estimate!
     PacketAccess = is_same<LhsScalar,RhsScalar>::value && packet_traits<LhsScalar>::HasAdd && packet_traits<RhsScalar>::HasAdd
     // TODO vectorize mixed sum
   };
@@ -88,7 +88,7 @@ struct scalar_product_op  : binary_op_base<LhsScalar,RhsScalar>
 template<typename LhsScalar,typename RhsScalar>
 struct functor_traits<scalar_product_op<LhsScalar,RhsScalar> > {
   enum {
-    Cost = (NumTraits<LhsScalar>::MulCost + NumTraits<RhsScalar>::MulCost)/2, // rough estimate!
+    Cost = (int(NumTraits<LhsScalar>::MulCost) + int(NumTraits<RhsScalar>::MulCost))/2, // rough estimate!
     PacketAccess = is_same<LhsScalar,RhsScalar>::value && packet_traits<LhsScalar>::HasMul && packet_traits<RhsScalar>::HasMul
     // TODO vectorize mixed product
   };
@@ -364,7 +364,7 @@ struct scalar_difference_op : binary_op_base<LhsScalar,RhsScalar>
 template<typename LhsScalar,typename RhsScalar>
 struct functor_traits<scalar_difference_op<LhsScalar,RhsScalar> > {
   enum {
-    Cost = (NumTraits<LhsScalar>::AddCost+NumTraits<RhsScalar>::AddCost)/2,
+    Cost = (int(NumTraits<LhsScalar>::AddCost) + int(NumTraits<RhsScalar>::AddCost)) / 2,
     PacketAccess = is_same<LhsScalar,RhsScalar>::value && packet_traits<LhsScalar>::HasSub && packet_traits<RhsScalar>::HasSub
   };
 };

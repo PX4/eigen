@@ -1673,8 +1673,8 @@ void gebp_kernel<LhsScalar,RhsScalar,Index,DataMapper,mr,nr,ConjugateLhs,Conjuga
             EIGEN_GEBGP_ONESTEP(6);
             EIGEN_GEBGP_ONESTEP(7);
 
-            blB += pk*RhsProgress;
-            blA += pk*3*Traits::LhsProgress;
+            blB += int(pk) * int(RhsProgress);
+            blA += int(pk) * 3 * int(Traits::LhsProgress);
 
             EIGEN_ASM_COMMENT("end gebp micro kernel 3pX1");
           }
@@ -1885,8 +1885,8 @@ void gebp_kernel<LhsScalar,RhsScalar,Index,DataMapper,mr,nr,ConjugateLhs,Conjuga
             EIGEN_GEBGP_ONESTEP(6);
             EIGEN_GEBGP_ONESTEP(7);
 
-            blB += pk*RhsProgress;
-            blA += pk*2*Traits::LhsProgress;
+            blB += int(pk) * int(RhsProgress);
+            blA += int(pk) * 2 * int(Traits::LhsProgress);
 
             EIGEN_ASM_COMMENT("end gebp micro kernel 2pX1");
           }

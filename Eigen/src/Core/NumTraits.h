@@ -289,9 +289,9 @@ struct NumTraits<Array<Scalar, Rows, Cols, Options, MaxRows, MaxCols> >
     IsInteger = NumTraits<Scalar>::IsInteger,
     IsSigned  = NumTraits<Scalar>::IsSigned,
     RequireInitialization = 1,
-    ReadCost = ArrayType::SizeAtCompileTime==Dynamic ? HugeCost : ArrayType::SizeAtCompileTime * NumTraits<Scalar>::ReadCost,
-    AddCost  = ArrayType::SizeAtCompileTime==Dynamic ? HugeCost : ArrayType::SizeAtCompileTime * NumTraits<Scalar>::AddCost,
-    MulCost  = ArrayType::SizeAtCompileTime==Dynamic ? HugeCost : ArrayType::SizeAtCompileTime * NumTraits<Scalar>::MulCost
+    ReadCost = ArrayType::SizeAtCompileTime==Dynamic ? HugeCost : ArrayType::SizeAtCompileTime * int(NumTraits<Scalar>::ReadCost),
+    AddCost  = ArrayType::SizeAtCompileTime==Dynamic ? HugeCost : ArrayType::SizeAtCompileTime * int(NumTraits<Scalar>::AddCost),
+    MulCost  = ArrayType::SizeAtCompileTime==Dynamic ? HugeCost : ArrayType::SizeAtCompileTime * int(NumTraits<Scalar>::MulCost)
   };
 
   EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR
