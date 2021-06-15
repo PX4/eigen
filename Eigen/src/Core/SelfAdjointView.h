@@ -66,7 +66,7 @@ template<typename _MatrixType, unsigned int UpLo> class SelfAdjointView
     enum {
       Mode = internal::traits<SelfAdjointView>::Mode,
       Flags = internal::traits<SelfAdjointView>::Flags,
-      TransposeMode = ((Mode & Upper) ? Lower : 0) | ((Mode & Lower) ? Upper : 0)
+      TransposeMode = ((int(Mode) & int(Upper)) ? Lower : 0) | ((int(Mode) & int(Lower)) ? Upper : 0)
     };
     typedef typename MatrixType::PlainObject PlainObject;
 

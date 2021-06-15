@@ -112,8 +112,8 @@ public:
     ColsAtCompileTime = MatrixType::ColsAtCompileTime,
     MaxRowsAtCompileTime = MatrixType::MaxRowsAtCompileTime,
     MaxColsAtCompileTime = MatrixType::MaxColsAtCompileTime,
-    TrOptions = RowsAtCompileTime==1 ? (MatrixType::Options & ~(RowMajor))
-              : ColsAtCompileTime==1 ? (MatrixType::Options |   RowMajor)
+    TrOptions = RowsAtCompileTime==1 ? (int(MatrixType::Options) & ~(int(RowMajor)))
+              : ColsAtCompileTime==1 ? (int(MatrixType::Options) | int(RowMajor))
               : MatrixType::Options
   };
   typedef Matrix<Scalar, ColsAtCompileTime, RowsAtCompileTime, TrOptions, MaxColsAtCompileTime, MaxRowsAtCompileTime>
@@ -202,8 +202,8 @@ public:
     ColsAtCompileTime = MatrixType::ColsAtCompileTime,
     MaxRowsAtCompileTime = MatrixType::MaxRowsAtCompileTime,
     MaxColsAtCompileTime = MatrixType::MaxColsAtCompileTime,
-    TrOptions = RowsAtCompileTime==1 ? (MatrixType::Options & ~(RowMajor))
-              : ColsAtCompileTime==1 ? (MatrixType::Options |   RowMajor)
+    TrOptions = RowsAtCompileTime==1 ? (int(MatrixType::Options) & ~(int(RowMajor)))
+              : ColsAtCompileTime==1 ? (int(MatrixType::Options) | int(RowMajor))
               : MatrixType::Options
   };
 

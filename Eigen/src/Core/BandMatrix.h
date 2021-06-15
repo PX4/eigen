@@ -67,7 +67,7 @@ class BandMatrixBase : public EigenBase<Derived>
       * \warning the internal storage must be column major. */
     inline Block<CoefficientsType,Dynamic,1> col(Index i)
     {
-      EIGEN_STATIC_ASSERT((Options&RowMajor)==0,THIS_METHOD_IS_ONLY_FOR_COLUMN_MAJOR_MATRICES);
+      EIGEN_STATIC_ASSERT((int(Options) & int(RowMajor)) == 0, THIS_METHOD_IS_ONLY_FOR_COLUMN_MAJOR_MATRICES);
       Index start = 0;
       Index len = coeffs().rows();
       if (i<=supers())
@@ -90,7 +90,7 @@ class BandMatrixBase : public EigenBase<Derived>
 
     template<int Index> struct DiagonalIntReturnType {
       enum {
-        ReturnOpposite = (Options&SelfAdjoint) && (((Index)>0 && Supers==0) || ((Index)<0 && Subs==0)),
+        ReturnOpposite = (int(Options) & int(SelfAdjoint)) && (((Index) > 0 && Supers == 0) || ((Index) < 0 && Subs == 0)),
         Conjugate = ReturnOpposite && NumTraits<Scalar>::IsComplex,
         ActualIndex = ReturnOpposite ? -Index : Index,
         DiagonalSize = (RowsAtCompileTime==Dynamic || ColsAtCompileTime==Dynamic)
@@ -192,7 +192,7 @@ struct traits<BandMatrix<_Scalar,_Rows,_Cols,_Supers,_Subs,_Options> >
     Options = _Options,
     DataRowsAtCompileTime = ((Supers!=Dynamic) && (Subs!=Dynamic)) ? 1 + Supers + Subs : Dynamic
   };
-  typedef Matrix<Scalar,DataRowsAtCompileTime,ColsAtCompileTime,Options&RowMajor?RowMajor:ColMajor> CoefficientsType;
+  typedef Matrix<Scalar, DataRowsAtCompileTime, ColsAtCompileTime, int(Options) & int(RowMajor) ? RowMajor : ColMajor> CoefficientsType;
 };
 
 template<typename _Scalar, int Rows, int Cols, int Supers, int Subs, int Options>

@@ -402,8 +402,8 @@ struct TensorEvaluator<const TensorConversionOp<TargetType, ArgType>, Device>
     const bool Vectorizable =
         IsSameType
         ? TensorEvaluator<ArgType, Device>::PacketAccess
-        : TensorEvaluator<ArgType, Device>::PacketAccess &
-          internal::type_casting_traits<SrcType, TargetType>::VectorizedCast;
+        : int(TensorEvaluator<ArgType, Device>::PacketAccess) &
+          int(internal::type_casting_traits<SrcType, TargetType>::VectorizedCast);
 
     return internal::PacketConv<PacketSourceType, PacketReturnType, LoadMode,
                                 Vectorizable, IsSameType>::run(m_impl, index);

@@ -324,7 +324,7 @@ struct vectorization_logic_half
       EIGEN_UNALIGNED_VECTORIZE ? InnerUnrolling : NoUnrolling));
 
     VERIFY(test_assign(Matrix1u(),Matrix1()+Matrix1(),
-      EIGEN_UNALIGNED_VECTORIZE ? ((Matrix1::InnerSizeAtCompileTime % PacketSize)==0 ? InnerVectorizedTraversal : LinearVectorizedTraversal) : LinearTraversal,CompleteUnrolling));
+      EIGEN_UNALIGNED_VECTORIZE ? ((int(Matrix1::InnerSizeAtCompileTime) % int(PacketSize))==0 ? InnerVectorizedTraversal : LinearVectorizedTraversal) : LinearTraversal,CompleteUnrolling));
         
     if(PacketSize>1)
     {

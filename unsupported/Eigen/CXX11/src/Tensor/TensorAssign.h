@@ -104,14 +104,14 @@ struct TensorEvaluator<const TensorAssignOp<LeftArgType, RightArgType>, Device>
   static const int NumDims = XprType::NumDims;
 
   enum {
-    IsAligned         = TensorEvaluator<LeftArgType, Device>::IsAligned &
-                        TensorEvaluator<RightArgType, Device>::IsAligned,
-    PacketAccess      = TensorEvaluator<LeftArgType, Device>::PacketAccess &
-                        TensorEvaluator<RightArgType, Device>::PacketAccess,
-    BlockAccess       = TensorEvaluator<LeftArgType, Device>::BlockAccess &
-                        TensorEvaluator<RightArgType, Device>::BlockAccess,
-    PreferBlockAccess = TensorEvaluator<LeftArgType, Device>::PreferBlockAccess |
-                        TensorEvaluator<RightArgType, Device>::PreferBlockAccess,
+    IsAligned         = int(TensorEvaluator<LeftArgType, Device>::IsAligned) &
+                        int(TensorEvaluator<RightArgType, Device>::IsAligned),
+    PacketAccess      = int(TensorEvaluator<LeftArgType, Device>::PacketAccess) &
+                        int(TensorEvaluator<RightArgType, Device>::PacketAccess),
+    BlockAccess       = int(TensorEvaluator<LeftArgType, Device>::BlockAccess) &
+                        int(TensorEvaluator<RightArgType, Device>::BlockAccess),
+    PreferBlockAccess = int(TensorEvaluator<LeftArgType, Device>::PreferBlockAccess) |
+                        int(TensorEvaluator<RightArgType, Device>::PreferBlockAccess),
     Layout            = TensorEvaluator<LeftArgType, Device>::Layout,
     RawAccess         = TensorEvaluator<LeftArgType, Device>::RawAccess
   };

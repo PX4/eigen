@@ -445,8 +445,8 @@ struct TensorEvaluator<const TensorCwiseUnaryOp<UnaryOp, ArgType>, Device>
 
   enum {
     IsAligned          = TensorEvaluator<ArgType, Device>::IsAligned,
-    PacketAccess       = TensorEvaluator<ArgType, Device>::PacketAccess &
-                         internal::functor_traits<UnaryOp>::PacketAccess,
+    PacketAccess       = int(TensorEvaluator<ArgType, Device>::PacketAccess) &
+                         int(internal::functor_traits<UnaryOp>::PacketAccess),
     BlockAccess        = TensorEvaluator<ArgType, Device>::BlockAccess,
     PreferBlockAccess  = TensorEvaluator<ArgType, Device>::PreferBlockAccess,
     Layout             = TensorEvaluator<ArgType, Device>::Layout,
@@ -556,15 +556,15 @@ struct TensorEvaluator<const TensorCwiseBinaryOp<BinaryOp, LeftArgType, RightArg
   typedef TensorCwiseBinaryOp<BinaryOp, LeftArgType, RightArgType> XprType;
 
   enum {
-    IsAligned         = TensorEvaluator<LeftArgType, Device>::IsAligned &
-                        TensorEvaluator<RightArgType, Device>::IsAligned,
-    PacketAccess      = TensorEvaluator<LeftArgType, Device>::PacketAccess &
-                        TensorEvaluator<RightArgType, Device>::PacketAccess &
-                        internal::functor_traits<BinaryOp>::PacketAccess,
-    BlockAccess       = TensorEvaluator<LeftArgType, Device>::BlockAccess &
-                        TensorEvaluator<RightArgType, Device>::BlockAccess,
-    PreferBlockAccess = TensorEvaluator<LeftArgType, Device>::PreferBlockAccess |
-                        TensorEvaluator<RightArgType, Device>::PreferBlockAccess,
+    IsAligned         = int(TensorEvaluator<LeftArgType, Device>::IsAligned) &
+                        int(TensorEvaluator<RightArgType, Device>::IsAligned),
+    PacketAccess      = int(TensorEvaluator<LeftArgType, Device>::PacketAccess) &
+                        int(TensorEvaluator<RightArgType, Device>::PacketAccess) &
+                        int(internal::functor_traits<BinaryOp>::PacketAccess),
+    BlockAccess       = int(TensorEvaluator<LeftArgType, Device>::BlockAccess) &
+                        int(TensorEvaluator<RightArgType, Device>::BlockAccess),
+    PreferBlockAccess = int(TensorEvaluator<LeftArgType, Device>::PreferBlockAccess) |
+                        int(TensorEvaluator<RightArgType, Device>::PreferBlockAccess),
     Layout            = TensorEvaluator<LeftArgType, Device>::Layout,
     CoordAccess       = false,  // to be implemented
     RawAccess         = false

@@ -639,7 +639,7 @@ struct ternary_evaluator<CwiseTernaryOp<TernaryOp, Arg1, Arg2, Arg3>, IndexBased
   typedef CwiseTernaryOp<TernaryOp, Arg1, Arg2, Arg3> XprType;
 
   enum {
-    CoeffReadCost = evaluator<Arg1>::CoeffReadCost + evaluator<Arg2>::CoeffReadCost + evaluator<Arg3>::CoeffReadCost + functor_traits<TernaryOp>::Cost,
+    CoeffReadCost = int(evaluator<Arg1>::CoeffReadCost) + int(evaluator<Arg2>::CoeffReadCost) + int(evaluator<Arg3>::CoeffReadCost) + int(functor_traits<TernaryOp>::Cost),
 
     Arg1Flags = evaluator<Arg1>::Flags,
     Arg2Flags = evaluator<Arg2>::Flags,

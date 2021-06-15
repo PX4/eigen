@@ -218,7 +218,7 @@ class SimplicialCholeskyBase : public SparseSolverBase<Derived>
       CholMatrixType tmp(size,size);
       ConstCholMatrixPtr pmat;
       
-      if(m_P.size()==0 && (UpLo&Upper)==Upper)
+      if(m_P.size() == 0 && (int(UpLo) & int(Upper)) == Upper)
       {
         // If there is no ordering, try to directly use the input matrix without any copy
         internal::simplicial_cholesky_grab_input<CholMatrixType,MatrixType>::run(a, pmat, tmp);

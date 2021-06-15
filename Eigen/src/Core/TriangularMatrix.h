@@ -53,7 +53,7 @@ template<typename Derived> class TriangularBase : public EigenBase<Derived>
     typedef Derived const& Nested;
 
     EIGEN_DEVICE_FUNC
-    inline TriangularBase() { eigen_assert(!((Mode&UnitDiag) && (Mode&ZeroDiag))); }
+    inline TriangularBase() { eigen_assert(!((int(Mode) & int(UnitDiag)) && (int(Mode) & int(ZeroDiag)))); }
 
     EIGEN_DEVICE_FUNC EIGEN_CONSTEXPR
     inline Index rows() const EIGEN_NOEXCEPT { return derived().rows(); }
@@ -853,7 +853,7 @@ struct Assignment<DstXprType, SrcXprType, Functor, Triangular2Dense>
 {
   EIGEN_DEVICE_FUNC static void run(DstXprType &dst, const SrcXprType &src, const Functor &func)
   {
-    call_triangular_assignment_loop<SrcXprType::Mode, (SrcXprType::Mode&SelfAdjoint)==0>(dst, src, func);
+    call_triangular_assignment_loop<SrcXprType::Mode, (int(SrcXprType::Mode) & int(SelfAdjoint)) == 0>(dst, src, func);
   }
 };
 
@@ -951,7 +951,7 @@ template<typename DenseDerived>
 EIGEN_DEVICE_FUNC void TriangularBase<Derived>::evalToLazy(MatrixBase<DenseDerived> &other) const
 {
   other.derived().resize(this->rows(), this->cols());
-  internal::call_triangular_assignment_loop<Derived::Mode,(Derived::Mode&SelfAdjoint)==0 /* SetOpposite */>(other.derived(), derived().nestedExpression());
+  internal::call_triangular_assignment_loop<Derived::Mode, (int(Derived::Mode) & int(SelfAdjoint)) == 0 /* SetOpposite */>(other.derived(), derived().nestedExpression());
 }
 
 namespace internal {
