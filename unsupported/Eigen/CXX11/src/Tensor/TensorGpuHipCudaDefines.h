@@ -11,8 +11,6 @@
 #if defined(EIGEN_USE_GPU) && !defined(EIGEN_CXX11_TENSOR_GPU_HIP_CUDA_DEFINES_H)
 #define EIGEN_CXX11_TENSOR_GPU_HIP_CUDA_DEFINES_H
 
-#ifndef EIGEN_PERMANENTLY_ENABLE_GPU_HIP_CUDA_DEFINES
-
 // Note that we are using EIGEN_USE_HIP here instead of EIGEN_HIPCC...this is by design
 // There is code in the Tensorflow codebase that will define EIGEN_USE_GPU,  but
 // for some reason gets sent to the gcc/host compiler instead of the gpu/nvcc/hipcc compiler
@@ -97,7 +95,5 @@
 #endif
 
 #endif // gpu_assert
-
-#endif // EIGEN_PERMANENTLY_ENABLE_GPU_HIP_CUDA_DEFINES
 
 #endif  // EIGEN_CXX11_TENSOR_GPU_HIP_CUDA_DEFINES_H
