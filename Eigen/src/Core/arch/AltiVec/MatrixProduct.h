@@ -113,7 +113,7 @@ const static Packet16uc p16uc_GETIMAG64 = {  8,  9, 10, 11, 12, 13, 14, 15,
  * float32/64 and complex float32/64 version.
  **/
 template<typename Scalar, typename Index, int StorageOrder>
-EIGEN_STRONG_INLINE std::complex<Scalar> getAdjointVal(Index i, Index j, const_blas_data_mapper<std::complex<Scalar>, Index, StorageOrder>& dt)
+EIGEN_ALWAYS_INLINE std::complex<Scalar> getAdjointVal(Index i, Index j, const_blas_data_mapper<std::complex<Scalar>, Index, StorageOrder>& dt)
 {
   std::complex<Scalar> v;
   if(i < j)
@@ -403,7 +403,7 @@ struct symm_pack_lhs<double, Index, Pack1, Pack2_dummy, StorageOrder>
  **/
 
 template<typename Scalar, typename Packet, typename Index>
-EIGEN_STRONG_INLINE void storeBlock(Scalar* to, PacketBlock<Packet,4>& block)
+EIGEN_ALWAYS_INLINE void storeBlock(Scalar* to, PacketBlock<Packet,4>& block)
 {
   const Index size = 16 / sizeof(Scalar);
   pstore<Scalar>(to + (0 * size), block.packet[0]);
@@ -413,7 +413,7 @@ EIGEN_STRONG_INLINE void storeBlock(Scalar* to, PacketBlock<Packet,4>& block)
 }
 
 template<typename Scalar, typename Packet, typename Index>
-EIGEN_STRONG_INLINE void storeBlock(Scalar* to, PacketBlock<Packet,2>& block)
+EIGEN_ALWAYS_INLINE void storeBlock(Scalar* to, PacketBlock<Packet,2>& block)
 {
   const Index size = 16 / sizeof(Scalar);
   pstore<Scalar>(to + (0 * size), block.packet[0]);
@@ -992,7 +992,7 @@ struct dhs_cpack<double, Index, DataMapper, Packet, PacketC, StorageOrder, Conju
 
 // 512-bits rank1-update of acc. It can either positive or negative accumulate (useful for complex gemm).
 template<typename Packet, bool NegativeAccumulate>
-EIGEN_STRONG_INLINE void pger_common(PacketBlock<Packet,4>* acc, const Packet& lhsV, const Packet* rhsV)
+EIGEN_ALWAYS_INLINE void pger_common(PacketBlock<Packet,4>* acc, const Packet& lhsV, const Packet* rhsV)
 {
   if(NegativeAccumulate)
   {
@@ -1009,7 +1009,7 @@ EIGEN_STRONG_INLINE void pger_common(PacketBlock<Packet,4>* acc, const Packet& l
 }
 
 template<typename Packet, bool NegativeAccumulate>
-EIGEN_STRONG_INLINE void pger_common(PacketBlock<Packet,1>* acc, const Packet& lhsV, const Packet* rhsV)
+EIGEN_ALWAYS_INLINE void pger_common(PacketBlock<Packet,1>* acc, const Packet& lhsV, const Packet* rhsV)
 {
   if(NegativeAccumulate)
   {
@@ -1020,7 +1020,7 @@ EIGEN_STRONG_INLINE void pger_common(PacketBlock<Packet,1>* acc, const Packet& l
 }
 
 template<int N, typename Scalar, typename Packet, bool NegativeAccumulate>
-EIGEN_STRONG_INLINE void pger(PacketBlock<Packet,N>* acc, const Scalar* lhs, const Packet* rhsV)
+EIGEN_ALWAYS_INLINE void pger(PacketBlock<Packet,N>* acc, const Scalar* lhs, const Packet* rhsV)
 {
   Packet lhsV = pload<Packet>(lhs);
 
@@ -1028,7 +1028,7 @@ EIGEN_STRONG_INLINE void pger(PacketBlock<Packet,N>* acc, const Scalar* lhs, con
 }
 
 template<typename Scalar, typename Packet, typename Index>
-EIGEN_STRONG_INLINE void loadPacketRemaining(const Scalar* lhs, Packet &lhsV, Index remaining_rows)
+EIGEN_ALWAYS_INLINE void loadPacketRemaining(const Scalar* lhs, Packet &lhsV, Index remaining_rows)
 {
 #ifdef _ARCH_PWR9
   lhsV = vec_xl_len((Scalar *)lhs, remaining_rows * sizeof(Scalar));
@@ -1041,7 +1041,7 @@ EIGEN_STRONG_INLINE void loadPacketRemaining(const Scalar* lhs, Packet &lhsV, In
 }
 
 template<int N, typename Scalar, typename Packet, typename Index, bool NegativeAccumulate>
-EIGEN_STRONG_INLINE void pger(PacketBlock<Packet,N>* acc, const Scalar* lhs, const Packet* rhsV, Index remaining_rows)
+EIGEN_ALWAYS_INLINE void pger(PacketBlock<Packet,N>* acc, const Scalar* lhs, const Packet* rhsV, Index remaining_rows)
 {
   Packet lhsV;
   loadPacketRemaining<Scalar, Packet, Index>(lhs, lhsV, remaining_rows);
@@ -1051,7 +1051,7 @@ EIGEN_STRONG_INLINE void pger(PacketBlock<Packet,N>* acc, const Scalar* lhs, con
 
 // 512-bits rank1-update of complex acc. It takes decoupled accumulators as entries. It also takes cares of mixed types real * complex and complex * real.
 template<int N, typename Packet, bool ConjugateLhs, bool ConjugateRhs, bool LhsIsReal, bool RhsIsReal>
-EIGEN_STRONG_INLINE void pgerc_common(PacketBlock<Packet,N>* accReal, PacketBlock<Packet,N>* accImag, const Packet &lhsV, const Packet &lhsVi, const Packet* rhsV, const Packet* rhsVi)
+EIGEN_ALWAYS_INLINE void pgerc_common(PacketBlock<Packet,N>* accReal, PacketBlock<Packet,N>* accImag, const Packet &lhsV, const Packet &lhsVi, const Packet* rhsV, const Packet* rhsVi)
 {
   pger_common<Packet, false>(accReal, lhsV, rhsV);
   if(LhsIsReal)
@@ -1070,7 +1070,7 @@ EIGEN_STRONG_INLINE void pgerc_common(PacketBlock<Packet,N>* accReal, PacketBloc
 }
 
 template<int N, typename Scalar, typename Packet, bool ConjugateLhs, bool ConjugateRhs, bool LhsIsReal, bool RhsIsReal>
-EIGEN_STRONG_INLINE void pgerc(PacketBlock<Packet,N>* accReal, PacketBlock<Packet,N>* accImag, const Scalar* lhs_ptr, const Scalar* lhs_ptr_imag, const Packet* rhsV, const Packet* rhsVi)
+EIGEN_ALWAYS_INLINE void pgerc(PacketBlock<Packet,N>* accReal, PacketBlock<Packet,N>* accImag, const Scalar* lhs_ptr, const Scalar* lhs_ptr_imag, const Packet* rhsV, const Packet* rhsVi)
 {
   Packet lhsV = ploadLhs<Scalar, Packet>(lhs_ptr);
   Packet lhsVi;
@@ -1081,7 +1081,7 @@ EIGEN_STRONG_INLINE void pgerc(PacketBlock<Packet,N>* accReal, PacketBlock<Packe
 }
 
 template<typename Scalar, typename Packet, typename Index, bool LhsIsReal>
-EIGEN_STRONG_INLINE void loadPacketRemaining(const Scalar* lhs_ptr, const Scalar* lhs_ptr_imag, Packet &lhsV, Packet &lhsVi, Index remaining_rows)
+EIGEN_ALWAYS_INLINE void loadPacketRemaining(const Scalar* lhs_ptr, const Scalar* lhs_ptr_imag, Packet &lhsV, Packet &lhsVi, Index remaining_rows)
 {
 #ifdef _ARCH_PWR9
   lhsV = vec_xl_len((Scalar *)lhs_ptr, remaining_rows * sizeof(Scalar));
@@ -1098,7 +1098,7 @@ EIGEN_STRONG_INLINE void loadPacketRemaining(const Scalar* lhs_ptr, const Scalar
 }
 
 template<int N, typename Scalar, typename Packet, typename Index, bool ConjugateLhs, bool ConjugateRhs, bool LhsIsReal, bool RhsIsReal>
-EIGEN_STRONG_INLINE void pgerc(PacketBlock<Packet,N>* accReal, PacketBlock<Packet,N>* accImag, const Scalar* lhs_ptr, const Scalar* lhs_ptr_imag, const Packet* rhsV, const Packet* rhsVi, Index remaining_rows)
+EIGEN_ALWAYS_INLINE void pgerc(PacketBlock<Packet,N>* accReal, PacketBlock<Packet,N>* accImag, const Scalar* lhs_ptr, const Scalar* lhs_ptr_imag, const Packet* rhsV, const Packet* rhsVi, Index remaining_rows)
 {
   Packet lhsV, lhsVi;
   loadPacketRemaining<Scalar, Packet, Index, LhsIsReal>(lhs_ptr, lhs_ptr_imag, lhsV, lhsVi, remaining_rows);
@@ -1107,14 +1107,14 @@ EIGEN_STRONG_INLINE void pgerc(PacketBlock<Packet,N>* accReal, PacketBlock<Packe
 }
 
 template<typename Scalar, typename Packet>
-EIGEN_STRONG_INLINE Packet ploadLhs(const Scalar* lhs)
+EIGEN_ALWAYS_INLINE Packet ploadLhs(const Scalar* lhs)
 {
   return *reinterpret_cast<Packet *>(const_cast<Scalar *>(lhs));
 }
 
 // Zero the accumulator on PacketBlock.
 template<typename Scalar, typename Packet>
-EIGEN_STRONG_INLINE void bsetzero(PacketBlock<Packet,4>& acc)
+EIGEN_ALWAYS_INLINE void bsetzero(PacketBlock<Packet,4>& acc)
 {
   acc.packet[0] = pset1<Packet>((Scalar)0);
   acc.packet[1] = pset1<Packet>((Scalar)0);
@@ -1123,14 +1123,14 @@ EIGEN_STRONG_INLINE void bsetzero(PacketBlock<Packet,4>& acc)
 }
 
 template<typename Scalar, typename Packet>
-EIGEN_STRONG_INLINE void bsetzero(PacketBlock<Packet,1>& acc)
+EIGEN_ALWAYS_INLINE void bsetzero(PacketBlock<Packet,1>& acc)
 {
   acc.packet[0] = pset1<Packet>((Scalar)0);
 }
 
 // Scale the PacketBlock vectors by alpha.
 template<typename Packet>
-EIGEN_STRONG_INLINE void bscale(PacketBlock<Packet,4>& acc, PacketBlock<Packet,4>& accZ, const Packet& pAlpha)
+EIGEN_ALWAYS_INLINE void bscale(PacketBlock<Packet,4>& acc, PacketBlock<Packet,4>& accZ, const Packet& pAlpha)
 {
   acc.packet[0] = pmadd(pAlpha, accZ.packet[0], acc.packet[0]);
   acc.packet[1] = pmadd(pAlpha, accZ.packet[1], acc.packet[1]);
@@ -1139,13 +1139,13 @@ EIGEN_STRONG_INLINE void bscale(PacketBlock<Packet,4>& acc, PacketBlock<Packet,4
 }
 
 template<typename Packet>
-EIGEN_STRONG_INLINE void bscale(PacketBlock<Packet,1>& acc, PacketBlock<Packet,1>& accZ, const Packet& pAlpha)
+EIGEN_ALWAYS_INLINE void bscale(PacketBlock<Packet,1>& acc, PacketBlock<Packet,1>& accZ, const Packet& pAlpha)
 {
   acc.packet[0] = pmadd(pAlpha, accZ.packet[0], acc.packet[0]);
 }
 
 template<typename Packet>
-EIGEN_STRONG_INLINE void bscalec_common(PacketBlock<Packet,4>& acc, PacketBlock<Packet,4>& accZ, const Packet& pAlpha)
+EIGEN_ALWAYS_INLINE void bscalec_common(PacketBlock<Packet,4>& acc, PacketBlock<Packet,4>& accZ, const Packet& pAlpha)
 {
   acc.packet[0] = pmul<Packet>(accZ.packet[0], pAlpha);
   acc.packet[1] = pmul<Packet>(accZ.packet[1], pAlpha);
@@ -1154,14 +1154,14 @@ EIGEN_STRONG_INLINE void bscalec_common(PacketBlock<Packet,4>& acc, PacketBlock<
 }
 
 template<typename Packet>
-EIGEN_STRONG_INLINE void bscalec_common(PacketBlock<Packet,1>& acc, PacketBlock<Packet,1>& accZ, const Packet& pAlpha)
+EIGEN_ALWAYS_INLINE void bscalec_common(PacketBlock<Packet,1>& acc, PacketBlock<Packet,1>& accZ, const Packet& pAlpha)
 {
   acc.packet[0] = pmul<Packet>(accZ.packet[0], pAlpha);
 }
 
 // Complex version of PacketBlock scaling.
 template<typename Packet, int N>
-EIGEN_STRONG_INLINE void bscalec(PacketBlock<Packet,N>& aReal, PacketBlock<Packet,N>& aImag, const Packet& bReal, const Packet& bImag, PacketBlock<Packet,N>& cReal, PacketBlock<Packet,N>& cImag)
+EIGEN_ALWAYS_INLINE void bscalec(PacketBlock<Packet,N>& aReal, PacketBlock<Packet,N>& aImag, const Packet& bReal, const Packet& bImag, PacketBlock<Packet,N>& cReal, PacketBlock<Packet,N>& cImag)
 {
   bscalec_common<Packet>(cReal, aReal, bReal);
 
@@ -1173,7 +1173,7 @@ EIGEN_STRONG_INLINE void bscalec(PacketBlock<Packet,N>& aReal, PacketBlock<Packe
 }
 
 template<typename Packet>
-EIGEN_STRONG_INLINE void band(PacketBlock<Packet,4>& acc, const Packet& pMask)
+EIGEN_ALWAYS_INLINE void band(PacketBlock<Packet,4>& acc, const Packet& pMask)
 {
   acc.packet[0] = pand(acc.packet[0], pMask);
   acc.packet[1] = pand(acc.packet[1], pMask);
@@ -1182,7 +1182,7 @@ EIGEN_STRONG_INLINE void band(PacketBlock<Packet,4>& acc, const Packet& pMask)
 }
 
 template<typename Packet>
-EIGEN_STRONG_INLINE void bscalec(PacketBlock<Packet,4>& aReal, PacketBlock<Packet,4>& aImag, const Packet& bReal, const Packet& bImag, PacketBlock<Packet,4>& cReal, PacketBlock<Packet,4>& cImag, const Packet& pMask)
+EIGEN_ALWAYS_INLINE void bscalec(PacketBlock<Packet,4>& aReal, PacketBlock<Packet,4>& aImag, const Packet& bReal, const Packet& bImag, PacketBlock<Packet,4>& cReal, PacketBlock<Packet,4>& cImag, const Packet& pMask)
 {
   band<Packet>(aReal, pMask);
   band<Packet>(aImag, pMask);
@@ -1192,7 +1192,7 @@ EIGEN_STRONG_INLINE void bscalec(PacketBlock<Packet,4>& aReal, PacketBlock<Packe
 
 // Load a PacketBlock, the N parameters make tunning gemm easier so we can add more accumulators as needed.
 template<typename DataMapper, typename Packet, typename Index, const Index accCols, int N, int StorageOrder>
-EIGEN_STRONG_INLINE void bload(PacketBlock<Packet,4>& acc, const DataMapper& res, Index row, Index col)
+EIGEN_ALWAYS_INLINE void bload(PacketBlock<Packet,4>& acc, const DataMapper& res, Index row, Index col)
 {
   if (StorageOrder == RowMajor) {
     acc.packet[0] = res.template loadPacket<Packet>(row + 0, col + N*accCols);
@@ -1209,7 +1209,7 @@ EIGEN_STRONG_INLINE void bload(PacketBlock<Packet,4>& acc, const DataMapper& res
 
 // An overload of bload when you have a PacketBLock with 8 vectors.
 template<typename DataMapper, typename Packet, typename Index, const Index accCols, int N, int StorageOrder>
-EIGEN_STRONG_INLINE void bload(PacketBlock<Packet,8>& acc, const DataMapper& res, Index row, Index col)
+EIGEN_ALWAYS_INLINE void bload(PacketBlock<Packet,8>& acc, const DataMapper& res, Index row, Index col)
 {
   if (StorageOrder == RowMajor) {
     acc.packet[0] = res.template loadPacket<Packet>(row + 0, col + N*accCols);
@@ -1233,7 +1233,7 @@ EIGEN_STRONG_INLINE void bload(PacketBlock<Packet,8>& acc, const DataMapper& res
 }
 
 template<typename DataMapper, typename Packet, typename Index, const Index accCols, int N, int StorageOrder>
-EIGEN_STRONG_INLINE void bload(PacketBlock<Packet,2>& acc, const DataMapper& res, Index row, Index col)
+EIGEN_ALWAYS_INLINE void bload(PacketBlock<Packet,2>& acc, const DataMapper& res, Index row, Index col)
 {
   acc.packet[0] = res.template loadPacket<Packet>(row + N*accCols, col + 0);
   acc.packet[1] = res.template loadPacket<Packet>(row + (N+1)*accCols, col + 0);
@@ -1246,7 +1246,7 @@ const static Packet4i mask43 = { -1, -1, -1,  0 };
 const static Packet2l mask21 = { -1, 0 };
 
 template<typename Packet>
-EIGEN_STRONG_INLINE Packet bmask(const int remaining_rows)
+EIGEN_ALWAYS_INLINE Packet bmask(const int remaining_rows)
 {
   if (remaining_rows == 0) {
     return pset1<Packet>(float(0.0));  // Not used
@@ -1260,7 +1260,7 @@ EIGEN_STRONG_INLINE Packet bmask(const int remaining_rows)
 }
 
 template<>
-EIGEN_STRONG_INLINE Packet2d bmask<Packet2d>(const int remaining_rows)
+EIGEN_ALWAYS_INLINE Packet2d bmask<Packet2d>(const int remaining_rows)
 {
   if (remaining_rows == 0) {
     return pset1<Packet2d>(double(0.0));  // Not used
@@ -1270,7 +1270,7 @@ EIGEN_STRONG_INLINE Packet2d bmask<Packet2d>(const int remaining_rows)
 }
 
 template<typename Packet>
-EIGEN_STRONG_INLINE void bscale(PacketBlock<Packet,4>& acc, PacketBlock<Packet,4>& accZ, const Packet& pAlpha, const Packet& pMask)
+EIGEN_ALWAYS_INLINE void bscale(PacketBlock<Packet,4>& acc, PacketBlock<Packet,4>& accZ, const Packet& pAlpha, const Packet& pMask)
 {
   band<Packet>(accZ, pMask);
 
@@ -1278,13 +1278,13 @@ EIGEN_STRONG_INLINE void bscale(PacketBlock<Packet,4>& acc, PacketBlock<Packet,4
 }
 
 template<typename Packet>
-EIGEN_STRONG_INLINE void pbroadcast4_old(const __UNPACK_TYPE__(Packet)* a, Packet& a0, Packet& a1, Packet& a2, Packet& a3)
+EIGEN_ALWAYS_INLINE void pbroadcast4_old(const __UNPACK_TYPE__(Packet)* a, Packet& a0, Packet& a1, Packet& a2, Packet& a3)
 {
   pbroadcast4<Packet>(a, a0, a1, a2, a3);
 }
 
 template<>
-EIGEN_STRONG_INLINE void pbroadcast4_old<Packet2d>(const double* a, Packet2d& a0, Packet2d& a1, Packet2d& a2, Packet2d& a3)
+EIGEN_ALWAYS_INLINE void pbroadcast4_old<Packet2d>(const double* a, Packet2d& a0, Packet2d& a1, Packet2d& a2, Packet2d& a3)
 {
   a1 = pload<Packet2d>(a);
   a3 = pload<Packet2d>(a + 2);
@@ -1298,7 +1298,7 @@ EIGEN_STRONG_INLINE void pbroadcast4_old<Packet2d>(const double* a, Packet2d& a0
 #define PEEL 7
 
 template<typename Scalar, typename Packet, typename Index>
-EIGEN_STRONG_INLINE void MICRO_EXTRA_COL(
+EIGEN_ALWAYS_INLINE void MICRO_EXTRA_COL(
   const Scalar* &lhs_ptr,
   const Scalar* &rhs_ptr,
   PacketBlock<Packet,1> &accZero,
@@ -1362,7 +1362,7 @@ EIGEN_STRONG_INLINE void gemm_extra_col(
 }
 
 template<typename Scalar, typename Packet, typename Index, const Index accRows>
-EIGEN_STRONG_INLINE void MICRO_EXTRA_ROW(
+EIGEN_ALWAYS_INLINE void MICRO_EXTRA_ROW(
   const Scalar* &lhs_ptr,
   const Scalar* &rhs_ptr,
   PacketBlock<Packet,4> &accZero,
@@ -1565,7 +1565,6 @@ EIGEN_STRONG_INLINE void gemm_unrolled_iteration(
   Index col,
   const Packet& pAlpha)
 {
-asm("#gemm begin");
   const Scalar* rhs_ptr = rhs_base;
   const Scalar* lhs_ptr0, *  lhs_ptr1, * lhs_ptr2, * lhs_ptr3, * lhs_ptr4, * lhs_ptr5, * lhs_ptr6, * lhs_ptr7;
   PacketBlock<Packet,4> accZero0, accZero1, accZero2, accZero3, accZero4, accZero5, accZero6, accZero7;
@@ -1588,7 +1587,6 @@ asm("#gemm begin");
   MICRO_STORE
 
   row += unroll_factor*accCols;
-asm("#gemm end");
 }
 
 template<int unroll_factor, typename Scalar, typename Packet, typename DataMapper, typename Index, const Index accCols>
@@ -1789,7 +1787,7 @@ EIGEN_STRONG_INLINE void gemm(const DataMapper& res, const Scalar* blockA, const
 #define PEEL_COMPLEX 3
 
 template<typename Scalar, typename Packet, typename Index, const Index accRows, bool ConjugateLhs, bool ConjugateRhs, bool LhsIsReal, bool RhsIsReal>
-EIGEN_STRONG_INLINE void MICRO_COMPLEX_EXTRA_COL(
+EIGEN_ALWAYS_INLINE void MICRO_COMPLEX_EXTRA_COL(
   const Scalar* &lhs_ptr_real, const Scalar* &lhs_ptr_imag,
   const Scalar* &rhs_ptr_real, const Scalar* &rhs_ptr_imag,
   PacketBlock<Packet,1> &accReal, PacketBlock<Packet,1> &accImag,
@@ -1888,7 +1886,7 @@ EIGEN_STRONG_INLINE void gemm_complex_extra_col(
 }
 
 template<typename Scalar, typename Packet, typename Index, const Index accRows, bool ConjugateLhs, bool ConjugateRhs, bool LhsIsReal, bool RhsIsReal>
-EIGEN_STRONG_INLINE void MICRO_COMPLEX_EXTRA_ROW(
+EIGEN_ALWAYS_INLINE void MICRO_COMPLEX_EXTRA_ROW(
   const Scalar* &lhs_ptr_real, const Scalar* &lhs_ptr_imag,
   const Scalar* &rhs_ptr_real, const Scalar* &rhs_ptr_imag,
   PacketBlock<Packet,4> &accReal, PacketBlock<Packet,4> &accImag,
@@ -1924,7 +1922,6 @@ EIGEN_STRONG_INLINE void gemm_complex_extra_row(
   const Packet& pAlphaImag,
   const Packet& pMask)
 {
-asm("#gemm_complex begin");
   const Scalar* rhs_ptr_real = rhs_base;
   const Scalar* rhs_ptr_imag;
   if(!RhsIsReal) rhs_ptr_imag = rhs_base + accRows*strideB;
@@ -2001,7 +1998,6 @@ asm("#gemm_complex begin");
       }
     }
   }
-asm("#gemm_complex end");
 }
 
 #define MICRO_COMPLEX_UNROLL(func) \
@@ -2173,7 +2169,6 @@ EIGEN_STRONG_INLINE void gemm_complex_unrolled_iteration(
   const Packet& pAlphaReal,
   const Packet& pAlphaImag)
 {
-asm("#gemm_complex_unrolled begin");
   const Scalar* rhs_ptr_real = rhs_base;
   const Scalar* rhs_ptr_imag;
   if(!RhsIsReal) {
@@ -2211,7 +2206,6 @@ asm("#gemm_complex_unrolled begin");
   MICRO_COMPLEX_STORE
 
   row += unroll_factor*accCols;
-asm("#gemm_complex_unrolled end");
 }
 
 template<int unroll_factor, typename Scalar, typename Packet, typename Packetc, typename DataMapper, typename Index, const Index accCols, bool ConjugateLhs, bool ConjugateRhs, bool LhsIsReal, bool RhsIsReal>

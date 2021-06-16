@@ -24,13 +24,13 @@ namespace Eigen {
 namespace internal {
 
 template<typename Scalar, typename Packet>
-EIGEN_STRONG_INLINE void bsetzeroMMA(__vector_quad* acc)
+EIGEN_ALWAYS_INLINE void bsetzeroMMA(__vector_quad* acc)
 {
   __builtin_mma_xxsetaccz(acc);
 }
 
 template<typename DataMapper, typename Index, typename Packet, const Index accCols>
-EIGEN_STRONG_INLINE void storeAccumulator(Index i, Index j, const DataMapper& data, const Packet& alpha, __vector_quad* acc)
+EIGEN_ALWAYS_INLINE void storeAccumulator(Index i, Index j, const DataMapper& data, const Packet& alpha, __vector_quad* acc)
 {
   PacketBlock<Packet, 4> result;
   __builtin_mma_disassemble_acc(&result.packet, acc);
@@ -44,7 +44,7 @@ EIGEN_STRONG_INLINE void storeAccumulator(Index i, Index j, const DataMapper& da
 }
 
 template<typename DataMapper, typename Index, typename Packet, typename Packetc, const Index accColsC, int N>
-EIGEN_STRONG_INLINE void storeComplexAccumulator(Index i, Index j, const DataMapper& data, const Packet& alphaReal, const Packet& alphaImag, __vector_quad* accReal, __vector_quad* accImag)
+EIGEN_ALWAYS_INLINE void storeComplexAccumulator(Index i, Index j, const DataMapper& data, const Packet& alphaReal, const Packet& alphaImag, __vector_quad* accReal, __vector_quad* accImag)
 {
   PacketBlock<Packet, 4> resultReal, resultImag;
   __builtin_mma_disassemble_acc(&resultReal.packet, accReal);
@@ -65,7 +65,7 @@ EIGEN_STRONG_INLINE void storeComplexAccumulator(Index i, Index j, const DataMap
 
 // Defaults to float32, since Eigen still supports C++03 we can't use default template arguments
 template<typename LhsPacket, typename RhsPacket, bool NegativeAccumulate>
-EIGEN_STRONG_INLINE void pgerMMA(__vector_quad* acc, const RhsPacket& a, const LhsPacket& b)
+EIGEN_ALWAYS_INLINE void pgerMMA(__vector_quad* acc, const RhsPacket& a, const LhsPacket& b)
 {
   if(NegativeAccumulate)
   {
@@ -76,7 +76,7 @@ EIGEN_STRONG_INLINE void pgerMMA(__vector_quad* acc, const RhsPacket& a, const L
 }
 
 template<typename LhsPacket, typename RhsPacket, bool NegativeAccumulate>
-EIGEN_STRONG_INLINE void pgerMMA(__vector_quad* acc, const PacketBlock<Packet2d,2>& a, const Packet2d& b)
+EIGEN_ALWAYS_INLINE void pgerMMA(__vector_quad* acc, const PacketBlock<Packet2d,2>& a, const Packet2d& b)
 {
   __vector_pair* a0 = (__vector_pair *)(&a.packet[0]);
   if(NegativeAccumulate)
@@ -88,7 +88,7 @@ EIGEN_STRONG_INLINE void pgerMMA(__vector_quad* acc, const PacketBlock<Packet2d,
 }
 
 template<typename LhsPacket, typename RhsPacket, bool NegativeAccumulate>
-EIGEN_STRONG_INLINE void pgerMMA(__vector_quad* acc, const __vector_pair& a, const Packet2d& b)
+EIGEN_ALWAYS_INLINE void pgerMMA(__vector_quad* acc, const __vector_pair& a, const Packet2d& b)
 {
   if(NegativeAccumulate)
   {
@@ -99,13 +99,13 @@ EIGEN_STRONG_INLINE void pgerMMA(__vector_quad* acc, const __vector_pair& a, con
 }
 
 template<typename LhsPacket, typename RhsPacket, bool NegativeAccumulate>
-EIGEN_STRONG_INLINE void pgerMMA(__vector_quad*, const __vector_pair&, const Packet4f&)
+EIGEN_ALWAYS_INLINE void pgerMMA(__vector_quad*, const __vector_pair&, const Packet4f&)
 {
   // Just for compilation
 }
 
 template<typename Scalar, typename Packet, typename RhsPacket, bool ConjugateLhs, bool ConjugateRhs, bool LhsIsReal, bool RhsIsReal>
-EIGEN_STRONG_INLINE void pgercMMA(__vector_quad* accReal, __vector_quad* accImag, const Packet& lhsV, const Packet& lhsVi, const RhsPacket& rhsV, const RhsPacket& rhsVi)
+EIGEN_ALWAYS_INLINE void pgercMMA(__vector_quad* accReal, __vector_quad* accImag, const Packet& lhsV, const Packet& lhsVi, const RhsPacket& rhsV, const RhsPacket& rhsVi)
 {
   pgerMMA<Packet, RhsPacket, false>(accReal,  rhsV,  lhsV);
   if(LhsIsReal) {
@@ -123,20 +123,20 @@ EIGEN_STRONG_INLINE void pgercMMA(__vector_quad* accReal, __vector_quad* accImag
 
 // This is necessary because ploadRhs for double returns a pair of vectors when MMA is enabled.
 template<typename Scalar, typename Packet>
-EIGEN_STRONG_INLINE void ploadRhsMMA(const Scalar* rhs, Packet& rhsV)
+EIGEN_ALWAYS_INLINE void ploadRhsMMA(const Scalar* rhs, Packet& rhsV)
 {
   rhsV = ploadRhs<Scalar, Packet>((const Scalar*)(rhs));
 } 
 
 template<>
-EIGEN_STRONG_INLINE void ploadRhsMMA<double, PacketBlock<Packet2d, 2> >(const double* rhs, PacketBlock<Packet2d, 2>& rhsV)
+EIGEN_ALWAYS_INLINE void ploadRhsMMA<double, PacketBlock<Packet2d, 2> >(const double* rhs, PacketBlock<Packet2d, 2>& rhsV)
 {
   rhsV.packet[0] = ploadRhs<double, Packet2d>((const double *)((Packet2d *)rhs      ));
   rhsV.packet[1] = ploadRhs<double, Packet2d>((const double *)(((Packet2d *)rhs) + 1));
 }
 
 template<>
-EIGEN_STRONG_INLINE void ploadRhsMMA<double, __vector_pair>(const double* rhs, __vector_pair& rhsV)
+EIGEN_ALWAYS_INLINE void ploadRhsMMA<double, __vector_pair>(const double* rhs, __vector_pair& rhsV)
 {
 #if EIGEN_COMP_LLVM
   __builtin_vsx_assemble_pair(&rhsV,
@@ -148,7 +148,7 @@ EIGEN_STRONG_INLINE void ploadRhsMMA<double, __vector_pair>(const double* rhs, _
 }
 
 template<>
-EIGEN_STRONG_INLINE void ploadRhsMMA(const float*, __vector_pair&)
+EIGEN_ALWAYS_INLINE void ploadRhsMMA(const float*, __vector_pair&)
 {
   // Just for compilation
 }
@@ -255,7 +255,6 @@ EIGEN_STRONG_INLINE void gemm_unrolled_MMA_iteration(
   Index col,
   const Packet& pAlpha)
 {
-asm("#gemm_MMA begin");
   const Scalar* rhs_ptr = rhs_base;
   const Scalar* lhs_ptr0, * lhs_ptr1, * lhs_ptr2, * lhs_ptr3, * lhs_ptr4, * lhs_ptr5, * lhs_ptr6, * lhs_ptr7;
   __vector_quad accZero0, accZero1, accZero2, accZero3, accZero4, accZero5, accZero6, accZero7;
@@ -277,7 +276,6 @@ asm("#gemm_MMA begin");
   MICRO_MMA_STORE
 
   row += unroll_factor*accCols;
-asm("#gemm_MMA end");
 }
 
 template<typename Scalar, typename Index, typename Packet, typename RhsPacket, typename DataMapper, const Index accRows, const Index accCols>
@@ -505,7 +503,6 @@ EIGEN_STRONG_INLINE void gemm_complex_unrolled_MMA_iteration(
   const Packet& pAlphaReal,
   const Packet& pAlphaImag)
 {
-asm("#gemm_complex_MMA begin");
   const Scalar* rhs_ptr_real = rhs_base;
   const Scalar* rhs_ptr_imag;
   if(!RhsIsReal) {
@@ -538,7 +535,6 @@ asm("#gemm_complex_MMA begin");
   MICRO_COMPLEX_MMA_STORE
 
   row += unroll_factor*accCols;
-asm("#gemm_complex_MMA end");
 }
 
 template<typename LhsScalar, typename RhsScalar, typename Scalarc, typename Scalar, typename Index, typename Packet, typename Packetc, typename RhsPacket, typename DataMapper, const Index accRows, const Index accCols, bool ConjugateLhs, bool ConjugateRhs, bool LhsIsReal, bool RhsIsReal>
