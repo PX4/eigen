@@ -19,12 +19,6 @@
 namespace Eigen {
 namespace internal {
 
-template<typename Packet, int N> EIGEN_DEVICE_FUNC inline Packet
-pset(const typename unpacket_traits<Packet>::type (&a)[N] /* a */) {
-  EIGEN_STATIC_ASSERT(unpacket_traits<Packet>::size == N, THE_ARRAY_SIZE_SHOULD_EQUAL_WITH_PACKET_SIZE);
-  return pload<Packet>(a);
-}
-
 // Creates a Scalar integer type with same bit-width.
 template<typename T> struct make_integer;
 template<> struct make_integer<float>    { typedef numext::int32_t type; };
