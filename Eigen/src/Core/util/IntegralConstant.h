@@ -77,7 +77,7 @@ public:
   template<int M>
   FixedInt<N&M> operator&( FixedInt<M>) const { return FixedInt<N&M>(); }
 
-#if EIGEN_HAS_CXX14
+#if EIGEN_HAS_CXX14_VARIABLE_TEMPLATES
   // Needed in C++14 to allow fix<N>():
   FixedInt operator() () const { return *this; }
 
