@@ -88,6 +88,9 @@ else()
   ei_add_cxx_compiler_flag("-std=c++03")
 endif()
 
+# Determine if we should build shared libraries on this platform.
+get_cmake_property(EIGEN_BUILD_SHARED_LIBS TARGET_SUPPORTS_SHARED_LIBS)
+
 #############################################################################
 # find how to link to the standard libraries                                #
 #############################################################################
