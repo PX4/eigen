@@ -349,36 +349,6 @@ inline void computeProductBlockingSizes(Index& k, Index& m, Index& n, Index num_
   computeProductBlockingSizes<LhsScalar,RhsScalar,1,Index>(k, m, n, num_threads);
 }
 
-#ifdef EIGEN_HAS_SINGLE_INSTRUCTION_CJMADD
-  #define CJMADD(CJ,A,B,C,T)  C = CJ.pmadd(A,B,C);
-#else
-
-  // FIXME (a bit overkill maybe ?)
-
-  template<typename CJ, typename A, typename B, typename C, typename T> struct gebp_madd_selector {
-    EIGEN_ALWAYS_INLINE static void run(const CJ& cj, A& a, B& b, C& c, T& /*t*/)
-    {
-      c = cj.pmadd(a,b,c);
-    }
-  };
-
-  template<typename CJ, typename T> struct gebp_madd_selector<CJ,T,T,T,T> {
-    EIGEN_ALWAYS_INLINE static void run(const CJ& cj, T& a, T& b, T& c, T& t)
-    {
-      t = b; t = cj.pmul(a,t); c = padd(c,t);
-    }
-  };
-
-  template<typename CJ, typename A, typename B, typename C, typename T>
-  EIGEN_STRONG_INLINE void gebp_madd(const CJ& cj, A& a, B& b, C& c, T& t)
-  {
-    gebp_madd_selector<CJ,A,B,C,T>::run(cj,a,b,c,t);
-  }
-
-  #define CJMADD(CJ,A,B,C,T)  gebp_madd(CJ,A,B,C,T);
-//   #define CJMADD(CJ,A,B,C,T)  T = B; T = CJ.pmul(A,T); C = padd(C,T);
-#endif
-
 template <typename RhsPacket, typename RhsPacketx4, int registers_taken>
 struct RhsPanelHelper {
  private:
@@ -2060,14 +2030,14 @@ void gebp_kernel<LhsScalar,RhsScalar,Index,DataMapper,mr,nr,ConjugateLhs,Conjuga
 
               B_0 = blB[0];
               B_1 = blB[1];
-              CJMADD(cj,A0,B_0,C0,  B_0);
-              CJMADD(cj,A0,B_1,C1,  B_1);
-              
+              C0 = cj.pmadd(A0,B_0,C0);
+              C1 = cj.pmadd(A0,B_1,C1);
+
               B_0 = blB[2];
               B_1 = blB[3];
-              CJMADD(cj,A0,B_0,C2,  B_0);
-              CJMADD(cj,A0,B_1,C3,  B_1);
-              
+              C2 = cj.pmadd(A0,B_0,C2);
+              C3 = cj.pmadd(A0,B_1,C3);
+
               blB += 4;
             }
             res(i, j2 + 0) += alpha * C0;
@@ -2092,7 +2062,7 @@ void gebp_kernel<LhsScalar,RhsScalar,Index,DataMapper,mr,nr,ConjugateLhs,Conjuga
           {
             LhsScalar A0 = blA[k];
             RhsScalar B_0 = blB[k];
-            CJMADD(cj, A0, B_0, C0, B_0);
+            C0 = cj.pmadd(A0, B_0, C0);
           }
           res(i, j2) += alpha * C0;
         }
@@ -2100,8 +2070,6 @@ void gebp_kernel<LhsScalar,RhsScalar,Index,DataMapper,mr,nr,ConjugateLhs,Conjuga
     }
   }
 
-
-#undef CJMADD
 
 // pack a block of the lhs
 // The traversal is as follow (mr==4):
