@@ -802,9 +802,8 @@ Packet psqrt_complex(const Packet& a) {
   //    l0 = (min0 == 0 ? max0 : max0 * sqrt(1 + (min0/max0)**2)),
   // where max0 = max(|x0|, |y0|), min0 = min(|x0|, |y0|), and similarly for l1.
 
-  Packet a_flip = pcplxflip(a);
   RealPacket a_abs = pabs(a.v);           // [|x0|, |y0|, |x1|, |y1|]
-  RealPacket a_abs_flip = pabs(a_flip.v); // [|y0|, |x0|, |y1|, |x1|]
+  RealPacket a_abs_flip = pcplxflip(Packet(a_abs)).v; // [|y0|, |x0|, |y1|, |x1|]
   RealPacket a_max = pmax(a_abs, a_abs_flip);
   RealPacket a_min = pmin(a_abs, a_abs_flip);
   RealPacket a_min_zero_mask = pcmp_eq(a_min, pzero(a_min));
