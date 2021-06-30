@@ -13,6 +13,17 @@
 
 #include <Eigen/Core>
 
+#if EIGEN_HAS_TYPE_TRAITS && EIGEN_HAS_CXX11
+using DenseStorageD3x3 = Eigen::DenseStorage<double, 3, 3, 3, 3>;
+static_assert(std::is_trivially_move_constructible<DenseStorageD3x3>::value, "DenseStorage not trivially_move_constructible");
+static_assert(std::is_trivially_move_assignable<DenseStorageD3x3>::value, "DenseStorage not trivially_move_assignable");
+#if !defined(EIGEN_DENSE_STORAGE_CTOR_PLUGIN)
+static_assert(std::is_trivially_copy_constructible<DenseStorageD3x3>::value, "DenseStorage not trivially_copy_constructible");
+static_assert(std::is_trivially_copy_assignable<DenseStorageD3x3>::value, "DenseStorage not trivially_copy_assignable");
+static_assert(std::is_trivially_copyable<DenseStorageD3x3>::value, "DenseStorage not trivially_copyable");
+#endif
+#endif
+
 template <typename T, int Size, int Rows, int Cols>
 void dense_storage_copy(int rows, int cols)
 {

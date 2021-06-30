@@ -214,17 +214,26 @@ template<typename T, int Size, int _Rows, int _Cols, int _Options> class DenseSt
     EIGEN_DEVICE_FUNC
     explicit DenseStorage(internal::constructor_without_unaligned_array_assert)
       : m_data(internal::constructor_without_unaligned_array_assert()) {}
+#if !EIGEN_HAS_CXX11 || defined(EIGEN_DENSE_STORAGE_CTOR_PLUGIN)
     EIGEN_DEVICE_FUNC
     DenseStorage(const DenseStorage& other) : m_data(other.m_data) {
       EIGEN_INTERNAL_DENSE_STORAGE_CTOR_PLUGIN(Index size = Size)
     }
+#else
+    EIGEN_DEVICE_FUNC DenseStorage(const DenseStorage& other) = default;
+#endif
+#if !EIGEN_HAS_CXX11
     EIGEN_DEVICE_FUNC
     DenseStorage& operator=(const DenseStorage& other)
     {
       if (this != &other) m_data = other.m_data;
       return *this;
     }
+#else
+    EIGEN_DEVICE_FUNC DenseStorage& operator=(const DenseStorage& other) = default;
+#endif
 #if EIGEN_HAS_RVALUE_REFERENCES
+#if !EIGEN_HAS_CXX11
     EIGEN_DEVICE_FUNC DenseStorage(DenseStorage&& other) EIGEN_NOEXCEPT
       : m_data(std::move(other.m_data))
     {
@@ -235,6 +244,10 @@ template<typename T, int Size, int _Rows, int _Cols, int _Options> class DenseSt
         m_data = std::move(other.m_data);
       return *this;
     }
+#else
+    EIGEN_DEVICE_FUNC DenseStorage(DenseStorage&& other) EIGEN_NOEXCEPT = default;
+    EIGEN_DEVICE_FUNC DenseStorage& operator=(DenseStorage&& other) EIGEN_NOEXCEPT = default;
+#endif
 #endif
     EIGEN_DEVICE_FUNC DenseStorage(Index size, Index rows, Index cols) {
       EIGEN_INTERNAL_DENSE_STORAGE_CTOR_PLUGIN({})
