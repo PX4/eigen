@@ -220,7 +220,7 @@ template<typename T, int Size, int _Rows, int _Cols, int _Options> class DenseSt
       EIGEN_INTERNAL_DENSE_STORAGE_CTOR_PLUGIN(Index size = Size)
     }
 #else
-    EIGEN_DEVICE_FUNC DenseStorage(const DenseStorage& other) = default;
+    EIGEN_DEVICE_FUNC DenseStorage(const DenseStorage&) = default;
 #endif
 #if !EIGEN_HAS_CXX11
     EIGEN_DEVICE_FUNC
@@ -230,7 +230,7 @@ template<typename T, int Size, int _Rows, int _Cols, int _Options> class DenseSt
       return *this;
     }
 #else
-    EIGEN_DEVICE_FUNC DenseStorage& operator=(const DenseStorage& other) = default;
+    EIGEN_DEVICE_FUNC DenseStorage& operator=(const DenseStorage&) = default;
 #endif
 #if EIGEN_HAS_RVALUE_REFERENCES
 #if !EIGEN_HAS_CXX11
@@ -245,8 +245,8 @@ template<typename T, int Size, int _Rows, int _Cols, int _Options> class DenseSt
       return *this;
     }
 #else
-    EIGEN_DEVICE_FUNC DenseStorage(DenseStorage&& other) EIGEN_NOEXCEPT = default;
-    EIGEN_DEVICE_FUNC DenseStorage& operator=(DenseStorage&& other) EIGEN_NOEXCEPT = default;
+    EIGEN_DEVICE_FUNC DenseStorage(DenseStorage&&) = default;
+    EIGEN_DEVICE_FUNC DenseStorage& operator=(DenseStorage&&) = default;
 #endif
 #endif
     EIGEN_DEVICE_FUNC DenseStorage(Index size, Index rows, Index cols) {

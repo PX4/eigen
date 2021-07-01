@@ -372,7 +372,7 @@ template <typename T> struct ArgMaxTupleReducer
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void reduce(const T t, T* accum) const {
     if (t.second < accum->second) {
       return;
-    } else if (t.second > accum->second || t.first < accum->first) {
+    } else if (t.second > accum->second || accum->first > t.first ) {
       *accum = t;
     }
   }
@@ -400,7 +400,7 @@ template <typename T> struct ArgMinTupleReducer
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE void reduce(const T& t, T* accum) const {
     if (t.second > accum->second) {
       return;
-    } else if (t.second < accum->second || t.first < accum->first) {
+    } else if (t.second < accum->second || accum->first > t.first) {
       *accum = t;
     }
   }
