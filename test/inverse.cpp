@@ -135,6 +135,8 @@ EIGEN_DECLARE_TEST(inverse)
     CALL_SUBTEST_5( inverse(MatrixXf(s,s)) );
     TEST_SET_BUT_UNUSED_VARIABLE(s)
     CALL_SUBTEST_5( inverse_zerosized<float>() );
+    CALL_SUBTEST_5( inverse(MatrixXf(0, 0)) );
+    CALL_SUBTEST_5( inverse(MatrixXf(1, 1)) );
     
     s = internal::random<int>(25,100);
     CALL_SUBTEST_6( inverse(MatrixXcd(s,s)) );

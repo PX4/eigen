@@ -504,8 +504,13 @@ struct partial_lu_impl
 template<typename MatrixType, typename TranspositionType>
 void partial_lu_inplace(MatrixType& lu, TranspositionType& row_transpositions, typename TranspositionType::StorageIndex& nb_transpositions)
 {
+  // Special-case of zero matrix.
+  if (lu.rows() == 0 || lu.cols() == 0) {
+    nb_transpositions = 0;
+    return;
+  }
   eigen_assert(lu.cols() == row_transpositions.size());
-  eigen_assert((&row_transpositions.coeffRef(1)-&row_transpositions.coeffRef(0)) == 1);
+  eigen_assert(row_transpositions.size() < 2 || (&row_transpositions.coeffRef(1)-&row_transpositions.coeffRef(0)) == 1);
 
   partial_lu_impl
     < typename MatrixType::Scalar, MatrixType::Flags&RowMajorBit?RowMajor:ColMajor,
