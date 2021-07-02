@@ -142,7 +142,8 @@ struct TensorEvaluator<const TensorShufflingOp<Shuffle, ArgType>, Device>
         m_unshuffledInputStrides[i] =
             m_unshuffledInputStrides[i - 1] * input_dims[i - 1];
         m_outputStrides[i] = m_outputStrides[i - 1] * m_dimensions[i - 1];
-        m_fastOutputStrides[i] = internal::TensorIntDivisor<Index>(m_outputStrides[i]);
+        m_fastOutputStrides[i] = internal::TensorIntDivisor<Index>(
+                  m_outputStrides[i] > 0 ? m_outputStrides[i] : Index(1));
       }
     } else {
       m_unshuffledInputStrides[NumDims - 1] = 1;
@@ -151,7 +152,8 @@ struct TensorEvaluator<const TensorShufflingOp<Shuffle, ArgType>, Device>
         m_unshuffledInputStrides[i] =
             m_unshuffledInputStrides[i + 1] * input_dims[i + 1];
         m_outputStrides[i] = m_outputStrides[i + 1] * m_dimensions[i + 1];
-        m_fastOutputStrides[i] = internal::TensorIntDivisor<Index>(m_outputStrides[i]);
+        m_fastOutputStrides[i] = internal::TensorIntDivisor<Index>(
+                  m_outputStrides[i] > 0 ? m_outputStrides[i] : Index(1));
       }
     }
 
