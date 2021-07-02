@@ -57,48 +57,58 @@ template<> struct conj_if<false> {
   EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE const T& pconj(const T& x) const { return x; }
 };
 
-// Generic implementation.
+// Generic Implementation, assume scalars since the packet-version is
+// specialized below.
 template<typename LhsType, typename RhsType, bool ConjLhs, bool ConjRhs>
-struct conj_helper
-{
-  typedef typename ScalarBinaryOpTraits<LhsType,RhsType>::ReturnType ResultType;
+struct conj_helper {
+  typedef typename ScalarBinaryOpTraits<LhsType, RhsType>::ReturnType ResultType;
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE ResultType pmadd(const LhsType& x, const RhsType& y, const ResultType& c) const
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE ResultType
+  pmadd(const LhsType& x, const RhsType& y, const ResultType& c) const
+  { return this->pmul(x, y) + c; }
+
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE ResultType
+  pmul(const LhsType& x, const RhsType& y) const
+  { return conj_if<ConjLhs>()(x) * conj_if<ConjRhs>()(y); }
+};
+
+template<typename LhsScalar, typename RhsScalar>
+struct conj_helper<LhsScalar, RhsScalar, true, true> {
+  typedef typename ScalarBinaryOpTraits<LhsScalar,RhsScalar>::ReturnType ResultType;
+
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE ResultType
+  pmadd(const LhsScalar& x, const RhsScalar& y, const ResultType& c) const
+  { return this->pmul(x, y) + c; }
+
+  // We save a conjuation by using the identity conj(a)*conj(b) = conj(a*b).
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE ResultType
+  pmul(const LhsScalar& x, const RhsScalar& y) const
+  { return numext::conj(x * y); }
+};
+
+// Implementation with equal type, use packet operations.
+template<typename Packet, bool ConjLhs, bool ConjRhs>
+struct conj_helper<Packet, Packet, ConjLhs, ConjRhs>
+{
+  typedef Packet ResultType;
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet pmadd(const Packet& x, const Packet& y, const Packet& c) const
   { return Eigen::internal::pmadd(conj_if<ConjLhs>().pconj(x), conj_if<ConjRhs>().pconj(y), c); }
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE ResultType pmul(const LhsType& x, const RhsType& y) const
+
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet pmul(const Packet& x, const Packet& y) const
   { return Eigen::internal::pmul(conj_if<ConjLhs>().pconj(x), conj_if<ConjRhs>().pconj(y)); }
 };
 
-template<typename LhsType, typename RhsType>
-struct conj_helper<LhsType, RhsType, true, true>
+template<typename Packet>
+struct conj_helper<Packet, Packet, true, true>
 {
-  typedef typename ScalarBinaryOpTraits<LhsType,RhsType>::ReturnType ResultType;
+  typedef Packet ResultType;
 
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE ResultType pmadd(const LhsType& x, const RhsType& y, const ResultType& c) const
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet pmadd(const Packet& x, const Packet& y, const Packet& c) const
   { return Eigen::internal::pmadd(pconj(x), pconj(y), c); }
   // We save a conjuation by using the identity conj(a)*conj(b) = conj(a*b).
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE ResultType pmul(const LhsType& x, const RhsType& y) const
+  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Packet pmul(const Packet& x, const Packet& y) const
   { return pconj(Eigen::internal::pmul(x, y)); }
-};
-
-// Generic implementation for mixed products of complex scalar types.
-template<typename RealScalar,bool Conj> struct conj_helper<std::complex<RealScalar>, RealScalar, Conj,false>
-{
-  typedef std::complex<RealScalar> Scalar;
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Scalar pmadd(const Scalar& x, const RealScalar& y, const Scalar& c) const
-  { return c + conj_if<Conj>().pconj(x) * y; }
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Scalar pmul(const Scalar& x, const RealScalar& y) const
-  { return conj_if<Conj>().pconj(x) * y; }
-};
-
-template<typename RealScalar,bool Conj> struct conj_helper<RealScalar, std::complex<RealScalar>, false,Conj>
-{
-  typedef std::complex<RealScalar> Scalar;
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Scalar pmadd(const RealScalar& x, const Scalar& y, const Scalar& c) const
-  { return c + pmul(x,y); }
-  EIGEN_DEVICE_FUNC EIGEN_STRONG_INLINE Scalar pmul(const RealScalar& x, const Scalar& y) const
-  { return x * conj_if<Conj>().pconj(y); }
 };
 
 }  // namespace internal
