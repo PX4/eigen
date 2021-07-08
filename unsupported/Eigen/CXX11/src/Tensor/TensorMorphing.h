@@ -446,21 +446,13 @@ struct TensorEvaluator<const TensorSlicingOp<StartIndices, Sizes, ArgType>, Devi
   EIGEN_STRONG_INLINE TensorEvaluator(const XprType& op, const Device& device)
       : m_impl(op.expression(), device), m_device(device), m_dimensions(op.sizes()), m_offsets(op.startIndices())
   {
-    for (Index i = 0; i < internal::array_size<Dimensions>::value; ++i) {
-      eigen_assert(m_impl.dimensions()[i] >= op.sizes()[i] + op.startIndices()[i]);
-    }
-
     m_is_identity = true;
-    bool degenerate = false;
     for (int i = 0; i < internal::array_size<Dimensions>::value; ++i) {
       eigen_assert(m_impl.dimensions()[i] >=
                    op.sizes()[i] + op.startIndices()[i]);
       if (m_impl.dimensions()[i] != op.sizes()[i] ||
           op.startIndices()[i] != 0) {
         m_is_identity = false;
-      }
-      if (op.sizes()[i] == 0) { // we have an empty size
-        degenerate = true;
       }
     }
 
@@ -479,8 +471,8 @@ struct TensorEvaluator<const TensorSlicingOp<StartIndices, Sizes, ArgType>, Devi
       m_outputStrides[0] = 1;
       for (int i = 1; i < NumDims; ++i) {
         m_outputStrides[i] = m_outputStrides[i-1] * output_dims[i-1];
-        // NOTE: if tensor is degenerate, we send 1 to prevent TensorIntDivisor constructor crash
-        m_fastOutputStrides[i] = internal::TensorIntDivisor<Index>(degenerate ? 1 : m_outputStrides[i]);      }
+        m_fastOutputStrides[i] = internal::TensorIntDivisor<Index>(m_outputStrides[i] > 0 ? m_outputStrides[i] : 1);
+      }
     } else {
       m_inputStrides[NumDims-1] = 1;
       for (int i = NumDims - 2; i >= 0; --i) {
@@ -491,8 +483,8 @@ struct TensorEvaluator<const TensorSlicingOp<StartIndices, Sizes, ArgType>, Devi
       m_outputStrides[NumDims-1] = 1;
       for (int i = NumDims - 2; i >= 0; --i) {
         m_outputStrides[i] = m_outputStrides[i+1] * output_dims[i+1];
-        // NOTE: if tensor is degenerate, we send 1 to prevent TensorIntDivisor constructor crash
-        m_fastOutputStrides[i] = internal::TensorIntDivisor<Index>(degenerate ? 1 : m_outputStrides[i]);      }
+        m_fastOutputStrides[i] = internal::TensorIntDivisor<Index>(m_outputStrides[i] > 0 ? m_outputStrides[i] : 1);
+      }
     }
   }
 
@@ -933,14 +925,12 @@ struct TensorEvaluator<const TensorStridingSlicingOp<StartIndices, StopIndices, 
     typedef typename TensorEvaluator<ArgType, Device>::Dimensions InputDimensions;
     const InputDimensions& input_dims = m_impl.dimensions();
 
-    // check for degenerate intervals and compute output tensor shape
-    bool degenerate = false;
+    // compute output tensor shape
     m_is_identity = true;
     for (int i = 0; i < NumDims; i++) {
       Index interval = stopIndicesClamped[i] - startIndicesClamped[i];
       if (interval == 0 || ((interval < 0) != (m_strides[i] < 0))) {
         m_dimensions[i] = 0;
-        degenerate = true;
       } else {
         m_dimensions[i] =
             (interval / m_strides[i]) + (interval % m_strides[i] != 0 ? 1 : 0);
@@ -967,8 +957,7 @@ struct TensorEvaluator<const TensorStridingSlicingOp<StartIndices, StopIndices, 
       m_outputStrides[0] = 1;
       for (int i = 1; i < NumDims; ++i) {
         m_outputStrides[i] = m_outputStrides[i-1] * output_dims[i-1];
-        // NOTE: if tensor is degenerate, we send 1 to prevent TensorIntDivisor constructor crash
-        m_fastOutputStrides[i] = internal::TensorIntDivisor<Index>(degenerate ? 1 : m_outputStrides[i]);
+        m_fastOutputStrides[i] = internal::TensorIntDivisor<Index>(m_outputStrides[i] > 0 ? m_outputStrides[i] : 1);
       }
     } else {
       m_inputStrides[NumDims-1] = m_strides[NumDims-1];
@@ -983,8 +972,7 @@ struct TensorEvaluator<const TensorStridingSlicingOp<StartIndices, StopIndices, 
       m_outputStrides[NumDims-1] = 1;
       for (int i = NumDims - 2; i >= 0; --i) {
         m_outputStrides[i] = m_outputStrides[i+1] * output_dims[i+1];
-        // NOTE: if tensor is degenerate, we send 1 to prevent TensorIntDivisor constructor crash
-        m_fastOutputStrides[i] = internal::TensorIntDivisor<Index>(degenerate ? 1 : m_outputStrides[i]);
+        m_fastOutputStrides[i] = internal::TensorIntDivisor<Index>(m_outputStrides[i] > 0 ? m_outputStrides[i] : 1);
       }
     }
   }
