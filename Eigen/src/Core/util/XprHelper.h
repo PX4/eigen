@@ -184,19 +184,7 @@ template<typename T> struct functor_traits
 
 template<typename T> struct packet_traits;
 
-template<typename T> struct unpacket_traits
-{
-  typedef T type;
-  typedef T half;
-  enum
-  {
-    size = 1,
-    alignment = 1,
-    vectorizable = false,
-    masked_load_available=false,
-    masked_store_available=false
-  };
-};
+template<typename T> struct unpacket_traits;
 
 template<int Size, typename PacketType,
          bool Stop = Size==Dynamic || (Size%unpacket_traits<PacketType>::size)==0 || is_same<PacketType,typename unpacket_traits<PacketType>::half>::value>

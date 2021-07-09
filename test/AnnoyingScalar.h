@@ -126,7 +126,7 @@ template<>
 struct NumTraits<AnnoyingScalar> : NumTraits<float>
 {
   enum {
-    RequireInitialization = true
+    RequireInitialization = 1,
   };
   typedef AnnoyingScalar Real;
   typedef AnnoyingScalar Nested;
@@ -145,10 +145,6 @@ bool (isfinite)(const AnnoyingScalar& x) {
 }
 
 namespace internal {
-  template<> EIGEN_STRONG_INLINE AnnoyingScalar pcmp_eq(const AnnoyingScalar& a, const AnnoyingScalar& b)
-  { return AnnoyingScalar(pcmp_eq(*a.v, *b.v)); }
-  template<> EIGEN_STRONG_INLINE AnnoyingScalar pselect(const AnnoyingScalar& mask, const AnnoyingScalar& a, const AnnoyingScalar& b)
-  { return numext::equal_strict(*mask.v, 0.f) ? b : a; }
   template<> EIGEN_STRONG_INLINE double cast(const AnnoyingScalar& x) { return double(*x.v); }
   template<> EIGEN_STRONG_INLINE float  cast(const AnnoyingScalar& x) { return *x.v; }
 }
