@@ -518,7 +518,7 @@ struct blas_traits<const T>
 
 template<typename T, bool HasUsableDirectAccess=blas_traits<T>::HasUsableDirectAccess>
 struct extract_data_selector {
-  static const typename T::Scalar* run(const T& m)
+  EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE static const typename T::Scalar* run(const T& m)
   {
     return blas_traits<T>::extract(m).data();
   }
@@ -529,7 +529,8 @@ struct extract_data_selector<T,false> {
   static typename T::Scalar* run(const T&) { return 0; }
 };
 
-template<typename T> const typename T::Scalar* extract_data(const T& m)
+template<typename T>
+EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE const typename T::Scalar* extract_data(const T& m)
 {
   return extract_data_selector<T>::run(m);
 }
