@@ -57,12 +57,12 @@ mark_as_advanced(TRISYCL_DEBUG_STRUCTORS)
 mark_as_advanced(TRISYCL_TRACE_KERNEL)
 
 #triSYCL definitions
-set(CL_SYCL_LANGUAGE_VERSION 220 CACHE VERSION
+set(CL_SYCL_LANGUAGE_VERSION 220 CACHE STRING
   "Host language version to be used by trisYCL (default is: 220)")
-set(TRISYCL_CL_LANGUAGE_VERSION 220 CACHE VERSION
+set(TRISYCL_CL_LANGUAGE_VERSION 220 CACHE STRING
   "Device language version to be used by trisYCL (default is: 220)")
-#set(TRISYCL_COMPILE_OPTIONS "-std=c++1z -Wall -Wextra")
-set(CMAKE_CXX_STANDARD 14)
+# triSYCL now requires c++17
+set(CMAKE_CXX_STANDARD 17)
 set(CXX_STANDARD_REQUIRED ON)
 
 
@@ -93,6 +93,20 @@ endif()
 find_package(Threads REQUIRED)
 
 # Find triSYCL directory
+if (TRISYCL_INCLUDES AND TRISYCL_LIBRARIES)
+  set(TRISYCL_FIND_QUIETLY TRUE)
+endif ()
+
+find_path(TRISYCL_INCLUDE_DIR
+  NAMES sycl.hpp
+  PATHS $ENV{TRISYCLDIR} $ENV{TRISYCLDIR}/include ${INCLUDE_INSTALL_DIR}
+  PATH_SUFFIXES triSYCL
+)
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(TriSYCL DEFAULT_MSG
+                                  TRISYCL_INCLUDE_DIR)
+
 if(NOT TRISYCL_INCLUDE_DIR)
   message(FATAL_ERROR
     "triSYCL include directory - Not found! (please set TRISYCL_INCLUDE_DIR")
@@ -100,36 +114,42 @@ else()
   message(STATUS "triSYCL include directory - Found ${TRISYCL_INCLUDE_DIR}")
 endif()
 
+include(CMakeParseArguments)
 #######################
 #  add_sycl_to_target
 #######################
-#
-#  Sets the proper flags and includes for the target compilation.
-#
-#  targetName : Name of the target to add a SYCL to.
-#  sourceFile : Source file to be compiled for SYCL.
-#  binaryDir : Intermediate directory to output the integration header.
-#
-function(add_sycl_to_target targetName sourceFile binaryDir)
+function(add_sycl_to_target)
+  set(options)
+  set(one_value_args
+    TARGET
+  )
+  set(multi_value_args
+    SOURCES
+  )
+  cmake_parse_arguments(ADD_SYCL_ARGS
+    "${options}"
+    "${one_value_args}"
+    "${multi_value_args}"
+    ${ARGN}
+  )
 
   # Add include directories to the "#include <>" paths
-  target_include_directories (${targetName} PUBLIC
+  target_include_directories (${ADD_SYCL_ARGS_TARGET} PUBLIC
     ${TRISYCL_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}
     $<$<BOOL:${TRISYCL_OPENCL}>:${OpenCL_INCLUDE_DIRS}>
     $<$<BOOL:${TRISYCL_OPENCL}>:${BOOST_COMPUTE_INCPATH}>)
 
-
   # Link dependencies
-  target_link_libraries(${targetName} PUBLIC
+  target_link_libraries(${ADD_SYCL_ARGS_TARGET}
     $<$<BOOL:${TRISYCL_OPENCL}>:${OpenCL_LIBRARIES}>
     Threads::Threads
     $<$<BOOL:${LOG_NEEDED}>:Boost::log>
     Boost::chrono)
 
-
   # Compile definitions
-  target_compile_definitions(${targetName} PUBLIC
+  target_compile_definitions(${ADD_SYCL_ARGS_TARGET} PUBLIC
+    EIGEN_SYCL_TRISYCL
     $<$<BOOL:${TRISYCL_NO_ASYNC}>:TRISYCL_NO_ASYNC>
     $<$<BOOL:${TRISYCL_OPENCL}>:TRISYCL_OPENCL>
     $<$<BOOL:${TRISYCL_DEBUG}>:TRISYCL_DEBUG>
@@ -138,13 +158,13 @@ function(add_sycl_to_target targetName sourceFile binaryDir)
     $<$<BOOL:${LOG_NEEDED}>:BOOST_LOG_DYN_LINK>)
 
   # C++ and OpenMP requirements
-  target_compile_options(${targetName} PUBLIC
+  target_compile_options(${ADD_SYCL_ARGS_TARGET} PUBLIC
     ${TRISYCL_COMPILE_OPTIONS}
     $<$<BOOL:${TRISYCL_OPENMP}>:${OpenMP_CXX_FLAGS}>)
 
   if(${TRISYCL_OPENMP} AND (NOT WIN32))
     # Does not support generator expressions
-    set_target_properties(${targetName}
+    set_target_properties(${ADD_SYCL_ARGS_TARGET}
       PROPERTIES
       LINK_FLAGS ${OpenMP_CXX_FLAGS})
   endif()

@@ -165,8 +165,8 @@ if(EIGEN_TEST_CXX11)
     endif()
 
     if(EIGEN_SYCL_TRISYCL)
-      set(CMAKE_CXX_STANDARD 14)
-      set(STD_CXX_FLAG "-std=c++1z")
+      # triSYCL now requires c++17.
+      set(CMAKE_CXX_STANDARD 17)
     else()
       if(MSVC)
         # Set the host and device compilers C++ standard to C++14. On Windows setting this to C++11
