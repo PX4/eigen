@@ -67,8 +67,9 @@ set(CXX_STANDARD_REQUIRED ON)
 
 
 # Find OpenCL package
+include(CMakeFindDependencyMacro)
 if(TRISYCL_OPENCL)
-  find_package(OpenCL REQUIRED)
+  find_dependency(OpenCL REQUIRED)
   if(UNIX)
     set(BOOST_COMPUTE_INCPATH /usr/include/compute CACHE PATH
       "Path to Boost.Compute headers (default is: /usr/include/compute)")
@@ -77,11 +78,11 @@ endif()
 
 # Find OpenMP package
 if(TRISYCL_OPENMP)
-  find_package(OpenMP REQUIRED)
+  find_dependency(OpenMP REQUIRED)
 endif()
 
 # Find Boost
-find_package(Boost 1.58 REQUIRED COMPONENTS chrono log)
+find_dependency(Boost 1.58 REQUIRED COMPONENTS chrono log)
 
 # If debug or trace we need boost log
 if(TRISYCL_DEBUG OR TRISYCL_DEBUG_STRUCTORS OR TRISYCL_TRACE_KERNEL)
@@ -90,7 +91,7 @@ else()
   set(LOG_NEEDED OFF)
 endif()
 
-find_package(Threads REQUIRED)
+find_dependency(Threads REQUIRED)
 
 # Find triSYCL directory
 if (TRISYCL_INCLUDES AND TRISYCL_LIBRARIES)

@@ -65,8 +65,9 @@ endif()
 
 # Optionally use pkg-config to detect include/library dirs (if pkg-config is available)
 # -------------------------------------------------------------------------------------
-include(FindPkgConfig)
-find_package(PkgConfig QUIET)
+include(CMakeFindDependencyMacro)
+# include(FindPkgConfig)
+find_dependency(PkgConfig QUIET)
 if( PKG_CONFIG_EXECUTABLE AND NOT HWLOC_GIVEN_BY_USER )
 
   pkg_search_module(HWLOC hwloc)

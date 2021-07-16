@@ -22,7 +22,8 @@ if( NOT FFTW_ROOT AND ENV{FFTWDIR} )
 endif()
 
 # Check if we can use PkgConfig
-find_package(PkgConfig)
+include(CMakeFindDependencyMacro)
+find_dependency(PkgConfig)
 
 #Determine from PKG
 if( PKG_CONFIG_FOUND AND NOT FFTW_ROOT )
