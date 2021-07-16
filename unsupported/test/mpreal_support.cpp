@@ -1,3 +1,4 @@
+#include <mpreal.h>  // Must be included before main.h.
 #include "main.h"
 #include <Eigen/MPRealSupport>
 #include <Eigen/LU>
