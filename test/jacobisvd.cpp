@@ -36,6 +36,9 @@ void jacobisvd(const MatrixType& a = MatrixType(), bool pickrandom = true)
 template<typename MatrixType> void jacobisvd_verify_assert(const MatrixType& m)
 {
   svd_verify_assert<JacobiSVD<MatrixType> >(m);
+  svd_verify_assert<JacobiSVD<MatrixType, FullPivHouseholderQRPreconditioner> >(m, true);
+  svd_verify_assert<JacobiSVD<MatrixType, ColPivHouseholderQRPreconditioner> >(m);
+  svd_verify_assert<JacobiSVD<MatrixType, HouseholderQRPreconditioner> >(m);
   Index rows = m.rows();
   Index cols = m.cols();
 

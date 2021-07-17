@@ -112,12 +112,12 @@ public:
     ColsAtCompileTime = MatrixType::ColsAtCompileTime,
     MaxRowsAtCompileTime = MatrixType::MaxRowsAtCompileTime,
     MaxColsAtCompileTime = MatrixType::MaxColsAtCompileTime,
-    TrOptions = RowsAtCompileTime==1 ? (int(MatrixType::Options) & ~(int(RowMajor)))
-              : ColsAtCompileTime==1 ? (int(MatrixType::Options) | int(RowMajor))
-              : MatrixType::Options
+    Options = MatrixType::Options
   };
-  typedef Matrix<Scalar, ColsAtCompileTime, RowsAtCompileTime, TrOptions, MaxColsAtCompileTime, MaxRowsAtCompileTime>
-          TransposeTypeWithSameStorageOrder;
+
+  typedef typename internal::make_proper_matrix_type<
+    Scalar, ColsAtCompileTime, RowsAtCompileTime, Options, MaxColsAtCompileTime, MaxRowsAtCompileTime
+  >::type TransposeTypeWithSameStorageOrder;
 
   void allocate(const JacobiSVD<MatrixType, FullPivHouseholderQRPreconditioner>& svd)
   {
@@ -202,13 +202,12 @@ public:
     ColsAtCompileTime = MatrixType::ColsAtCompileTime,
     MaxRowsAtCompileTime = MatrixType::MaxRowsAtCompileTime,
     MaxColsAtCompileTime = MatrixType::MaxColsAtCompileTime,
-    TrOptions = RowsAtCompileTime==1 ? (int(MatrixType::Options) & ~(int(RowMajor)))
-              : ColsAtCompileTime==1 ? (int(MatrixType::Options) | int(RowMajor))
-              : MatrixType::Options
+    Options = MatrixType::Options
   };
 
-  typedef Matrix<Scalar, ColsAtCompileTime, RowsAtCompileTime, TrOptions, MaxColsAtCompileTime, MaxRowsAtCompileTime>
-          TransposeTypeWithSameStorageOrder;
+  typedef typename internal::make_proper_matrix_type<
+    Scalar, ColsAtCompileTime, RowsAtCompileTime, Options, MaxColsAtCompileTime, MaxRowsAtCompileTime
+  >::type TransposeTypeWithSameStorageOrder;
 
   void allocate(const JacobiSVD<MatrixType, ColPivHouseholderQRPreconditioner>& svd)
   {
@@ -303,8 +302,9 @@ public:
     Options = MatrixType::Options
   };
 
-  typedef Matrix<Scalar, ColsAtCompileTime, RowsAtCompileTime, Options, MaxColsAtCompileTime, MaxRowsAtCompileTime>
-          TransposeTypeWithSameStorageOrder;
+  typedef typename internal::make_proper_matrix_type<
+    Scalar, ColsAtCompileTime, RowsAtCompileTime, Options, MaxColsAtCompileTime, MaxRowsAtCompileTime
+  >::type TransposeTypeWithSameStorageOrder;
 
   void allocate(const JacobiSVD<MatrixType, HouseholderQRPreconditioner>& svd)
   {

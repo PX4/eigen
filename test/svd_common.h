@@ -462,7 +462,7 @@ void svd_preallocate()
 }
 
 template<typename SvdType,typename MatrixType> 
-void svd_verify_assert(const MatrixType& m)
+void svd_verify_assert(const MatrixType& m, bool fullOnly = false)
 {
   typedef typename MatrixType::Scalar Scalar;
   Index rows = m.rows();
@@ -489,8 +489,17 @@ void svd_verify_assert(const MatrixType& m)
   VERIFY_RAISES_ASSERT(svd.matrixV())
   svd.singularValues();
   VERIFY_RAISES_ASSERT(svd.solve(rhs))
-    
-  if (ColsAtCompileTime == Dynamic)
+
+  svd.compute(a, ComputeFullU);
+  svd.matrixU();
+  VERIFY_RAISES_ASSERT(svd.matrixV())
+  VERIFY_RAISES_ASSERT(svd.solve(rhs))
+  svd.compute(a, ComputeFullV);
+  svd.matrixV();
+  VERIFY_RAISES_ASSERT(svd.matrixU())
+  VERIFY_RAISES_ASSERT(svd.solve(rhs))
+
+  if (!fullOnly && ColsAtCompileTime == Dynamic)
   {
     svd.compute(a, ComputeThinU);
     svd.matrixU();
