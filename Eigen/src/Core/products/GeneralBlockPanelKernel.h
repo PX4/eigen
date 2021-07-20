@@ -44,7 +44,7 @@ inline std::ptrdiff_t manage_caching_sizes_helper(std::ptrdiff_t a, std::ptrdiff
 #endif // defined(EIGEN_DEFAULT_L2_CACHE_SIZE)
 
 #if defined(EIGEN_DEFAULT_L3_CACHE_SIZE)
-#define EIGEN_SET_DEFAULT_L3_CACHE_SIZE(val) EIGEN_SET_DEFAULT_L3_CACHE_SIZE
+#define EIGEN_SET_DEFAULT_L3_CACHE_SIZE(val) EIGEN_DEFAULT_L3_CACHE_SIZE
 #else
 #define EIGEN_SET_DEFAULT_L3_CACHE_SIZE(val) val
 #endif // defined(EIGEN_DEFAULT_L3_CACHE_SIZE)
