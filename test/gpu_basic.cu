@@ -197,18 +197,17 @@ struct complex_operators {
     res.segment(block_idx, size) = x1; res.segment(block_idx, size).array() /= x2.array();
     block_idx += size;
 
-    // Equality comparisons currently not functional on device
-    //   (std::equal_to<T> is host-only).
-    // const T true_vector = T::Constant(true_value);
-    // const T false_vector = T::Constant(false_value);
-    // res.segment(block_idx, size) = (x1 == x2 ? true_vector : false_vector);
-    // block_idx += size;
+    const T true_vector = T::Constant(true_value);
+    const T false_vector = T::Constant(false_value);
+    res.segment(block_idx, size) = (x1 == x2 ? true_vector : false_vector);
+    block_idx += size;
+    // Mixing types in equality comparison does not work.
     // res.segment(block_idx, size) = (x1 == x2.real() ? true_vector : false_vector);
     // block_idx += size;
     // res.segment(block_idx, size) = (x1.real() == x2 ? true_vector : false_vector);
     // block_idx += size;
-    // res.segment(block_idx, size) = (x1 != x2 ? true_vector : false_vector);
-    // block_idx += size;
+    res.segment(block_idx, size) = (x1 != x2 ? true_vector : false_vector);
+    block_idx += size;
     // res.segment(block_idx, size) = (x1 != x2.real() ? true_vector : false_vector);
     // block_idx += size;
     // res.segment(block_idx, size) = (x1.real() != x2 ? true_vector : false_vector);
