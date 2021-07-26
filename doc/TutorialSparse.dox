@@ -60,7 +60,7 @@ On the other hand, inserting elements with increasing inner indices in a given i
 The case where no empty space is available is a special case, and is referred as the \em compressed mode.
 It corresponds to the widely used Compressed Column (or Row) Storage schemes (CCS or CRS).
 Any SparseMatrix can be turned to this form by calling the SparseMatrix::makeCompressed() function.
-In this case, one can remark that the \c InnerNNZs array is redundant with \c OuterStarts because we the equality: \c InnerNNZs[j] = \c OuterStarts[j+1]-\c OuterStarts[j].
+In this case, one can remark that the \c InnerNNZs array is redundant with \c OuterStarts because we have the equality: \c InnerNNZs[j] = \c OuterStarts[j+1]-\c OuterStarts[j].
 Therefore, in practice a call to SparseMatrix::makeCompressed() frees this buffer.
 
 It is worth noting that most of our wrappers to external libraries requires compressed matrices as inputs.
