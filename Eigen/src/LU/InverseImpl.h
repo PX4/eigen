@@ -144,13 +144,18 @@ inline void compute_inverse_size3_helper(
     const Matrix<typename ResultType::Scalar,3,1>& cofactors_col0,
     ResultType& result)
 {
-  result.row(0) = cofactors_col0 * invdet;
-  result.coeffRef(1,0) =  cofactor_3x3<MatrixType,0,1>(matrix) * invdet;
-  result.coeffRef(1,1) =  cofactor_3x3<MatrixType,1,1>(matrix) * invdet;
+  // Compute cofactors in a way that avoids aliasing issues.
+  typedef typename ResultType::Scalar Scalar;
+  const Scalar c01 = cofactor_3x3<MatrixType,0,1>(matrix) * invdet;
+  const Scalar c11 = cofactor_3x3<MatrixType,1,1>(matrix) * invdet;
+  const Scalar c02 = cofactor_3x3<MatrixType,0,2>(matrix) * invdet;
   result.coeffRef(1,2) =  cofactor_3x3<MatrixType,2,1>(matrix) * invdet;
-  result.coeffRef(2,0) =  cofactor_3x3<MatrixType,0,2>(matrix) * invdet;
   result.coeffRef(2,1) =  cofactor_3x3<MatrixType,1,2>(matrix) * invdet;
   result.coeffRef(2,2) =  cofactor_3x3<MatrixType,2,2>(matrix) * invdet;
+  result.coeffRef(1,0) =  c01;
+  result.coeffRef(1,1) =  c11;
+  result.coeffRef(2,0) =  c02;  
+  result.row(0) = cofactors_col0 * invdet;
 }
 
 template<typename MatrixType, typename ResultType>
@@ -166,12 +171,7 @@ struct compute_inverse<MatrixType, ResultType, 3>
     cofactors_col0.coeffRef(2) =  cofactor_3x3<MatrixType,2,0>(matrix);
     const Scalar det = (cofactors_col0.cwiseProduct(matrix.col(0))).sum();
     const Scalar invdet = Scalar(1) / det;
-    if(extract_data(matrix) != extract_data(result)) {
-      compute_inverse_size3_helper(matrix, invdet, cofactors_col0, result);
-    } else {
-      MatrixType matrix_t = matrix;
-      compute_inverse_size3_helper(matrix_t, invdet, cofactors_col0, result);
-    }
+    compute_inverse_size3_helper(matrix, invdet, cofactors_col0, result);
   }
 };
 
@@ -187,22 +187,16 @@ struct compute_inverse_and_det_with_check<MatrixType, ResultType, 3>
     bool& invertible
   )
   {
-    using std::abs;
     typedef typename ResultType::Scalar Scalar;
     Matrix<Scalar,3,1> cofactors_col0;
     cofactors_col0.coeffRef(0) =  cofactor_3x3<MatrixType,0,0>(matrix);
     cofactors_col0.coeffRef(1) =  cofactor_3x3<MatrixType,1,0>(matrix);
     cofactors_col0.coeffRef(2) =  cofactor_3x3<MatrixType,2,0>(matrix);
     determinant = (cofactors_col0.cwiseProduct(matrix.col(0))).sum();
-    invertible = abs(determinant) > absDeterminantThreshold;
+    invertible = Eigen::numext::abs(determinant) > absDeterminantThreshold;
     if(!invertible) return;
     const Scalar invdet = Scalar(1) / determinant;
-    if(extract_data(matrix) != extract_data(inverse)) {
-      compute_inverse_size3_helper(matrix, invdet, cofactors_col0, inverse);
-    } else {
-      MatrixType matrix_t = matrix;
-      compute_inverse_size3_helper(matrix_t, invdet, cofactors_col0, inverse);
-    }
+    compute_inverse_size3_helper(matrix, invdet, cofactors_col0, inverse);
   }
 };
 
