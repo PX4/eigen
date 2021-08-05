@@ -115,9 +115,11 @@ template<int> void noncopyable()
 {
   typedef Eigen::Matrix<AnnoyingScalar,Dynamic,1> VectorType;
   typedef Eigen::Matrix<AnnoyingScalar,Dynamic,Dynamic> MatrixType;
-  
+
   {
+#ifndef EIGEN_TEST_ANNOYING_SCALAR_DONT_THROW
     AnnoyingScalar::dont_throw = true;
+#endif
     int n = 50;
     VectorType v0(n), v1(n);
     MatrixType m0(n,n), m1(n,n), m2(n,n);
@@ -156,7 +158,9 @@ EIGEN_DECLARE_TEST(conservative_resize)
     CALL_SUBTEST_4((run_vector_tests<std::complex<float> >()));
     CALL_SUBTEST_5((run_vector_tests<std::complex<double> >()));
 
+#ifndef EIGEN_TEST_ANNOYING_SCALAR_DONT_THROW
     AnnoyingScalar::dont_throw = true;
+#endif
     CALL_SUBTEST_6(( run_vector_tests<AnnoyingScalar>() ));
     CALL_SUBTEST_6(( noncopyable<0>() ));
   }

@@ -315,8 +315,9 @@ EIGEN_DECLARE_TEST(sparse_block)
     
     CALL_SUBTEST_4(( sparse_block(SparseMatrix<double,ColMajor,short int>(short(r), short(c))) ));
     CALL_SUBTEST_4(( sparse_block(SparseMatrix<double,RowMajor,short int>(short(r), short(c))) ));
-
+#ifndef EIGEN_TEST_ANNOYING_SCALAR_DONT_THROW
     AnnoyingScalar::dont_throw = true;
+#endif
     CALL_SUBTEST_5((  sparse_block(SparseMatrix<AnnoyingScalar>(r,c)) ));
   }
 }
