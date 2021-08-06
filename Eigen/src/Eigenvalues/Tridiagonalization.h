@@ -425,12 +425,13 @@ struct tridiagonalization_inplace_selector;
   *
   * \sa class Tridiagonalization
   */
-template<typename MatrixType, typename DiagonalType, typename SubDiagonalType>
+template<typename MatrixType, typename DiagonalType, typename SubDiagonalType, typename CoeffVectorType>
 EIGEN_DEVICE_FUNC
-void tridiagonalization_inplace(MatrixType& mat, DiagonalType& diag, SubDiagonalType& subdiag, bool extractQ)
+void tridiagonalization_inplace(MatrixType& mat, DiagonalType& diag, SubDiagonalType& subdiag,
+                                CoeffVectorType& hcoeffs, bool extractQ)
 {
   eigen_assert(mat.cols()==mat.rows() && diag.size()==mat.rows() && subdiag.size()==mat.rows()-1);
-  tridiagonalization_inplace_selector<MatrixType>::run(mat, diag, subdiag, extractQ);
+  tridiagonalization_inplace_selector<MatrixType>::run(mat, diag, subdiag, hcoeffs, extractQ);
 }
 
 /** \internal
@@ -443,10 +444,9 @@ struct tridiagonalization_inplace_selector
   typedef typename Tridiagonalization<MatrixType>::HouseholderSequenceType HouseholderSequenceType;
   template<typename DiagonalType, typename SubDiagonalType>
   static EIGEN_DEVICE_FUNC
-  void run(MatrixType& mat, DiagonalType& diag, SubDiagonalType& subdiag, bool extractQ)
+      void run(MatrixType& mat, DiagonalType& diag, SubDiagonalType& subdiag, CoeffVectorType& hCoeffs, bool extractQ)
   {
-    CoeffVectorType hCoeffs(mat.cols()-1);
-    tridiagonalization_inplace(mat,hCoeffs);
+    tridiagonalization_inplace(mat, hCoeffs);
     diag = mat.diagonal().real();
     subdiag = mat.template diagonal<-1>().real();
     if(extractQ)
@@ -466,8 +466,8 @@ struct tridiagonalization_inplace_selector<MatrixType,3,false>
   typedef typename MatrixType::Scalar Scalar;
   typedef typename MatrixType::RealScalar RealScalar;
 
-  template<typename DiagonalType, typename SubDiagonalType>
-  static void run(MatrixType& mat, DiagonalType& diag, SubDiagonalType& subdiag, bool extractQ)
+  template<typename DiagonalType, typename SubDiagonalType, typename CoeffVectorType>
+  static void run(MatrixType& mat, DiagonalType& diag, SubDiagonalType& subdiag, CoeffVectorType&, bool extractQ)
   {
     using std::sqrt;
     const RealScalar tol = (std::numeric_limits<RealScalar>::min)();
@@ -511,9 +511,9 @@ struct tridiagonalization_inplace_selector<MatrixType,1,IsComplex>
 {
   typedef typename MatrixType::Scalar Scalar;
 
-  template<typename DiagonalType, typename SubDiagonalType>
+  template<typename DiagonalType, typename SubDiagonalType, typename CoeffVectorType>
   static EIGEN_DEVICE_FUNC
-  void run(MatrixType& mat, DiagonalType& diag, SubDiagonalType&, bool extractQ)
+  void run(MatrixType& mat, DiagonalType& diag, SubDiagonalType&, CoeffVectorType&, bool extractQ)
   {
     diag(0,0) = numext::real(mat(0,0));
     if(extractQ)
