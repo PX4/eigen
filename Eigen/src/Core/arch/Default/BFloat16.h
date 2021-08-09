@@ -250,10 +250,6 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC __bfloat16_raw truncate_to_bfloat16(const 
   if (Eigen::numext::isnan EIGEN_NOT_A_MACRO(v)) {
     output.value = std::signbit(v) ? 0xFFC0: 0x7FC0;
     return output;
-  } else if (std::fabs(v) < std::numeric_limits<float>::min EIGEN_NOT_A_MACRO()) {
-    // Flush denormal to +/- 0.
-    output.value = std::signbit(v) ? 0x8000 : 0;
-    return output;
   }
   const uint16_t* p = reinterpret_cast<const uint16_t*>(&v);
 #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
@@ -288,9 +284,6 @@ EIGEN_STRONG_INLINE EIGEN_DEVICE_FUNC __bfloat16_raw float_to_bfloat16_rtne<fals
     // qNaN magic: All exponent bits set + most significant bit of fraction
     // set.
     output.value = std::signbit(ff) ? 0xFFC0: 0x7FC0;
-  } else if (std::fabs(ff) < std::numeric_limits<float>::min EIGEN_NOT_A_MACRO()) {
-    // Flush denormal to +/- 0.0
-    output.value = std::signbit(ff) ? 0x8000 : 0;
   } else {
     // Fast rounding algorithm that rounds a half value to nearest even. This
     // reduces expected error when we convert a large number of floats. Here

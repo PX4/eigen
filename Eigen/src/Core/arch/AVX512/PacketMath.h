@@ -1945,23 +1945,15 @@ EIGEN_STRONG_INLINE Packet16f Bf16ToF32(const Packet16bf& a) {
 EIGEN_STRONG_INLINE Packet16bf F32ToBf16(const Packet16f& a) {
   Packet16bf r;
 
-  // Flush input denormals value to zero with hardware capability.
-  _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
-#if defined(EIGEN_VECTORIZE_AVX512DQ)
-  __m512 flush = _mm512_and_ps(a, a);
-#else
-  __m512 flush = _mm512_max_ps(a, a);
-#endif // EIGEN_VECTORIZE_AVX512DQ
-  _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_OFF);
-
 #if defined(EIGEN_VECTORIZE_AVX512BF16) && EIGEN_GNUC_AT_LEAST(10, 1)
   // Since GCC 10.1 supports avx512bf16 and C style explicit cast
   // (C++ static_cast is not supported yet), do converion via intrinsic
   // and register path for performance.
-  r = (__m256i)(_mm512_cvtneps_pbh(flush));
+  r = (__m256i)(_mm512_cvtneps_pbh(a));
+
 #else
   __m512i t;
-  __m512i input = _mm512_castps_si512(flush);
+  __m512i input = _mm512_castps_si512(a);
   __m512i nan = _mm512_set1_epi32(0x7fc0);
 
   // uint32_t lsb = (input >> 16) & 1;
@@ -1974,9 +1966,9 @@ EIGEN_STRONG_INLINE Packet16bf F32ToBf16(const Packet16f& a) {
   t = _mm512_srli_epi32(t, 16);
 
   // Check NaN before converting back to bf16
-  __mmask16 mask = _mm512_cmp_ps_mask(flush, flush, _CMP_ORD_Q);
-  t = _mm512_mask_blend_epi32(mask, nan, t);
+  __mmask16 mask = _mm512_cmp_ps_mask(a, a, _CMP_ORD_Q);
 
+  t = _mm512_mask_blend_epi32(mask, nan, t);
   // output.value = static_cast<uint16_t>(input);
   r = _mm512_cvtepi32_epi16(t);
 #endif // EIGEN_VECTORIZE_AVX512BF16

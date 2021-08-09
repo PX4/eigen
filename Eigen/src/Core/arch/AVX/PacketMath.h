@@ -1274,12 +1274,7 @@ EIGEN_STRONG_INLINE Packet8f Bf16ToF32(const Packet8bf& a) {
 EIGEN_STRONG_INLINE Packet8bf F32ToBf16(const Packet8f& a) {
   Packet8bf r;
 
-  // Flush input denormals value to zero with hardware capability.
-  _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
-  __m256 flush = _mm256_and_ps(a, a);
-  _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_OFF);
-
-  __m256i input = _mm256_castps_si256(flush);
+  __m256i input = _mm256_castps_si256(a);
 
 #ifdef EIGEN_VECTORIZE_AVX2
   // uint32_t lsb = (input >> 16);
@@ -1293,7 +1288,7 @@ EIGEN_STRONG_INLINE Packet8bf F32ToBf16(const Packet8f& a) {
   // input = input >> 16;
   t = _mm256_srli_epi32(t, 16);
   // Check NaN before converting back to bf16
-  __m256 mask = _mm256_cmp_ps(flush, flush, _CMP_ORD_Q);
+  __m256 mask = _mm256_cmp_ps(a, a, _CMP_ORD_Q);
   __m256i nan = _mm256_set1_epi32(0x7fc0);
   t = _mm256_blendv_epi8(nan, t, _mm256_castps_si256(mask));
   // output = numext::bit_cast<uint16_t>(input);
@@ -1316,7 +1311,7 @@ EIGEN_STRONG_INLINE Packet8bf F32ToBf16(const Packet8f& a) {
   lo = _mm_srli_epi32(lo, 16);
   hi = _mm_srli_epi32(hi, 16);
   // Check NaN before converting back to bf16
-  __m256 mask = _mm256_cmp_ps(flush, flush, _CMP_ORD_Q);
+  __m256 mask = _mm256_cmp_ps(a, a, _CMP_ORD_Q);
   __m128i nan = _mm_set1_epi32(0x7fc0);
   lo = _mm_blendv_epi8(nan, lo, _mm_castps_si128(_mm256_castps256_ps128(mask)));
   hi = _mm_blendv_epi8(nan, hi, _mm_castps_si128(_mm256_extractf128_ps(mask, 1)));
