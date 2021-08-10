@@ -31,6 +31,22 @@ static long g_dense_op_sparse_count = 0;
 #include "sparse_basic.cpp"
 #endif
 
+#if EIGEN_HAS_CXX11
+
+#ifdef min
+#undef min
+#endif
+
+#ifdef max
+#undef max
+#endif
+
+#include <unordered_map>
+#define EIGEN_UNORDERED_MAP_SUPPORT
+
+#endif
+
+
 #include <Eigen/SparseExtra>
 
 template<typename SetterType,typename DenseType, typename Scalar, int Options>
@@ -145,6 +161,7 @@ template<typename SparseMatrixType> void sparse_extra(const SparseMatrixType& re
 
 
 }
+
 
 template<typename SparseMatrixType>
 void check_marketio()
