@@ -74,7 +74,7 @@ struct Packet2cf
     return Packet2cf(*this) -= b;
   }
   EIGEN_STRONG_INLINE Packet2cf operator-(void) const {
-    return Packet2cf(vec_neg(v));
+    return Packet2cf(-v);
   }
 
   Packet4f  v;
@@ -294,7 +294,7 @@ struct Packet1cd
     return Packet1cd(*this) -= b;
   }
   EIGEN_STRONG_INLINE Packet1cd operator-(void) const {
-    return Packet1cd(vec_neg(v));
+    return Packet1cd(-v);
   }
 
   Packet2d v;

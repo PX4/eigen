@@ -433,7 +433,7 @@ EIGEN_STRONG_INLINE Packet pload_common(const __UNPACK_TYPE__(Packet)* from)
   EIGEN_UNUSED_VARIABLE(from);
   EIGEN_DEBUG_ALIGNED_LOAD
 #ifdef __VSX__
-  return vec_xl(0, from);
+  return vec_xl(0, const_cast<__UNPACK_TYPE__(Packet)*>(from));
 #else
   return vec_ld(0, from);
 #endif
@@ -952,7 +952,7 @@ template<typename Packet> EIGEN_STRONG_INLINE Packet ploadu_common(const __UNPAC
   return (Packet) vec_perm(MSQ, LSQ, mask);           // align the data
 #else
   EIGEN_DEBUG_UNALIGNED_LOAD
-  return vec_xl(0, from);
+  return vec_xl(0, const_cast<__UNPACK_TYPE__(Packet)*>(from));
 #endif
 }
 
@@ -2453,7 +2453,7 @@ template<> EIGEN_STRONG_INLINE Packet2d print<Packet2d>(const Packet2d& a)
 template<> EIGEN_STRONG_INLINE Packet2d ploadu<Packet2d>(const double* from)
 {
   EIGEN_DEBUG_UNALIGNED_LOAD
-  return vec_xl(0, from);
+  return vec_xl(0, const_cast<double*>(from));
 }
 
 template<> EIGEN_STRONG_INLINE Packet2d ploaddup<Packet2d>(const double*   from)
