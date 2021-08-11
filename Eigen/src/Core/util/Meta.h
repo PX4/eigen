@@ -715,19 +715,24 @@ class meta_sqrt<Y, InfX, SupX, true> { public:  enum { ret = (SupX*SupX <= Y) ? 
 
 
 /** \internal Computes the least common multiple of two positive integer A and B
-  * at compile-time. It implements a naive algorithm testing all multiples of A.
-  * It thus works better if A>=B.
+  * at compile-time. 
   */
-template<int A, int B, int K=1, bool Done = ((A*K)%B)==0>
+template<int A, int B, int K=1, bool Done = ((A*K)%B)==0, bool Big=(A>=B)>
 struct meta_least_common_multiple
 {
   enum { ret = meta_least_common_multiple<A,B,K+1>::ret };
 };
+template<int A, int B, int K, bool Done>
+struct meta_least_common_multiple<A,B,K,Done,false>
+{
+  enum { ret = meta_least_common_multiple<B,A,K>::ret };
+};
 template<int A, int B, int K>
-struct meta_least_common_multiple<A,B,K,true>
+struct meta_least_common_multiple<A,B,K,true,true>
 {
   enum { ret = A*K };
 };
+
 
 /** \internal determines whether the product of two numeric types is allowed and what the return type is */
 template<typename T, typename U> struct scalar_product_traits
