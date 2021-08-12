@@ -256,7 +256,7 @@ EIGEN_STRONG_INLINE void gemm_unrolled_MMA_iteration(
   const Packet& pAlpha)
 {
   const Scalar* rhs_ptr = rhs_base;
-  const Scalar* lhs_ptr0, * lhs_ptr1, * lhs_ptr2, * lhs_ptr3, * lhs_ptr4, * lhs_ptr5, * lhs_ptr6, * lhs_ptr7;
+  const Scalar* lhs_ptr0 = NULL, * lhs_ptr1 = NULL, * lhs_ptr2 = NULL, * lhs_ptr3 = NULL, * lhs_ptr4 = NULL, * lhs_ptr5 = NULL, * lhs_ptr6 = NULL, * lhs_ptr7 = NULL;
   __vector_quad accZero0, accZero1, accZero2, accZero3, accZero4, accZero5, accZero6, accZero7;
 
   MICRO_MMA_SRC_PTR
@@ -510,9 +510,9 @@ EIGEN_STRONG_INLINE void gemm_complex_unrolled_MMA_iteration(
   } else {
     EIGEN_UNUSED_VARIABLE(rhs_ptr_imag);
   }
-  const Scalar* lhs_ptr_real0, * lhs_ptr_imag0, * lhs_ptr_real1, * lhs_ptr_imag1;
-  const Scalar* lhs_ptr_real2, * lhs_ptr_imag2, * lhs_ptr_real3, * lhs_ptr_imag3;
-  const Scalar* lhs_ptr_real4, * lhs_ptr_imag4;
+  const Scalar* lhs_ptr_real0 = NULL, * lhs_ptr_imag0 = NULL, * lhs_ptr_real1 = NULL, * lhs_ptr_imag1 = NULL;
+  const Scalar* lhs_ptr_real2 = NULL, * lhs_ptr_imag2 = NULL, * lhs_ptr_real3 = NULL, * lhs_ptr_imag3 = NULL;
+  const Scalar* lhs_ptr_real4 = NULL, * lhs_ptr_imag4 = NULL;
   __vector_quad accReal0, accImag0, accReal1, accImag1, accReal2, accImag2, accReal3, accImag3, accReal4, accImag4;
 
   MICRO_COMPLEX_MMA_SRC_PTR
