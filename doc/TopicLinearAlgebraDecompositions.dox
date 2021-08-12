@@ -72,7 +72,7 @@ To get an overview of the true relative speed of the different decompositions, c
         <td>Orthogonalization</td>
         <td>Yes</td>
         <td>Excellent</td>
-        <td><em>Soon: blocking</em></td>
+        <td><em>-</em></td>
     </tr>
 
     <tr>
@@ -85,6 +85,18 @@ To get an overview of the true relative speed of the different decompositions, c
         <td>Yes</td>
         <td>Average</td>
         <td>-</td>
+    </tr>
+
+    <tr class="alt">
+        <td>CompleteOrthogonalDecomposition</td>
+        <td>-</td>
+        <td>Fast</td>
+        <td>Good</td>
+        <td>Yes</td>
+        <td>Orthogonalization</td>
+        <td>Yes</td>
+        <td>Excellent</td>
+        <td><em>-</em></td>
     </tr>
 
     <tr class="alt">
