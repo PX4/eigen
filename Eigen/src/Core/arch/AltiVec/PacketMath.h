@@ -902,8 +902,8 @@ template<> EIGEN_STRONG_INLINE Packet8bf pxor<Packet8bf>(const Packet8bf& a, con
   return pxor<Packet8us>(a, b);
 }
 
-template<> EIGEN_STRONG_INLINE Packet4f pandnot<Packet4f>(const Packet4f& a, const Packet4f& b) { return vec_and(a, vec_nor(b, b)); }
-template<> EIGEN_STRONG_INLINE Packet4i pandnot<Packet4i>(const Packet4i& a, const Packet4i& b) { return vec_and(a, vec_nor(b, b)); }
+template<> EIGEN_STRONG_INLINE Packet4f pandnot<Packet4f>(const Packet4f& a, const Packet4f& b) { return vec_andc(a, b); }
+template<> EIGEN_STRONG_INLINE Packet4i pandnot<Packet4i>(const Packet4i& a, const Packet4i& b) { return vec_andc(a, b); }
 
 template<> EIGEN_STRONG_INLINE Packet4f pselect(const Packet4f& mask, const Packet4f& a, const Packet4f& b) {
   return vec_sel(b, a, reinterpret_cast<Packet4ui>(mask));
@@ -1260,15 +1260,15 @@ EIGEN_STRONG_INLINE Packet8bf F32ToBf16(Packet4f p4f){
   Packet4bi is_max_exp = vec_cmpeq(exp, p4ui_max_exp);
   Packet4bi is_zero_exp = vec_cmpeq(exp, reinterpret_cast<Packet4ui>(p4i_ZERO));
 
-  Packet4bi is_mant_not_zero = vec_cmpne(mantissa, reinterpret_cast<Packet4ui>(p4i_ZERO));
-  Packet4ui nan_selector = pand<Packet4ui>(
+  Packet4bi is_mant_zero = vec_cmpeq(mantissa, reinterpret_cast<Packet4ui>(p4i_ZERO));
+  Packet4ui nan_selector = pandnot<Packet4ui>(
       reinterpret_cast<Packet4ui>(is_max_exp),
-      reinterpret_cast<Packet4ui>(is_mant_not_zero)
+      reinterpret_cast<Packet4ui>(is_mant_zero)
   );
 
-  Packet4ui subnormal_selector = pand<Packet4ui>(
+  Packet4ui subnormal_selector = pandnot<Packet4ui>(
       reinterpret_cast<Packet4ui>(is_zero_exp),
-      reinterpret_cast<Packet4ui>(is_mant_not_zero)
+      reinterpret_cast<Packet4ui>(is_mant_zero)
   );
 
   const _EIGEN_DECLARE_CONST_FAST_Packet4ui(nan, 0x7FC00000);
