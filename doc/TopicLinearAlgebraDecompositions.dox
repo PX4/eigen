@@ -99,7 +99,7 @@ To get an overview of the true relative speed of the different decompositions, c
         <td><em>-</em></td>
     </tr>
 
-    <tr class="alt">
+    <tr>
         <td>LLT</td>
         <td>Positive definite</td>
         <td>Very fast</td>
@@ -111,7 +111,7 @@ To get an overview of the true relative speed of the different decompositions, c
         <td>Blocking</td>
     </tr>
 
-    <tr>
+    <tr class="alt">
         <td>LDLT</td>
         <td>Positive or negative semidefinite<sup><a href="#note1">1</a></sup></td>
         <td>Very fast</td>
