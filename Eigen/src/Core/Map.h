@@ -47,7 +47,7 @@ private:
   * \brief A matrix or vector expression mapping an existing array of data.
   *
   * \tparam PlainObjectType the equivalent matrix type of the mapped data
-  * \tparam MapOptions specifies the pointer alignment in bytes. It can be: \c #Aligned128, , \c #Aligned64, \c #Aligned32, \c #Aligned16, \c #Aligned8 or \c #Unaligned.
+  * \tparam MapOptions specifies the pointer alignment in bytes. It can be: \c #Aligned128, \c #Aligned64, \c #Aligned32, \c #Aligned16, \c #Aligned8 or \c #Unaligned.
   *                The default is \c #Unaligned.
   * \tparam StrideType optionally specifies strides. By default, Map assumes the memory layout
   *                   of an ordinary, contiguous array. This can be overridden by specifying strides.
