@@ -1113,7 +1113,7 @@ EIGEN_ALWAYS_INLINE void pgerc(PacketBlock<Packet,N>* accReal, PacketBlock<Packe
 template<typename Scalar, typename Packet>
 EIGEN_ALWAYS_INLINE Packet ploadLhs(const Scalar* lhs)
 {
-  return *reinterpret_cast<Packet *>(const_cast<Scalar *>(lhs));
+  return ploadu<Packet>(lhs);
 }
 
 // Zero the accumulator on PacketBlock.
