@@ -582,11 +582,6 @@ template<typename Scalar> void transform_alignment()
   VERIFY_IS_APPROX(p1->matrix(), p3->matrix());
   
   VERIFY_IS_APPROX( (*p1) * (*p1), (*p2)*(*p3));
-  
-  #if defined(EIGEN_VECTORIZE) && EIGEN_MAX_STATIC_ALIGN_BYTES>0
-  if(internal::packet_traits<Scalar>::Vectorizable)
-    VERIFY_RAISES_ASSERT((::new(reinterpret_cast<void*>(array3u)) Projective3a));
-  #endif
 }
 
 template<typename Scalar, int Dim, int Options> void transform_products()

@@ -218,10 +218,6 @@ template<typename Scalar> void mapQuaternion(void){
   VERIFY_IS_APPROX(q1.coeffs(), q2.coeffs());
   VERIFY_IS_APPROX(q1.coeffs(), q3.coeffs());
   VERIFY_IS_APPROX(q4.coeffs(), q3.coeffs());
-  #ifdef EIGEN_VECTORIZE
-  if(internal::packet_traits<Scalar>::Vectorizable)
-    VERIFY_RAISES_ASSERT((MQuaternionA(array3unaligned)));
-  #endif
     
   VERIFY_IS_APPROX(mq1 * (mq1.inverse() * v1), v1);
   VERIFY_IS_APPROX(mq1 * (mq1.conjugate() * v1), v1);
@@ -281,10 +277,6 @@ template<typename Scalar> void quaternionAlignment(void){
 
   VERIFY_IS_APPROX(q1->coeffs(), q2->coeffs());
   VERIFY_IS_APPROX(q1->coeffs(), q3->coeffs());
-  #if defined(EIGEN_VECTORIZE) && EIGEN_MAX_STATIC_ALIGN_BYTES>0
-  if(internal::packet_traits<Scalar>::Vectorizable && internal::packet_traits<Scalar>::size<=4)
-    VERIFY_RAISES_ASSERT((::new(reinterpret_cast<void*>(arrayunaligned)) QuaternionA));
-  #endif
 }
 
 template<typename PlainObjectType> void check_const_correctness(const PlainObjectType&)
