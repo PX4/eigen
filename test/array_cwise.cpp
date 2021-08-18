@@ -626,6 +626,41 @@ template<typename ArrayType> void min_max(const ArrayType& m)
   }
 }
 
+template<int N>
+struct shift_left {
+  template<typename Scalar>
+  Scalar operator()(const Scalar& v) const {
+    return v << N;
+  }
+};
+
+template<int N>
+struct arithmetic_shift_right {
+  template<typename Scalar>
+  Scalar operator()(const Scalar& v) const {
+    return v >> N;
+  }
+};
+
+template<typename ArrayType> void array_integer(const ArrayType& m)
+{
+  Index rows = m.rows();
+  Index cols = m.cols();
+
+  ArrayType m1 = ArrayType::Random(rows, cols),
+            m2(rows, cols);
+
+  m2 = m1.template shiftLeft<2>();
+  VERIFY( (m2 == m1.unaryExpr(shift_left<2>())).all() );
+  m2 = m1.template shiftLeft<9>();
+  VERIFY( (m2 == m1.unaryExpr(shift_left<9>())).all() );
+  
+  m2 = m1.template shiftRight<2>();
+  VERIFY( (m2 == m1.unaryExpr(arithmetic_shift_right<2>())).all() );
+  m2 = m1.template shiftRight<9>();
+  VERIFY( (m2 == m1.unaryExpr(arithmetic_shift_right<9>())).all() );
+}
+
 EIGEN_DECLARE_TEST(array_cwise)
 {
   for(int i = 0; i < g_repeat; i++) {
@@ -636,6 +671,8 @@ EIGEN_DECLARE_TEST(array_cwise)
     CALL_SUBTEST_5( array(ArrayXXf(internal::random<int>(1,EIGEN_TEST_MAX_SIZE), internal::random<int>(1,EIGEN_TEST_MAX_SIZE))) );
     CALL_SUBTEST_6( array(ArrayXXi(internal::random<int>(1,EIGEN_TEST_MAX_SIZE), internal::random<int>(1,EIGEN_TEST_MAX_SIZE))) );
     CALL_SUBTEST_6( array(Array<Index,Dynamic,Dynamic>(internal::random<int>(1,EIGEN_TEST_MAX_SIZE), internal::random<int>(1,EIGEN_TEST_MAX_SIZE))) );
+    CALL_SUBTEST_6( array_integer(ArrayXXi(internal::random<int>(1,EIGEN_TEST_MAX_SIZE), internal::random<int>(1,EIGEN_TEST_MAX_SIZE))) );
+    CALL_SUBTEST_6( array_integer(Array<Index,Dynamic,Dynamic>(internal::random<int>(1,EIGEN_TEST_MAX_SIZE), internal::random<int>(1,EIGEN_TEST_MAX_SIZE))) );
   }
   for(int i = 0; i < g_repeat; i++) {
     CALL_SUBTEST_1( comparisons(Array<float, 1, 1>()) );
