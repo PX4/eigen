@@ -572,7 +572,9 @@ struct rint_retval
 * Implementation of arg                                                     *
 ****************************************************************************/
 
-#if EIGEN_HAS_CXX11_MATH
+// Visual Studio 2017 has a bug where arg(float) returns 0 for negative inputs.
+// This seems to be fixed in VS 2019.
+#if EIGEN_HAS_CXX11_MATH && (!EIGEN_COMP_MSVC || EIGEN_COMP_MSVC >= 1920)
 // std::arg is only defined for types of std::complex, or integer types or float/double/long double
 template<typename Scalar,
           bool HasStdImpl = NumTraits<Scalar>::IsComplex || is_integral<Scalar>::value
