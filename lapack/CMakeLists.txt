@@ -1,4 +1,3 @@
-
 project(EigenLapack CXX)
 
 include(CheckLanguage)
@@ -152,6 +151,7 @@ if(EXISTS ${eigen_full_path_to_testing_lapack})
     string(REPLACE "." "_" input_name ${input})
     set(testName "${target}_${input_name}")
     if(EXISTS "${TEST_INPUT}")
+      add_dependencies(buildtests ${target})
       add_test(NAME LAPACK-${testName}
         COMMAND "${CMAKE_COMMAND}"
         -DTEST=$<TARGET_FILE:${target}>
