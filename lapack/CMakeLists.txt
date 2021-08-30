@@ -5,6 +5,13 @@ include(CheckLanguage)
 check_language(Fortran)
 if(CMAKE_Fortran_COMPILER)
   enable_language(Fortran)
+  if("${CMAKE_Fortran_COMPILER_ID}" STREQUAL "GNU")
+    if ("${CMAKE_Fortran_COMPILER_VERSION}" VERSION_GREATER_EQUAL 10.0)
+      # We use an old version of LAPACK with argument type mismatches.
+      # Allow them to compile anyway with newer GNU versions.
+      set(CMAKE_Fortran_FLAGS  "${CMAKE_Fortran_FLAGS} -fallow-argument-mismatch")
+    endif()
+  endif()
   set(EIGEN_Fortran_COMPILER_WORKS ON)
 else()
   set(EIGEN_Fortran_COMPILER_WORKS OFF)
