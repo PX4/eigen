@@ -1131,7 +1131,7 @@ namespace Eigen {
       #define EIGEN_OPTIMIZATION_BARRIER(X)  __asm__  ("" : "+r,v,wa" (X));
     #elif EIGEN_ARCH_ARM_OR_ARM64
       // General, NEON.
-      #define EIGEN_OPTIMIZATION_BARRIER(X)  __asm__  ("" : "+g,w" (X));
+      #define EIGEN_OPTIMIZATION_BARRIER(X)  __asm__  ("" : "+r,w" (X));
     #elif EIGEN_ARCH_i386_OR_x86_64
       // General, SSE.
       #define EIGEN_OPTIMIZATION_BARRIER(X)  __asm__  ("" : "+g,x" (X));
