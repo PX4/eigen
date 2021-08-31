@@ -52,7 +52,7 @@ struct PacketType : internal::packet_traits<Scalar> {
 };
 
 // For CUDA packet types when using a GpuDevice
-#if defined(EIGEN_USE_GPU) && defined(EIGEN_HAS_GPU_FP16)
+#if defined(EIGEN_USE_GPU) && defined(EIGEN_HAS_GPU_FP16) && defined(EIGEN_GPU_COMPILE_PHASE)
 
 typedef ulonglong2 Packet4h2;
 template<>
