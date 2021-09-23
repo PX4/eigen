@@ -93,6 +93,7 @@
   #pragma diag_suppress 2735
   #pragma diag_suppress 2737
   #pragma diag_suppress 2739
+  #pragma diag_suppress 2976
   #pragma diag_suppress 2979
   // Disable the "// __device__ annotation is ignored on a function(...) that is
   //              explicitly defaulted on its first declaration" message.
