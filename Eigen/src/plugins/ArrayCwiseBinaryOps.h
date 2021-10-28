@@ -38,7 +38,7 @@ min
 #else
 (min)
 #endif
-(const OtherDerived &other) const
+(const EIGEN_CURRENT_STORAGE_BASE_CLASS<OtherDerived> &other) const
 {
   return CwiseBinaryOp<internal::scalar_min_op<Scalar,Scalar,NaNPropagation>, const Derived, const OtherDerived>(derived(), other.derived());
 }
@@ -102,7 +102,7 @@ max
 #else
 (max)
 #endif
-(const OtherDerived &other) const
+(const EIGEN_CURRENT_STORAGE_BASE_CLASS<OtherDerived> &other) const
 {
   return CwiseBinaryOp<internal::scalar_max_op<Scalar,Scalar,NaNPropagation>, const Derived, const OtherDerived>(derived(), other.derived());
 }
