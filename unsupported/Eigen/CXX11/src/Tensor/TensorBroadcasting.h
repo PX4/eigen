@@ -461,8 +461,8 @@ struct TensorEvaluator<const TensorBroadcastingOp<Broadcast, ArgType>, Device>
           values[i] = m_impl.coeff(inputIndex);
           ++outputOffset;
         } else {
-          outputOffset = 0;
           values[i] = m_impl.coeff(++inputIndex);
+          outputOffset = 1;  // Next offset.
         }
       }
       return internal::pload<PacketReturnType>(values);
