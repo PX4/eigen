@@ -122,10 +122,10 @@ public:
   {}
 
   /** \returns number of rows */
-  Index rows() const { return internal::size(m_rowIndices); }
+  Index rows() const { return internal::index_list_size(m_rowIndices); }
 
   /** \returns number of columns */
-  Index cols() const { return internal::size(m_colIndices); }
+  Index cols() const { return internal::index_list_size(m_colIndices); }
 
   /** \returns the nested expression */
   const typename internal::remove_all<XprType>::type&

@@ -466,20 +466,33 @@ template<typename T, std::size_t N> struct array_size<std::array<T,N> > {
 };
 #endif
 
+
 /** \internal
-  * Analogue of the std::size free function.
-  * It returns the size of the container or view \a x of type \c T
+  * Analogue of the std::ssize free function.
+  * It returns the signed size of the container or view \a x of type \c T
   *
   * It currently supports:
   *  - any types T defining a member T::size() const
   *  - plain C arrays as T[N]
   *
+  * For C++20, this function just forwards to `std::ssize`, or any ADL discoverable `ssize` function.
   */
-template<typename T>
-EIGEN_CONSTEXPR Index size(const T& x) { return x.size(); }
+#if EIGEN_COMP_CXXVER < 20
+template <typename T>
+EIGEN_CONSTEXPR auto index_list_size(const T& x) {
+  using R = std::common_type_t<std::ptrdiff_t, std::make_signed_t<decltype(x.size())>>;
+  return static_cast<R>(x.size());
+}
 
-template<typename T,std::size_t N>
-EIGEN_CONSTEXPR Index size(const T (&) [N]) { return N; }
+template<typename T, std::ptrdiff_t N>
+EIGEN_CONSTEXPR std::ptrdiff_t index_list_size(const T (&)[N]) { return N; }
+#else
+template <typename T>
+EIGEN_CONSTEXPR auto index_list_size(T&& x) {
+  using std::ssize;
+  return ssize(std::forward<T>(x));
+}
+#endif // EIGEN_COMP_CXXVER
 
 /** \internal
   * Convenient struct to get the result type of a nullary, unary, binary, or
