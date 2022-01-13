@@ -477,7 +477,7 @@ template<typename T, std::size_t N> struct array_size<std::array<T,N> > {
   *
   * For C++20, this function just forwards to `std::ssize`, or any ADL discoverable `ssize` function.
   */
-#if EIGEN_COMP_CXXVER < 20
+#if EIGEN_COMP_CXXVER < 20  || EIGEN_GNUC_AT_MOST(9,4)
 template <typename T>
 EIGEN_CONSTEXPR auto index_list_size(const T& x) {
   using R = std::common_type_t<std::ptrdiff_t, std::make_signed_t<decltype(x.size())>>;
