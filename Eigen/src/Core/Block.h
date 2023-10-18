@@ -82,7 +82,7 @@ template<typename XprType, int BlockRows, int BlockCols, bool InnerPanel, typena
   * type of DenseBase::block(Index,Index,Index,Index) and DenseBase::block<int,int>(Index,Index) and
   * most of the time this is the only way it is used.
   *
-  * However, if you want to directly maniputate block expressions,
+  * However, if you want to directly manipulate block expressions,
   * for instance if you want to write a function returning such an expression, you
   * will need to use this class.
   *
